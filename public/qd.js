@@ -6,7 +6,8 @@
 // objects to limit the values that can be set.
 
 qd.options      = {};
-qd.options.mode = [ 'draw', 'grab' ];
+qd.options.mode = [ 'draw', 'drag' ];
+qd.options.zoom = [ 0, 10 ];
 
 qd.options.pen            = {};
 qd.options.pen.mode       = [ 'draw', 'erase' ];
@@ -25,6 +26,7 @@ qd.mode = function(newVal) {
   if (newVal) { qd.path._attrsChanged = true; }
   if (newVal && _.include(qd.options.mode, newVal)) {
     this._mode = newVal;
+    qd.$body.removeClass('crosshair move').addClass(this._mode == 'draw' ? 'crosshair' : 'move');
     return this._mode;
   } else {
     return this._mode;
@@ -69,6 +71,18 @@ _.each([ 'size', 'eraserSize', 'opacity' ], function(key) {
   }
 });
 
+// zoom level (requires valid range)
+qd.zoom = function(newVal) {
+  var range = qd.options.zoom;
+  if (_.isFinite(newVal) && newVal >= range[0] && newVal <= range[1]) {
+    this._zoom = +newVal.toFixed(2);
+    this._zoomTo(this._zoom); // deferred, see section "UI & Drawing"
+    return this._zoom;
+  } else {
+    return this._zoom;
+  }
+}
+
 // ========
 // Defaults
 // ========
@@ -105,12 +119,6 @@ qd.path.attrs = function() {
   return qd.path._attrsCache;
 }
 
-// store the collection of paths
-qd.paths = [];
-
-// store the collection of undos
-qd.undos = [];
-
 // pops the last path and stores it in a separate collection
 // hides it from view by setting the opacity to 0
 qd.undo = function() {
@@ -136,9 +144,17 @@ qd.redo = function() {
   qd.server.patch(path);
 }
 
-// ======
-// Events
-// ======
+// private, zooms to the given zoom level
+qd._zoomTo = function(zoom) {
+  // the anchor point for zooming should be the center of the viewport,
+  // which may be almost any point on the canvas
+  // qd.canvas.setViewBox(0, 0, 3200, 3200, false);
+  consoe.log('Zooming to ' + zoom);
+}
+
+// ============
+// Events: Draw
+// ============
 
 qd.events      = {};
 qd.events.draw = {};
@@ -222,6 +238,56 @@ qd.events.draw.stop = function(coords) {
   }
 }
 
+// ============
+// Events: Drag
+// ============
+
+qd.events.drag = {};
+
+// handles the first mousedown event to start dragging
+qd.events.drag.start = function(coords) {
+  if (!qd.events.drag._origin) {
+    qd.events.drag._origin = coords;
+    qd.events.drag._maxOffset = {
+      x: $win.width() - 3200,
+      y: $win.height() - 3200
+    };
+  }
+}
+
+// handles the mousemove events to reposition the canvas
+qd.events.drag.move = _.throttle(function(coords) {
+  if (qd.events.drag._origin) {
+    var origin   = qd.events.drag._origin,
+        distance = { x: coords.x - origin.x, y: coords.y - origin.y },
+        offset   = { x: -(qd.offset.x - distance.x), y: -(qd.offset.y - distance.y) };
+
+    // prevent dragging beyond the left and top of the canvas
+    if (offset.x > 0) { offset.x = 0 };
+    if (offset.y > 0) { offset.y = 0 };
+
+    // prevent dragging beyond the right and bottom of the canvas
+    if (offset.x < qd.events.drag._maxOffset.x) { offset.x = qd.events.drag._maxOffset.x };
+    if (offset.y < qd.events.drag._maxOffset.y) { offset.y = qd.events.drag._maxOffset.y };
+
+    // position the canvas in the viewport
+    qd.$canvas.css({ left: offset.x, top: offset.y });
+  }
+}, 15);
+
+// handles the mouseup & mouseleave events to stop dragging
+qd.events.drag.stop = function(coords) {
+  if (qd.events.drag._origin) {
+    var origin   = qd.events.drag._origin,
+        distance = { x: coords.x - origin.x, y: coords.y - origin.y };
+
+    qd.offset.x = qd.offset.x - distance.x;
+    qd.offset.y = qd.offset.y - distance.y;
+
+    delete qd.events.drag._origin;
+  }
+}
+
 // ======
 // Server
 // ======
@@ -273,29 +339,57 @@ qd.server.patch = function(path) {
   });
 }
 
+// ==========
+// Dimensions
+// ==========
+
+qd.reflow = function() {
+
+  // recalculate the current window size
+  var w = $win.width(),
+      h = $win.height();
+
+  // calculate the offset
+  qd.offset = {
+    x: (3200 - w) / 2,
+    y: (3200 - h) / 2
+  };
+
+  // set the #window element's size to match the main window
+  qd.$window.width(w).height(h);
+
+  // center the viewport
+  qd.$canvas.css({ left: -qd.offset.x, top: -qd.offset.y });
+
+}
+
 // wait for the initial json data to be ready
 $doc.on('qd.ready', function() {
   // wait for the dom to be ready
   $(function() {
 
-    // ======
-    // Window
-    // ======
+    // ===
+    // DOM
+    // ===
 
-    var w = $win.width(),
-        h = $win.height();
+    qd.$body   = $('body');
+    qd.$window = $('#window');
+    qd.$canvas = $('#canvas');
 
-    var offset = {
-      x: (3200 - w) / 2,
-      y: (3200 - h) / 2
-    };
+    // set up the correct dimensions
+    qd.reflow();
 
     // =======
     // Raphael
     // =======
 
-    qd.canvas = Raphael(0, 0, 3200, 3200).setViewBox(0, 0, 3200, 3200, false);
-    $win.scrollLeft(offset.x).scrollTop(offset.y); // center the viewport
+    qd.canvas = Raphael('canvas', 3200, 3200).setViewBox(0, 0, 3200, 3200, false);
+
+    // store the collection of paths
+    qd.paths = qd.canvas.set();
+
+    // store the collection of undos
+    qd.undos = qd.canvas.set();
 
     // =====
     // Paper
@@ -320,19 +414,39 @@ $doc.on('qd.ready', function() {
     // jQuery
     // ======
 
+    // handles resetting the viewport when the window size changes
+    $win.resize(_.throttle(function() {
+      qd.reflow();
+    }, 15));
+
     // return an object with x and y attributes
+    // taking into account the current offset
     function normalizeEventCoordinates(e) {
-      return { x: e.pageX, y: e.pageY };
+      return {
+        x: e.pageX + qd.offset.x,
+        y: e.pageY + qd.offset.y
+      };
     }
 
     // delegate events to their corresponding draw functions
-    var $svg = $('svg');
-    $svg.on('mousedown', function(e) {
-      qd.events.draw.start(normalizeEventCoordinates(e));
+    qd.$window.on('mousedown', function(e) {
+      if (qd._mode == 'draw') {
+        qd.events.draw.start(normalizeEventCoordinates(e));
+      } else {
+        qd.events.drag.start({ x: e.pageX, y: e.pageY });
+      }
     }).on('mousemove', function(e) {
-      qd.events.draw.move(normalizeEventCoordinates(e));
+      if (qd._mode == 'draw') {
+        qd.events.draw.move(normalizeEventCoordinates(e));
+      } else {
+        qd.events.drag.move({ x: e.pageX, y: e.pageY });
+      }
     }).on('mouseup mouseleave', function(e) {
-      qd.events.draw.stop(normalizeEventCoordinates(e));
+      if (qd._mode == 'draw') {
+        qd.events.draw.stop(normalizeEventCoordinates(e));
+      } else {
+        qd.events.drag.stop({ x: e.pageX, y: e.pageY });
+      }
     });
 
   });

@@ -122,10 +122,30 @@
     .crosshair {
       cursor: crosshair;
     }
+
+    .move {
+      cursor: move;
+    }
+
+    #window {
+      overflow: hidden;
+      position: relative;
+    }
+
+    #canvas {
+      position: absolute;
+      top: 0; left: 0;
+      bottom: 0; right: 0;
+      height: auto; width: auto;
+    }
   </style>
 </head>
 
 <body class="crosshair">
-
+  <!-- #window creates a contained with fixed height & width and overflow hidden -->
+  <div id="window">
+    <!-- #canvas creates a container to hold the entire 3200x3200 drawing frame -->
+    <div id="canvas"></div>
+  </div>
 </body>
 </html>

@@ -68,6 +68,9 @@ app.get('/', function(req, res) {
   // currently stored drawing ids, which we can obtain
   // by reading the file names in the drawings directory
   fs.readdir('./drawings/', function(err, files) {
+    if (err) { console.log('Error reading drawings directory', err); };
+    console.log('Found these files in the drawing directory: ' + files.join(', '));
+
     // get all drawing ids
     _.each(files, function(file) {
       // ignore non-json files
@@ -130,7 +133,7 @@ app.get('/:id.json', function(req, res) {
   if (!path.existsSync(filePath)) {
     res.send(204);
   } else {
-    fs.readFile(filePath, 'utf-8', function(err, json) {
+    fs.readFile(filePath, 'utf8', function(err, json) {
       if (err) { console.log(err); return res.send(500); };
       // return the json string or nothing if there is no path data
       json = JSON.parse(json);
@@ -168,7 +171,7 @@ app.patch('/:id', function(req, res) {
   if (!path.existsSync(filePath)) {
     res.send(404);
   } else {
-    fs.readFile(filePath, 'utf-8', function(err, json) {
+    fs.readFile(filePath, 'utf8', function(err, json) {
       if (err) { console.log(err); return res.send(500); };
       json = JSON.parse(json);
 
