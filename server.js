@@ -49,7 +49,8 @@ app.configure('development', function() {
 });
 
 app.configure('production', function() {
-  app.use(express.errorHandler());
+  // app.use(express.errorHandler());
+  app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
 });
 
 // =======
@@ -206,7 +207,9 @@ app.patch('/:id', function(req, res) {
   }
 });
 
+// ======
 // Listen
+// ======
 
 var port = process.env.app_port || process.env.PORT || 3000; app.listen(port);
 console.log("Express server listening on port %d in %s mode", port, app.settings.env);
