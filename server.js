@@ -139,7 +139,7 @@ app.get('/:id.json', function(req, res) {
     res.send(204);
   } else {
     fs.readFile(filePath, 'utf8', function(err, json) {
-      if (err) { console.log(err); return res.send(500); };
+      if (err) { console.log('Error reading drawing file', err); return res.send(500); };
       // return the json string or nothing if there is no path data
       json = JSON.parse(json);
       if (!json.paths.length) { res.send(204); } else { res.json(json.paths); }
@@ -177,7 +177,7 @@ app.patch('/:id', function(req, res) {
     res.send(404);
   } else {
     fs.readFile(filePath, 'utf8', function(err, json) {
-      if (err) { console.log(err); return res.send(500); };
+      if (err) { console.log('Error reading drawing file', err); return res.send(500); };
       json = JSON.parse(json);
 
       // compare the drawing code to the client's cookie
