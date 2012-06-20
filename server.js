@@ -67,7 +67,7 @@ app.get('/', function(req, res) {
 
   // ensure the drawings directory exists
   if (!path.existsSync('./drawings/')) {
-    fs.mkDirSync('./drawings');
+    fs.mkdirSync('./drawings');
   }
 
   // in order to proceed, we'll need a list of all
