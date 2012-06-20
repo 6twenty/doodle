@@ -15,12 +15,12 @@ var express   = require('express'),
     app       = module.exports = express.createServer();
 
 // delete any empty drawings to minimise the number of json files
-fs.readdir(__dirname + '/drawings/', function(err, files) {
+fs.readdir('./drawings/', function(err, files) {
   _.each(files, function(file) {
     if ((/\.json$/).test(file)) {
-      fs.readFile(__dirname + '/drawings/' + file, 'utf-8', function(err, json) {
+      fs.readFile('./drawings/' + file, 'utf-8', function(err, json) {
         if (!err && !JSON.parse(json).paths.length) {
-          fs.unlink(__dirname + '/drawings/' + file);
+          fs.unlink('./drawings/' + file);
         }
       });
     }
@@ -67,7 +67,7 @@ app.get('/', function(req, res) {
   // in order to proceed, we'll need a list of all
   // currently stored drawing ids, which we can obtain
   // by reading the file names in the drawings directory
-  fs.readdir(__dirname + '/drawings/', function(err, files) {
+  fs.readdir('./drawings/', function(err, files) {
     // get all drawing ids
     _.each(files, function(file) {
       // ignore non-json files
@@ -91,7 +91,7 @@ app.get('/', function(req, res) {
 
     // create a json file for this drawing
     var jsonTemplate = JSON.stringify({ code: code, paths: [] });
-    fs.writeFile(__dirname + '/drawings/' + id + '.json', jsonTemplate, function(err) {
+    fs.writeFile('./drawings/' + id + '.json', jsonTemplate, function(err) {
       if (err) { console.log('Error generating JSON file', err); };
     });
 
@@ -123,7 +123,7 @@ app.get('/:id.json', function(req, res) {
   console.log('GET /' + req.params.id + '.json');
 
   var id       = req.params.id,
-      filePath = __dirname + '/drawings/' + id + '.json';
+      filePath = './drawings/' + id + '.json';
 
   // send back the json drawing data or return nothing if
   // this is a new drawing or if the drawing isn't found
@@ -145,7 +145,7 @@ app.get('/:id', function(req, res) {
   console.log('GET /' + req.params.id);
 
   var id       = req.params.id,
-      filePath = __dirname + '/drawings/' + id + '.json';
+      filePath = './drawings/' + id + '.json';
 
   // bounce if the drawing file doesn't exist;
   // otherwise, render the view
@@ -161,7 +161,7 @@ app.patch('/:id', function(req, res) {
   console.log('PATCH', '/' + req.params.id);
 
   var id       = req.params.id,
-      filePath = __dirname + '/drawings/' + id + '.json';
+      filePath = './drawings/' + id + '.json';
 
   // return 404 if the drawing file doesn't exist;
   // otherwise proceed to authenticate and process the request
