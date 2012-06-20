@@ -92,7 +92,10 @@ app.get('/', function(req, res) {
     // create a json file for this drawing
     var jsonTemplate = JSON.stringify({ code: code, paths: [] });
     fs.writeFile('./drawings/' + id + '.json', jsonTemplate, function(err) {
-      if (err) { console.log('Error generating JSON file', err); };
+      if (err) {
+        console.log('Error generating JSON file', err);
+        return res.send('Unable to create file.', 500);
+      };
     });
 
     // date 10 years from now (for cookies)
