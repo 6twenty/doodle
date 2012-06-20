@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>QuickDraw: Draw Quickly!</title>
+
+  <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+
+  <!-- jquery -->
+  <script src="/jquery.min.js"></script>
+  <script src="/jquery.cookie.min.js"></script>
+
+  <!-- =========
+  Initialization
+  ========== -->
+
+  <script>
+    // common jquery dom object references
+    var $doc = $(document),
+        $win = $(window);
+
+    // =======
+    // Hijacks
+    // =======
+
+    // Prevent right-click
+    document.oncontextmenu = function() { return false; };
+
+    // // Prevent scrolling with the mouse wheel
+    // document.onmousewheel = function(){ stopWheel(); }
+    // if (document.addEventListener) {
+    //   document.addEventListener('DOMMouseScroll', stopWheel, false);
+    // }
+    // function stopWheel(e) {
+    //   if (!e) { e = window.event; }
+    //   if (e.preventDefault) { e.preventDefault(); }
+    //   e.returnValue = false;
+    // }
+
+    // Prevent touch drag
+    $doc.on('touchmove', function(e) {
+      e.preventDefault();
+    });
+
+    // =========
+    // Pre-setup
+    // =========
+
+    // declare global namespace
+    var qd = {};
+
+    // cache the drawing id
+    qd.id = location.pathname.replace(/\//g, '');
+
+    // cache the ownership status
+    qd.owner = $.cookie('qd_' + qd.id) == '1';
+
+    // ===========
+    // Conditional
+    // ===========
+
+    // conditionally load json polyfill
+    if (!window.JSON) {
+      $.getScript('json3.min.js').done(function() {
+        $doc.trigger('json.ready');
+      });
+    };
+
+    // ===============
+    // Initial drawing
+    // ===============
+
+    // when finished, publish the app's ready event
+    $.ajax({
+       type: 'GET',
+       url: window.location.pathname + '.json'
+    }).done(function(data, textStatus, jqXHR) {
+      // if status = 200 we can parse the json data (once JSON object is ready)
+      if (jqXHR.status == 200) {
+        if (window.JSON) {
+          qd.initial = data;
+          // declare that the app is ready
+          $doc.trigger('qd.ready');
+        } else {
+          $doc.on('json.ready', function() {
+            qd.initial = data;
+            // declare that the app is ready
+            $doc.trigger('qd.ready');
+          });
+        }
+      } else {
+        // no data; drawing can begin immediately
+        $doc.trigger('qd.ready');
+      }
+    });
+  </script>
+
+  <!-- underscore (utils) -->
+  <script src="/underscore.min.js"></script>
+
+  <!-- raphael (drawing ui) -->
+  <script src="/raphael.min.js"></script>
+
+  <!-- paper (path smoothing) -->
+  <script src="/paper.min.js"></script>
+
+  <!-- app -->
+  <script src="/qd.js"></script>
+
+  <!-- css -->
+  <style>
+    * {
+      margin: 0; padding: 0;
+      -moz-user-select: -moz-none;
+      -webkit-user-select: none;
+      -khtml-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    .crosshair {
+      cursor: crosshair;
+    }
+  </style>
+</head>
+
+<body class="crosshair">
+
+</body>
+</html>
