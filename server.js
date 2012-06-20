@@ -64,12 +64,17 @@ app.get('/', function(req, res) {
 
   var ids = [], id, code;
 
+  // ensure the drawings directory exists
+  if (!path.existsSync('./drawings/')) {
+    fs.mkDirSync('./drawings');
+  }
+
   // in order to proceed, we'll need a list of all
   // currently stored drawing ids, which we can obtain
   // by reading the file names in the drawings directory
   fs.readdir('./drawings/', function(err, files) {
     if (err) { console.log('Error reading drawings directory', err); };
-    console.log('Found these files in the drawing directory: ' + files.join(', '));
+    console.log('Found these files in the drawing directory: ' + (files || []).join(', '));
 
     // get all drawing ids
     _.each(files, function(file) {
