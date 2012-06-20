@@ -94,7 +94,7 @@ app.get('/', function(req, res) {
     fs.writeFile('./drawings/' + id + '.json', jsonTemplate, function(err) {
       if (err) {
         console.log('Error generating JSON file', err);
-        return res.send('Unable to create file.', 500);
+        res.send('Unable to create file.', 500);
       };
     });
 
