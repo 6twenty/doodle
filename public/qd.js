@@ -5,10 +5,12 @@
 // Provides restrictions against the corresponding
 // objects to limit the values that can be set.
 
+// globals
 qd.options      = {};
 qd.options.mode = [ 'draw', 'drag' ];
 qd.options.zoom = [ 0, 10 ];
 
+// pen
 qd.options.pen            = {};
 qd.options.pen.mode       = [ 'draw', 'erase' ];
 qd.options.pen.size       = [ 0, 100 ];
@@ -87,8 +89,10 @@ qd.zoom = function(newVal) {
 // Defaults
 // ========
 
+// globals
 qd._mode = 'draw';
 
+// pen
 qd.pen._mode       = 'draw';
 qd.pen._color      = 'black';
 qd.pen._size       = 10;

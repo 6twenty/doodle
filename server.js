@@ -2,6 +2,13 @@
 // Notes
 // =====
 
+// todo:
+// - more comments
+// - use redis session store for express
+// - zooming
+// - abstract the method for getting a drawing's
+//   json file into a shared helper
+
 // ==============
 // Initialization
 // ==============
@@ -12,7 +19,7 @@ var express   = require('express'),
     path      = require('path'),
     fs        = require('fs'),
     _         = require('underscore'),
-    app       = module.exports = express.createServer();
+    app       = express.createServer();
 
 // delete any empty drawings to minimise the number of json files
 fs.readdir('./drawings/', function(err, files) {
@@ -49,8 +56,8 @@ app.configure('development', function() {
 });
 
 app.configure('production', function() {
-  // app.use(express.errorHandler());
-  app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
+  app.use(express.errorHandler());
+  // app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
 });
 
 // =======
@@ -58,8 +65,7 @@ app.configure('production', function() {
 // =======
 
 // root path:
-// sets up new drawings
-// redirects to /:id
+// sets up and redirects to new drawings
 app.get('/', function(req, res) {
   console.log('GET /');
 
@@ -75,7 +81,6 @@ app.get('/', function(req, res) {
   // by reading the file names in the drawings directory
   fs.readdir('./drawings/', function(err, files) {
     if (err) { console.log('Error reading drawings directory', err); };
-    console.log('Found these files in the drawing directory: ' + (files || []).join(', '));
 
     // get all drawing ids
     _.each(files, function(file) {
