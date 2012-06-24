@@ -186,59 +186,84 @@ qd.events.draw.move = _.throttle(function(coords) {
     qd._paperPath.lineTo(new paper.Point(coords.x, coords.y));
     // extend the raphael path
     qd._raphaelPath.attr('path', qd._raphaelPath.attr('path') + ' ' + [ coords.x, coords.y ].join(','));
+    // testing
+    // qd._customPath.lineTo(new Point(coords.x, coords.y));
+
+    // remember these coordinates
+    // this is to assist drag.stop() as touchend
+    // doesn't return any coordinates
+    qd._coordsCache = coords;
   }
 }, 15);
 
 // handles the mouseup & mouseleave events to complete the drawing path
 qd.events.draw.stop = function(coords) {
   if (qd._drawing) {
+    // touchend events return 0, 0 so use the previous touchmove coordinates
+    if (!coords.x && !coords.y) {
+      coords = qd._coordsCache;
+      delete qd._coordsCache;
+    }
+
+    // extend the paper path
+    qd._paperPath.lineTo(new paper.Point(coords.x, coords.y));
+    // extend the raphael path
+    qd._raphaelPath.attr('path', qd._raphaelPath.attr('path') + ' ' + [ coords.x, coords.y ].join(','));
+    // testing
+    // qd._customPath.lineTo(new Point(coords.x, coords.y));
+
+    // stop drawing
     qd._drawing = false;
 
     // clear the current path references
-    var pPath = qd._paperPath, rPath = qd._raphaelPath;
+    var rPath = qd._raphaelPath, pPath = qd._paperPath;
     delete qd._paperPath;
     delete qd._raphaelPath;
+    // delete qd._customPath;
 
-    // perform line smoothing
+    // perform line smoothing if there are enough points
     // when erasing, only minimal line smoothing is applied
-    pPath.simplify(qd.pen._mode == 'draw' ? (qd.pen._size * 2.5) : 1);
+    var newPath;
+    if (pPath.segments.length > 3) {
+      pPath.simplify(qd.pen._mode == 'draw' ? (qd.pen._size * 2.5) : 1);
 
-    // regenerate the rendered path using the smoothed paper path
-    var newPath = 'M', previousSegment;
-    _.each(pPath.segments, function(segment, i) {
-      var x1 = previousSegment ? (previousSegment.point.x + previousSegment.handleOut.x) : null,
-          y1 = previousSegment ? (previousSegment.point.y + previousSegment.handleOut.y) : null,
-          x2 = previousSegment ? (segment.point.x + segment.handleIn.x) : null,
-          y2 = previousSegment ? (segment.point.y + segment.handleIn.y) : null,
-          x  = segment.point.x,
-          y  = segment.point.y;
+      // regenerate the rendered path using the smoothed paper path
+      var previousSegment; newPath = 'M';
+      _.each(pPath.segments, function(segment, i) {
+        var x1 = previousSegment ? (previousSegment.point.x + previousSegment.handleOut.x) : null,
+            y1 = previousSegment ? (previousSegment.point.y + previousSegment.handleOut.y) : null,
+            x2 = previousSegment ? (segment.point.x + segment.handleIn.x) : null,
+            y2 = previousSegment ? (segment.point.y + segment.handleIn.y) : null,
+            x  = segment.point.x,
+            y  = segment.point.y;
 
-      if (i === 0) {
-        // first point defines the starting point
-        newPath += [ x, y ].join(' ') + 'C';
-      } else {
-        // subsequent points are joined by a curve
-        newPath += [ x1, y1, x2, y2, x, y ].join(' ') + ' ';
-      }
+        if (i === 0) {
+          // first point defines the starting point
+          newPath += [ x, y ].join(' ') + 'C';
+        } else {
+          // subsequent points are joined by a curve
+          newPath += [ x1, y1, x2, y2, x, y ].join(' ') + ' ';
+        }
 
-      // expose this segment to the next iteration
-      previousSegment = segment;
-    });
+        // expose this segment to the next iteration
+        previousSegment = segment;
+      });
 
-    // remove the current rendered path
-    rPath.remove();
+      // remove the current rendered path
+      rPath.remove();
 
-    // render the new smoothed path
-    newPath = qd.canvas.path(newPath).attr(qd.path.attrs());
+      // render the new smoothed path
+      newPath = qd.canvas.path(newPath).attr(qd.path.attrs());
+    }
 
     // add this path to the collection
-    qd.paths.push(newPath);
+    qd.paths.push(newPath || rPath);
 
     // clear the redo log
     qd.undos = [];
 
     // send the new path to the server
-    qd.server.patch(newPath);
+    qd.server.patch(newPath || rPath);
   }
 }
 
@@ -266,6 +291,11 @@ qd.events.drag.move = _.throttle(function(coords) {
         distance = { x: coords.x - origin.x, y: coords.y - origin.y },
         offset   = { x: -(qd.offset.x - distance.x), y: -(qd.offset.y - distance.y) };
 
+    // remember these coordinates
+    // this is to assist drag.stop() as touchend
+    // doesn't return any coordinates
+    qd._coordsCache = coords;
+
     // prevent dragging beyond the left and top of the canvas
     if (offset.x > 0) { offset.x = 0 };
     if (offset.y > 0) { offset.y = 0 };
@@ -279,9 +309,15 @@ qd.events.drag.move = _.throttle(function(coords) {
   }
 }, 15);
 
-// handles the mouseup & mouseleave events to stop dragging
+// handles the mouseup/mouseleave/touchend events to stop dragging
 qd.events.drag.stop = function(coords) {
   if (qd.events.drag._origin) {
+    // touchend events return 0, 0 so use the previous touchmove coordinates
+    if (!coords.x && !coords.y) {
+      coords = qd._coordsCache;
+      delete qd._coordsCache;
+    }
+
     var origin   = qd.events.drag._origin,
         distance = { x: coords.x - origin.x, y: coords.y - origin.y };
 
@@ -383,11 +419,15 @@ $doc.on('qd.ready', function() {
     // set up the correct dimensions
     qd.reflow();
 
+    // set the correct cursor
+    qd.mode(qd._mode);
+
     // =======
     // Raphael
     // =======
 
-    qd.canvas = Raphael('canvas', 3200, 3200).setViewBox(0, 0, 3200, 3200, false);
+    // qd.canvas = Raphael('canvas', 3200, 3200).setViewBox(0, 0, 3200, 3200, false);
+    qd.canvas = Raphael('canvas', 3200, 3200);
 
     // store the collection of paths
     qd.paths = qd.canvas.set();
@@ -395,9 +435,9 @@ $doc.on('qd.ready', function() {
     // store the collection of undos
     qd.undos = qd.canvas.set();
 
-    // =====
-    // Paper
-    // =====
+    // ========
+    // Paper.js
+    // ========
 
     paper.view    = new paper.View();
     paper.project = new paper.Project();
@@ -426,30 +466,73 @@ $doc.on('qd.ready', function() {
     // return an object with x and y attributes
     // taking into account the current offset
     function normalizeEventCoordinates(e) {
+      // touchend events have no coordinates
+      if (e.type == 'touchend') {
+        return { x: 0, y: 0 };
+      }
+
+      var pageX, pageY;
+
+      if (e.type == 'touchstart' || e.type == 'touchmove' || e.type == 'touchend') {
+        var t = e.originalEvent.targetTouches[0];
+        // or if dragging, find the coordinates at the center of the touches
+      }
+
+      pageX = t ? t.pageX : e.pageX;
+      pageY = t ? t.pageY : e.pageY;
+
+      return { x: pageX, y: pageY };
+    }
+
+    function coordinatesWithOffset(coords) {
       return {
-        x: e.pageX + qd.offset.x,
-        y: e.pageY + qd.offset.y
-      };
+        x: coords.x + qd.offset.x,
+        y: coords.y + qd.offset.y
+      }
+    }
+
+    function normalizeEventCoordinatesWithOffset(e) {
+      // touchend events have no coordinates
+      if (e.type == 'touchend') {
+        return { x: 0, y: 0 };
+      }
+
+      return coordinatesWithOffset(normalizeEventCoordinates(e));
     }
 
     // delegate events to their corresponding draw functions
-    qd.$window.on('mousedown', function(e) {
-      if (qd._mode == 'draw') {
-        qd.events.draw.start(normalizeEventCoordinates(e));
-      } else {
-        qd.events.drag.start({ x: e.pageX, y: e.pageY });
+    qd.$window.on('mousedown touchstart', function(e) {
+      e.preventDefault();
+
+      // single touch to draw; multi-touch to drag
+      if (e.type == 'touchstart') {
+        if (e.originalEvent.targetTouches.length == 1) {
+          qd.mode('draw');
+        } else {
+          qd.mode('drag');
+        }
       }
-    }).on('mousemove', function(e) {
+
       if (qd._mode == 'draw') {
-        qd.events.draw.move(normalizeEventCoordinates(e));
+        qd.events.draw.start(normalizeEventCoordinatesWithOffset(e));
       } else {
-        qd.events.drag.move({ x: e.pageX, y: e.pageY });
+        qd.events.drag.start(normalizeEventCoordinates(e));
       }
-    }).on('mouseup mouseleave', function(e) {
+    }).on('mousemove touchmove', function(e) {
+      e.preventDefault();
+
       if (qd._mode == 'draw') {
-        qd.events.draw.stop(normalizeEventCoordinates(e));
+        qd.events.draw.move(normalizeEventCoordinatesWithOffset(e));
       } else {
-        qd.events.drag.stop({ x: e.pageX, y: e.pageY });
+        qd.events.drag.move(normalizeEventCoordinates(e));
+      }
+    }).on('mouseup mouseleave touchend', function(e) {
+      e.preventDefault();
+
+      if (qd._mode == 'draw') {
+        qd.events.draw.stop(normalizeEventCoordinatesWithOffset(e));
+      } else {
+        qd.events.drag.stop(normalizeEventCoordinates(e));
       }
     });
 
