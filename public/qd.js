@@ -463,27 +463,16 @@ $doc.on('qd.ready', function() {
       qd.reflow();
     }, 15));
 
-    // return an object with x and y attributes
-    // taking into account the current offset
+    // handles resetting the viewport when the orientation is changed
+    $doc.on('orientationchange', qd.reflow);
+
+    // return an object with x and y attributes of the event
     function normalizeEventCoordinates(e) {
-      // touchend events have no coordinates
-      if (e.type == 'touchend') {
-        return { x: 0, y: 0 };
-      }
-
-      var pageX, pageY;
-
-      if (e.type == 'touchstart' || e.type == 'touchmove' || e.type == 'touchend') {
-        var t = e.originalEvent.targetTouches[0];
-        // or if dragging, find the coordinates at the center of the touches
-      }
-
-      pageX = t ? t.pageX : e.pageX;
-      pageY = t ? t.pageY : e.pageY;
-
-      return { x: pageX, y: pageY };
+      return { x: e.pageX, y: e.pageY };
     }
 
+    // return the corrdinates taking into account the
+    // current canvas offet (for correct render location)
     function coordinatesWithOffset(coords) {
       return {
         x: coords.x + qd.offset.x,
@@ -491,34 +480,37 @@ $doc.on('qd.ready', function() {
       }
     }
 
+    // combines the above functions
     function normalizeEventCoordinatesWithOffset(e) {
-      // touchend events have no coordinates
-      if (e.type == 'touchend') {
-        return { x: 0, y: 0 };
-      }
-
       return coordinatesWithOffset(normalizeEventCoordinates(e));
     }
 
-    // delegate events to their corresponding draw functions
-    qd.$window.on('mousedown touchstart', function(e) {
-      e.preventDefault();
+    // as normalizeEventCoordinates(), but for touch events
+    function normalizeTouchEventCoordinates(e, i) {
+      return {
+        x: e.originalEvent.targetTouches[i || 0].pageX,
+        y: e.originalEvent.targetTouches[i || 0].pageY
+      }      
+    }
 
-      // single touch to draw; multi-touch to drag
-      if (e.type == 'touchstart') {
-        if (e.originalEvent.targetTouches.length == 1) {
-          qd.mode('draw');
-        } else {
-          qd.mode('drag');
-        }
-      }
+    // as normalizeEventCoordinatesWithOffset(), but for touch events
+    function normalizeTouchEventCoordinatesWithOffset(e, i) {
+      return coordinatesWithOffset(normalizeTouchEventCoordinates(e, i));
+    }
+
+    // ===============
+    // Handlers: mouse
+    // ===============
+
+    qd.$window.on('mousedown', function(e) {
+      e.preventDefault();
 
       if (qd._mode == 'draw') {
         qd.events.draw.start(normalizeEventCoordinatesWithOffset(e));
       } else {
         qd.events.drag.start(normalizeEventCoordinates(e));
       }
-    }).on('mousemove touchmove', function(e) {
+    }).on('mousemove', function(e) {
       e.preventDefault();
 
       if (qd._mode == 'draw') {
@@ -526,7 +518,7 @@ $doc.on('qd.ready', function() {
       } else {
         qd.events.drag.move(normalizeEventCoordinates(e));
       }
-    }).on('mouseup mouseleave touchend', function(e) {
+    }).on('mouseup mouseleave', function(e) {
       e.preventDefault();
 
       if (qd._mode == 'draw') {
@@ -534,6 +526,54 @@ $doc.on('qd.ready', function() {
       } else {
         qd.events.drag.stop(normalizeEventCoordinates(e));
       }
+    });
+
+    // ===============
+    // Handlers: touch
+    // ===============
+
+    qd.$window.on('touchstart', function(e) {
+      e.preventDefault();
+
+      // assume the mode, but do nothing (yet)
+      // we may receive a 2nd touchstart indicating a drag; only
+      // trigger a change if a touchmove event hasn't yet fired
+      if (e.originalEvent.targetTouches.length === 1) {
+        qd.mode('draw');
+        // if we do end up drawing we'll discard any other touches
+        qd._trackTouch = e.originalEvent.targetTouches[0].identifier;
+      } else if (!qd._tracking) {
+        delete qd._trackTouch;
+        qd.mode('drag');
+      }
+    }).on('touchmove', function(e) {
+      e.preventDefault();
+
+      // handle the event differently depending on
+      // whether we're drawing or dragging
+      if (qd._mode == 'draw') {
+        // flag to indicate we're tracking a single touch
+        qd._tracking = true;
+        if (e.originalEvent.targetTouches[0].identifier == qd._trackTouch) {
+          if (!qd._drawing) { qd.events.draw.start(normalizeTouchEventCoordinatesWithOffset(e)); }
+          qd.events.draw.move(normalizeTouchEventCoordinatesWithOffset(e));
+        }
+      } else {
+        // currently, factor in the coordinates of the first touch only
+        if (!qd.events.drag._origin) { qd.events.drag.start(normalizeTouchEventCoordinates(e)); }
+        qd.events.drag.move(normalizeTouchEventCoordinates(e));
+      }
+    }).on('touchend', function(e) {
+      e.preventDefault();
+
+      if (qd._mode == 'draw') {
+        qd.events.draw.stop({ x: 0, y: 0 });
+      } else {
+        qd.events.drag.stop({ x: 0, y: 0 });
+      }
+
+      delete qd._trackTouch;
+      delete qd._tracking;
     });
 
   });
