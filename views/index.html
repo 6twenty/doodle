@@ -25,23 +25,7 @@
     // =======
 
     // Prevent right-click
-    document.oncontextmenu = function() { return false; };
-
-    // // Prevent scrolling with the mouse wheel
-    // document.onmousewheel = function(){ stopWheel(); }
-    // if (document.addEventListener) {
-    //   document.addEventListener('DOMMouseScroll', stopWheel, false);
-    // }
-    // function stopWheel(e) {
-    //   if (!e) { e = window.event; }
-    //   if (e.preventDefault) { e.preventDefault(); }
-    //   e.returnValue = false;
-    // }
-
-    // Prevent touch drag
-    // $doc.on('touchmove', function(e) {
-    //   e.preventDefault();
-    // });
+    $doc.on('contextmenu', function() { return false; });
 
     // =========
     // Pre-setup
