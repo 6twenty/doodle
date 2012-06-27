@@ -26,9 +26,9 @@ qd.options.zoom = [ 0, 10 ];
 // pen
 qd.options.pen            = {};
 qd.options.pen.mode       = [ 'draw', 'erase' ];
-qd.options.pen.size       = [ 0, 100 ];
-qd.options.pen.eraserSize = [ 0, 100 ];
-qd.options.pen.opacity    = [ 0, 1 ];
+qd.options.pen.size       = [ 1, 100 ];
+qd.options.pen.eraserSize = [ 1, 100 ];
+qd.options.pen.opacity    = [ 0.01, 1 ];
 
 // ==============
 // Getter/Setters
