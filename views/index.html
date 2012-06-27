@@ -7,9 +7,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
   <meta name="apple-mobile-web-app-capable" content="yes">
 
+  <!-- REMOTE INSPECTOR -->
+  <!-- <script src="http://192.168.0.47:8000/target/target-script-min.js"></script> -->
+
   <!-- jquery -->
   <script src="/jquery.min.js"></script>
   <script src="/jquery.cookie.min.js"></script>
+  <script src="/jquery.mousewheel.min.js"></script>
 
   <!-- =========
   Initialization
@@ -89,6 +93,9 @@
   <!-- pathfitter from paper.js (path smoothing) -->
   <script src="/paper.min.js"></script>
 
+  <!-- keymaster (keyboard shortcuts) -->
+  <script src="/keymaster.min.js"></script>
+
   <!-- app -->
   <script src="/qd.js"></script>
 
@@ -104,20 +111,25 @@
     }
 
     body {
-      background: #eee;
+      background: #444;
+      overflow: hidden;
     }
 
-    .crosshair {
-      cursor: crosshair;
-    }
+    .crosshair { cursor: crosshair; }
+    .move { cursor: move; }
 
-    .move {
-      cursor: move;
+    #ui {
+      position: absolute;
+      top: 0; left: 0;
+      bottom: 0; right: 0;
+      height: auto; width: auto;
+      z-index: 2;
     }
 
     #window {
       overflow: hidden;
       position: relative;
+      z-index: 0;
     }
 
     #canvas {
@@ -125,13 +137,16 @@
       top: 0; left: 0;
       bottom: 0; right: 0;
       height: auto; width: auto;
+      z-index: 1;
     }
   </style>
 </head>
 
 <body class="crosshair">
-  <!-- #window creates a contained with fixed height & width and overflow hidden -->
+  <!-- #window creates a container with fixed height & width and overflow hidden -->
   <div id="window">
+    <!-- #ui holds a separate canvas for fixed position ui elements -->
+    <div id="ui"></div>
     <!-- #canvas creates a container to hold the entire 3200x3200 drawing frame -->
     <div id="canvas"></div>
   </div>

@@ -1,3 +1,16 @@
+// =====
+// Notes
+// =====
+
+// test path positions at various zoom levels
+// test drawing while zoomed
+
+// see Evernote notes
+
+// add a new page element which is positioned with a z-index overlapping the main canvas
+// this will form a new canvas to render the ui pen
+// all events will pass through and the ui cannot be interacted with, so it doesn't interfere at all
+
 // =======
 // Options
 // =======
@@ -25,7 +38,6 @@ qd.options.pen.opacity    = [ 0, 1 ];
 
 // app mode (drawing or panning)
 qd.mode = function(newVal) {
-  if (newVal) { qd.path._attrsChanged = true; }
   if (newVal && _.include(qd.options.mode, newVal)) {
     this._mode = newVal;
     qd.$body.removeClass('crosshair move').addClass(this._mode == 'draw' ? 'crosshair' : 'move');
@@ -39,9 +51,9 @@ qd.pen = {};
 
 // pen mode (drawing or erasing)
 qd.pen.mode = function(newVal) {
-  if (newVal) { qd.path._attrsChanged = true; }
   if (newVal && _.include(qd.options.pen.mode, newVal)) {
     this._mode = newVal;
+    qd.pen.update();
     return this._mode;
   } else {
     return this._mode;
@@ -50,9 +62,9 @@ qd.pen.mode = function(newVal) {
 
 // pen color (accepts any value)
 qd.pen.color = function(newVal) {
-  if (newVal) { qd.path._attrsChanged = true; }
   if (newVal) {
     this._color = newVal;
+    qd.pen.update();
     return this._color;
   } else {
     return this._color;
@@ -62,10 +74,10 @@ qd.pen.color = function(newVal) {
 // pen/eraser size, & opacity (requires valid range)
 _.each([ 'size', 'eraserSize', 'opacity' ], function(key) {
   qd.pen[key] = function(newVal) {
-    if (newVal) { qd.path._attrsChanged = true; }
     var range = qd.options.pen[key];
     if (_.isFinite(newVal) && newVal >= range[0] && newVal <= range[1]) {
       this['_' + key] = +newVal.toFixed(2);
+      qd.pen.update();
       return this['_' + key];
     } else {
       return this['_' + key];
@@ -77,7 +89,10 @@ _.each([ 'size', 'eraserSize', 'opacity' ], function(key) {
 qd.zoom = function(newVal) {
   var range = qd.options.zoom;
   if (_.isFinite(newVal) && newVal >= range[0] && newVal <= range[1]) {
-    this._zoom = +newVal.toFixed(2);
+    this._zoom          = +newVal.toFixed(2);
+    this._previousSize  = this._size;
+    this._size          = this._originalSize * this._zoom;
+    this._margin        = this._originalMargin * this._zoom;
     this._zoomTo(this._zoom); // deferred, see section "UI & Drawing"
     return this._zoom;
   } else {
@@ -90,18 +105,48 @@ qd.zoom = function(newVal) {
 // ========
 
 // globals
-qd._mode = 'draw';
+qd._mode            = 'draw';
+qd._colors          = [
+  '#000000',
+  '#46648e',
+  '#89ad48',
+  '#8c5ba7',
+  '#d17060',
+  '#fae014',
+  '#d7503c',
+  '#f49f14',
+  '#8bbbff',
+  '#d1d642',
+  '#ca76bf'
+]
+
+// scaling
+qd._zoom            = 1;
+qd._originalSize    = 3200;
+qd._size            = qd._originalSize;
+qd._previousSize    = qd._originalSize;
+qd._originalMargin  = 30;
+qd._margin          = qd._originalMargin;
 
 // pen
-qd.pen._mode       = 'draw';
-qd.pen._color      = 'black';
-qd.pen._size       = 10;
-qd.pen._eraserSize = 10;
-qd.pen._opacity    = 1;
+qd.pen._mode        = 'draw';
+qd.pen._color       = 'black';
+qd.pen._size        = 10;
+qd.pen._eraserSize  = 10;
+qd.pen._opacity     = 1;
 
 // ============
 // UI & Drawing
 // ============
+
+qd.pen.update = function() {
+  qd.path._attrsChanged = true;
+  qd.pen.ui.attr({
+    'r'       : (qd.pen._mode == 'draw' ? qd.pen._size : qd.pen._eraserSize) / 2,
+    'fill'    : qd.pen._mode == 'draw' ? qd.pen._color : 'white',
+    'opacity' : qd.pen._mode == 'draw' ? qd.pen._opacity : 1
+  });
+}
 
 qd.path = {};
 
@@ -112,7 +157,7 @@ qd.path.attrs = function() {
     qd.path._attrsCache = {
       'stroke'          : qd.pen._mode == 'draw' ? qd.pen._color : 'white',
       'opacity'         : qd.pen._mode == 'draw' ? qd.pen._opacity : 1,
-      'stroke-width'    : qd.pen._mode == 'draw' ? qd.pen._size : qd.pen._eraserSize,
+      'stroke-width'    : (qd.pen._mode == 'draw' ? qd.pen._size : qd.pen._eraserSize) * qd._zoom,
       'stroke-linecap'  : 'round',
       'stroke-linejoin' : 'round'
     }
@@ -148,12 +193,73 @@ qd.redo = function() {
   qd.server.patch(path);
 }
 
-// private, zooms to the given zoom level
+// private(ish), zooms to the given zoom level
 qd._zoomTo = function(zoom) {
-  // the anchor point for zooming should be the center of the viewport,
-  // which may be almost any point on the canvas
-  // qd.canvas.setViewBox(0, 0, 3200, 3200, false);
-  consoe.log('Zooming to ' + zoom);
+  // scale the canvas
+  qd.canvas.setSize(qd._size, qd._size);
+
+  // scale the margin
+  qd.paper.attr({
+    'x'      : qd._margin,
+    'y'      : qd._margin,
+    'width'  : qd._size - (qd._margin * 2),
+    'height' : qd._size - (qd._margin * 2)
+  });
+
+  // reposition the paths
+  qd.paths.transform('T' + ((qd._size - qd._previousSize) / 2) + ',' + ((qd._size - qd._previousSize) / 2) + 's' + [ zoom, zoom, (qd._previousSize / 2), (qd._previousSize / 2) ].join(','));
+
+  // adjust the path strokes
+  _.each(qd.paths, function(path) {
+    if (!path._originalStrokeWidth) {
+      path._originalStrokeWidth = +path.attr('stroke-width');
+    }
+
+    path.attr({
+      'stroke-width': path._originalStrokeWidth * zoom
+    });
+  });
+
+  // adjust
+  qd.reflow();
+
+
+
+
+
+  // var margin = (qd._margin * zoom), paperSize = qd._size - (margin * 2);
+  // qd.paper.attr({
+  //   'x'      : margin,
+  //   'y'      : margin,
+  //   'width'  : paperSize,
+  //   'height' : paperSize
+  // });
+
+  // // scale each path's stroke-width individually
+  // _.each(qd.paths, function(path) {
+  //   if (!path._originalStrokeWidth) {
+  //     path._originalStrokeWidth = +path.attr('stroke-width');
+  //   }
+
+  //   path.attr({
+  //     'stroke-width': path._originalStrokeWidth * zoom
+  //   });
+  // });
+
+  // // build the transform string
+  // var transformString = [
+  //   's' + zoom,
+  //   zoom,
+  //   (qd._previousSize / 2),
+  //   (qd._previousSize / 2),
+  //   't' + ((qd._size - qd._previousSize) / 2) / 2,
+  //   ((qd._size - qd._previousSize) / 2) / 2
+  // ].join(',');
+
+  // // scale the paths and adjust their position
+  // qd.paths.transform(transformString);
+
+  // qd.reflow();
 }
 
 // ============
@@ -175,6 +281,11 @@ qd.events.draw.start = function(coords) {
     qd._raphaelPath = 'M' + [ coords.x, coords.y ].join(',') + 'L';
     qd._raphaelPath += [ coords.x, coords.y ].join(',');
     qd._raphaelPath = qd.canvas.path(qd._raphaelPath).attr(qd.path.attrs());
+
+    // remember these coordinates
+    // this is to assist drag.stop() as touchend
+    // doesn't return any coordinates
+    qd._coordsCache = coords;
   }
 }
 
@@ -199,6 +310,9 @@ qd.events.draw.move = _.throttle(function(coords) {
 // handles the mouseup & mouseleave events to complete the drawing path
 qd.events.draw.stop = function(coords) {
   if (qd._drawing) {
+    // stop drawing
+    qd._drawing = false;
+
     // touchend events return 0, 0 so use the previous touchmove coordinates
     if (!coords.x && !coords.y) {
       coords = qd._coordsCache;
@@ -211,9 +325,6 @@ qd.events.draw.stop = function(coords) {
     qd._raphaelPath.attr('path', qd._raphaelPath.attr('path') + ' ' + [ coords.x, coords.y ].join(','));
     // testing
     // qd._customPath.lineTo(new Point(coords.x, coords.y));
-
-    // stop drawing
-    qd._drawing = false;
 
     // clear the current path references
     var rPath = qd._raphaelPath, pPath = qd._paperPath;
@@ -275,18 +386,19 @@ qd.events.drag = {};
 
 // handles the first mousedown event to start dragging
 qd.events.drag.start = function(coords) {
-  if (!qd.events.drag._origin) {
+  if (!qd._dragging) {
+    qd._dragging = true;
     qd.events.drag._origin = coords;
     qd.events.drag._maxOffset = {
-      x: $win.width() - 3200,
-      y: $win.height() - 3200
+      x: $win.width() - qd._size,
+      y: $win.height() - qd._size
     };
   }
 }
 
 // handles the mousemove events to reposition the canvas
 qd.events.drag.move = _.throttle(function(coords) {
-  if (qd.events.drag._origin) {
+  if (qd._dragging) {
     var origin   = qd.events.drag._origin,
         distance = { x: coords.x - origin.x, y: coords.y - origin.y },
         offset   = { x: -(qd.offset.x - distance.x), y: -(qd.offset.y - distance.y) };
@@ -311,7 +423,10 @@ qd.events.drag.move = _.throttle(function(coords) {
 
 // handles the mouseup/mouseleave/touchend events to stop dragging
 qd.events.drag.stop = function(coords) {
-  if (qd.events.drag._origin) {
+  if (qd._dragging) {
+    // stop dragging
+    qd._dragging = false;
+
     // touchend events return 0, 0 so use the previous touchmove coordinates
     if (!coords.x && !coords.y) {
       coords = qd._coordsCache;
@@ -398,8 +513,8 @@ qd.reflow = function() {
 
   // calculate the offset
   qd.offset = {
-    x: (3200 - w) / 2,
-    y: (3200 - h) / 2
+    x: (qd._size - w) / 2,
+    y: (qd._size - h) / 2
   };
 
   // set the #window element's size to match the main window
@@ -433,8 +548,8 @@ $doc.on('qd.ready', function() {
     // Raphael
     // =======
 
-    // qd.canvas = Raphael('canvas', 3200, 3200).setViewBox(0, 0, 3200, 3200, false);
-    qd.canvas = Raphael('canvas', 3200, 3200);
+    qd.canvas = Raphael('canvas', qd._size, qd._size);
+    qd.ui     = Raphael('ui', '100%', '100%');
 
     // store the collection of paths
     qd.paths = qd.canvas.set();
@@ -442,11 +557,32 @@ $doc.on('qd.ready', function() {
     // store the collection of undos
     qd.undos = qd.canvas.set();
 
+    // draw the edge
+    qd.canvas.rect(0, 0, '100%', '100%').attr({
+      'fill'   : '#eee',
+      'stroke' : 'none'
+    });
+
     // draw a "canvas"
-    qd.canvas.rect(30, 30, 3140, 3140).attr({
-      'fill'        : 'white',
-      'stroke'      : '#ccc',
-      'stroke-width': 1
+    qd.paper = qd.canvas.rect(qd._margin, qd._margin, (qd._size - (qd._margin * 2)), (qd._size - (qd._margin * 2))).attr({
+      'fill'         : 'white',
+      'stroke'       : '#ccc',
+      'stroke-width' : 1
+    });
+
+    var radius      = qd.options.pen.size[1] / 2,
+        center      = { x: radius + 10, y: radius + 10 };
+
+    qd.ui.circle(center.x, center.y, radius).attr({
+      'fill'    : '#eee',
+      'stroke'  : 'none',
+      'opacity' : 0.75
+    });
+
+    qd.pen.ui = qd.ui.circle(center.x, center.y, qd.pen._size / 2).attr({
+      'fill'    : qd.pen._color,
+      'stroke'  : 'none',
+      'opacity' : qd.pen._opacity
     });
 
     // ========
@@ -468,9 +604,43 @@ $doc.on('qd.ready', function() {
       });
     }
 
+    // =========
+    // Keymaster
+    // =========
+
+    // shortcut to colours in the palette
+    _.each(_.without(qd._colors, '#000000'), function(color, i) {
+      key(i+'', function() { qd.pen.color(color); });
+    });
+
     // ======
     // jQuery
     // ======
+
+    // mousewheel support
+    $win.on('mousewheel', _.throttle(function(e, delta) {
+      var attr = qd.pen._mode == 'draw' ? 'size' : 'eraserSize';
+      if (delta > 0) {
+        qd.pen[attr](qd.pen['_' + attr] + 1);
+      } else {
+        qd.pen[attr](qd.pen['_' + attr] - 1);
+      }
+    }, 15));
+
+    // swap modes temporarily while shift key held down
+    var _modeCache;
+    $doc.on('keydown', function(e) {
+      if (e.which == 16) {
+        qd._shift = true;
+        _modeCache = qd._mode;
+        qd.mode(_modeCache == 'draw' ? 'drag' : 'draw');
+      }
+    }).on('keyup', function(e) {
+      if (e.which == 16) {
+        qd.mode(_modeCache);
+        delete qd._shift;
+      }
+    });
 
     // handles resetting the viewport when the window size changes
     $win.resize(_.throttle(function() {
@@ -549,45 +719,55 @@ $doc.on('qd.ready', function() {
     qd.$window.on('touchstart', function(e) {
       e.preventDefault();
 
+      // slightly delay triggering touchmove
+      qd._touchMoves = 0;
+
+      // track only the original touch
+      if (!qd._trackTouch || !qd._touchCache) {
+        qd._trackTouch = e.originalEvent.targetTouches[0].identifier;
+        qd._touchCache = normalizeTouchEventCoordinates(e);
+      }
+
       // assume the mode, but do nothing (yet)
       // we may receive a 2nd touchstart indicating a drag; only
       // trigger a change if a touchmove event hasn't yet fired
       if (e.originalEvent.targetTouches.length === 1) {
         qd.mode('draw');
-        // if we do end up drawing we'll discard any other touches
-        qd._trackTouch = e.originalEvent.targetTouches[0].identifier;
-      } else if (!qd._tracking) {
-        delete qd._trackTouch;
+      } else if (!qd._drawing) {
         qd.mode('drag');
       }
     }).on('touchmove', function(e) {
       e.preventDefault();
 
+      // only trigger once a threshhold has been reached
+      qd._touchMoves++;
+
       // handle the event differently depending on
       // whether we're drawing or dragging
-      if (qd._mode == 'draw') {
-        // flag to indicate we're tracking a single touch
-        qd._tracking = true;
-        if (e.originalEvent.targetTouches[0].identifier == qd._trackTouch) {
-          if (!qd._drawing) { qd.events.draw.start(normalizeTouchEventCoordinatesWithOffset(e)); }
+      if (qd._touchMoves > 3 && e.originalEvent.targetTouches[0].identifier == qd._trackTouch) {
+        if (qd._mode == 'draw') {
+          if (!qd._drawing) { qd.events.draw.start(coordinatesWithOffset(qd._touchCache)); }
           qd.events.draw.move(normalizeTouchEventCoordinatesWithOffset(e));
+        } else {
+          // currently, factor in the coordinates of the first touch only
+          if (!qd._dragging) { qd.events.drag.start(qd._touchCache); }
+          qd.events.drag.move(normalizeTouchEventCoordinates(e));
         }
-      } else {
-        // currently, factor in the coordinates of the first touch only
-        if (!qd.events.drag._origin) { qd.events.drag.start(normalizeTouchEventCoordinates(e)); }
-        qd.events.drag.move(normalizeTouchEventCoordinates(e));
       }
     }).on('touchend', function(e) {
       e.preventDefault();
+      if (qd._trackTouch) {
+        if (qd._mode == 'draw') {
+          if (!qd._drawing) { qd.events.draw.start(coordinatesWithOffset(qd._touchCache)); }
+          qd.events.draw.stop({ x: 0, y: 0 });
+        } else {
+          qd.events.drag.stop({ x: 0, y: 0 });
+        }
 
-      if (qd._mode == 'draw') {
-        qd.events.draw.stop({ x: 0, y: 0 });
-      } else {
-        qd.events.drag.stop({ x: 0, y: 0 });
+        delete qd._trackTouch;
+        delete qd._touchCache;
+        delete qd._touchMoves;
       }
-
-      delete qd._trackTouch;
-      delete qd._tracking;
     });
 
   });
