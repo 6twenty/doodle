@@ -666,9 +666,17 @@ $(function() {
   $win.on('mousewheel', _.throttle(function(e, delta) {
     var attr = qd.pen._mode == 'draw' ? 'size' : 'eraserSize';
     if (delta > 0) {
-      qd.pen[attr](qd.pen['_' + attr] + 1);
+      if (qd._shift) {
+        qd.pen.opacity(qd.pen._opacity + 0.01);
+      } else {
+        qd.pen[attr](qd.pen['_' + attr] + 1);
+      }
     } else {
-      qd.pen[attr](qd.pen['_' + attr] - 1);
+      if (qd._shift) {
+        qd.pen.opacity(qd.pen._opacity - 0.01);
+      } else {
+        qd.pen[attr](qd.pen['_' + attr] - 1);
+      }
     }
   }, 15));
 
