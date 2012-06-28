@@ -94,17 +94,16 @@ qd.zoom = function(newVal) {
 // globals
 qd._mode            = 'draw';
 qd._colors          = [
-  '#000000',
-  '#46648e',
-  '#89ad48',
-  '#8c5ba7',
-  '#d17060',
-  '#fae014',
-  '#d7503c',
-  '#f49f14',
-  '#8bbbff',
-  '#d1d642',
-  '#ca76bf'
+  '#46648e', // blue (strong)
+  '#8bbbff', // blue (pale)
+  '#89ad48', // green (strong)
+  '#d1d642', // green (pale)
+  '#8c5ba7', // purple (strong)
+  '#ca76bf', // purple (pale)
+  '#d7503c', // red (strong)
+  '#d17060', // red (pale)
+  '#f49f14', // yellow (strong)
+  '#fae014'  // yellow (pale)
 ]
 
 // scaling
@@ -437,6 +436,47 @@ qd.events.drag.stop = function(coords) {
   }
 }
 
+// ==============
+// Events: Pen UI
+// ==============
+
+qd.events.penSize = {};
+
+qd.events.penSize.start = function(e) {
+  if (!qd._penSizing) {
+    qd._penSizing = true;
+    e.preventDefault();
+    e.stopPropagation();
+    qd._bodyClass = qd.$body.attr('class');
+    qd.$body.removeClass('crosshair move');
+  }
+}
+
+qd.events.penSize.move = function(e, coords) {
+  if (qd._penSizing) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    var radius = qd.options.pen.size[1] / 2,
+        center = { x: radius + 10, y: radius + 10 };
+
+    var distance = { x: coords.x - center.x, y: coords.y - center.y };
+
+    radius = Math.sqrt((distance.x * distance.x) + (distance.y * distance.y));
+    qd.pen.size(radius * 2);
+  }
+}
+
+qd.events.penSize.stop = function(e) {
+  if (qd._penSizing) {
+    e.preventDefault();
+    e.stopPropagation();
+    qd._penSizing = false;
+    qd.$body.addClass(qd._bodyClass);
+    delete qd._bodyClass;
+  }
+}
+
 // ======
 // Server
 // ======
@@ -558,8 +598,8 @@ $(function() {
     'stroke-width' : 1
   });
 
-  var radius      = qd.options.pen.size[1] / 2,
-      center      = { x: radius + 10, y: radius + 10 };
+  var radius = qd.options.pen.size[1] / 2,
+      center = { x: radius + 10, y: radius + 10 };
 
   qd.ui.circle(center.x, center.y, radius).attr({
     'fill'    : '#eee',
@@ -571,6 +611,12 @@ $(function() {
     'fill'    : qd.pen._color,
     'stroke'  : 'none',
     'opacity' : qd.pen._opacity
+  });
+
+  qd.pen.uiOverlay = qd.ui.circle(center.x, center.y, radius).attr({
+    'fill'    : 'white',
+    'stroke'  : 'none',
+    'opacity' : 0
   });
 
   // ========
@@ -596,9 +642,20 @@ $(function() {
   // Keymaster
   // =========
 
-  // shortcut to colours in the palette
-  _.each(_.without(qd._colors, '#000000'), function(color, i) {
-    key(i+'', function() { qd.pen.color(color); });
+  // shortcut to change pen colour & opacity
+  _.each([ 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 ], function(num, i) {
+    // opacity: number keys
+    key('' + num, function() { qd.pen.opacity(num ? +('0.' + num) : 1); });
+    // colour: shift + number keys
+    key('shift+' + num, function() { qd.pen.color(qd._colors[i]); });
+  });
+
+  // revert to defaults
+  key('d', function() {
+    qd.pen.size(10);
+    qd.pen.opacity(1);
+    qd.pen.color('black');
+    qd.pen.eraserSize(10);
   });
 
   // ======
@@ -756,6 +813,18 @@ $(function() {
       delete qd._touchCache;
       delete qd._touchMoves;
     }
+  });
+
+  // ========================
+  // Handlers: touch (pen UI)
+  // ========================
+
+  $(qd.pen.uiOverlay.node).on('mousedown touchstart', function(e) {
+    qd.events.penSize.start(e);
+  }).on('mousemove touchmove', function(e) {
+    qd.events.penSize.move(e, (e.type == 'mousemove' ? normalizeEventCoordinates(e) : normalizeTouchEventCoordinates(e)));
+  }).on('mouseup mouseleave touchend', function(e) {
+    qd.events.penSize.stop(e);
   });
 
 });
