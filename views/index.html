@@ -49,39 +49,13 @@
     // ===========
 
     // conditionally load json polyfill
-    if (!window.JSON) {
-      $.getScript('json3.min.js').done(function() {
-        $doc.trigger('json.ready');
-      });
-    };
+    if (!window.JSON) { $.getScript('json3.min.js'); };
 
-    // ===============
-    // Initial drawing
-    // ===============
+    // =============
+    // Initial paths
+    // =============
 
-    // when finished, publish the app's ready event
-    $.ajax({
-       type: 'GET',
-       url: window.location.pathname + '.json'
-    }).done(function(data, textStatus, jqXHR) {
-      // if status = 200 we can parse the json data (once JSON object is ready)
-      if (jqXHR.status == 200) {
-        if (window.JSON) {
-          qd.initial = data;
-          // declare that the app is ready
-          $doc.trigger('qd.ready');
-        } else {
-          $doc.on('json.ready', function() {
-            qd.initial = data;
-            // declare that the app is ready
-            $doc.trigger('qd.ready');
-          });
-        }
-      } else {
-        // no data; drawing can begin immediately
-        $doc.trigger('qd.ready');
-      }
-    });
+    qd.initial = {{{ initial }}};
   </script>
 
   <!-- underscore (utils) -->

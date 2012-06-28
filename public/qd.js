@@ -1,16 +1,3 @@
-// =====
-// Notes
-// =====
-
-// test path positions at various zoom levels
-// test drawing while zoomed
-
-// see Evernote notes
-
-// add a new page element which is positioned with a z-index overlapping the main canvas
-// this will form a new canvas to render the ui pen
-// all events will pass through and the ui cannot be interacted with, so it doesn't interfere at all
-
 // =======
 // Options
 // =======
@@ -525,250 +512,250 @@ qd.reflow = function() {
 
 }
 
-// wait for the initial json data to be ready
-$doc.on('qd.ready', function() {
-  // wait for the dom to be ready
-  $(function() {
+// ==========
+// Initialize
+// ==========
 
-    // ===
-    // DOM
-    // ===
+$(function() {
 
-    qd.$body   = $('body');
-    qd.$window = $('#window');
-    qd.$canvas = $('#canvas');
+  // ===
+  // DOM
+  // ===
 
-    // set up the correct dimensions
-    qd.reflow();
+  qd.$body   = $('body');
+  qd.$window = $('#window');
+  qd.$canvas = $('#canvas');
 
-    // set the correct cursor
-    qd.mode(qd._mode);
+  // set up the correct dimensions
+  qd.reflow();
 
-    // =======
-    // Raphael
-    // =======
+  // set the correct cursor
+  qd.mode(qd._mode);
 
-    qd.canvas = Raphael('canvas', qd._size, qd._size);
-    qd.ui     = Raphael('ui', '100%', '100%');
+  // =======
+  // Raphael
+  // =======
 
-    // store the collection of paths
-    qd.paths = qd.canvas.set();
+  qd.canvas = Raphael('canvas', qd._size, qd._size);
+  qd.ui     = Raphael('ui', '100%', '100%');
 
-    // store the collection of undos
-    qd.undos = qd.canvas.set();
+  // store the collection of paths
+  qd.paths = qd.canvas.set();
 
-    // draw the edge
-    qd.canvas.rect(0, 0, '100%', '100%').attr({
-      'fill'   : '#eee',
-      'stroke' : 'none'
-    });
+  // store the collection of undos
+  qd.undos = qd.canvas.set();
 
-    // draw a "canvas"
-    qd.paper = qd.canvas.rect(qd._margin, qd._margin, (qd._size - (qd._margin * 2)), (qd._size - (qd._margin * 2))).attr({
-      'fill'         : 'white',
-      'stroke'       : '#ccc',
-      'stroke-width' : 1
-    });
-
-    var radius      = qd.options.pen.size[1] / 2,
-        center      = { x: radius + 10, y: radius + 10 };
-
-    qd.ui.circle(center.x, center.y, radius).attr({
-      'fill'    : '#eee',
-      'stroke'  : 'none',
-      'opacity' : 0.75
-    });
-
-    qd.pen.ui = qd.ui.circle(center.x, center.y, qd.pen._size / 2).attr({
-      'fill'    : qd.pen._color,
-      'stroke'  : 'none',
-      'opacity' : qd.pen._opacity
-    });
-
-    // ========
-    // Paper.js
-    // ========
-
-    paper.view    = new paper.View();
-    paper.project = new paper.Project();
-
-    // =======
-    // Initial
-    // =======
-
-    // gets the initial drawing paths and renders them to the UI
-    if (qd.initial) {
-      _.each(qd.initial, function(serialized) {
-        var path = qd.server.deserializePath(serialized);
-        qd.paths.push(path);
-      });
-    }
-
-    // =========
-    // Keymaster
-    // =========
-
-    // shortcut to colours in the palette
-    _.each(_.without(qd._colors, '#000000'), function(color, i) {
-      key(i+'', function() { qd.pen.color(color); });
-    });
-
-    // ======
-    // jQuery
-    // ======
-
-    // mousewheel support
-    $win.on('mousewheel', _.throttle(function(e, delta) {
-      var attr = qd.pen._mode == 'draw' ? 'size' : 'eraserSize';
-      if (delta > 0) {
-        qd.pen[attr](qd.pen['_' + attr] + 1);
-      } else {
-        qd.pen[attr](qd.pen['_' + attr] - 1);
-      }
-    }, 15));
-
-    // swap modes temporarily while shift key held down
-    var _modeCache;
-    $doc.on('keydown', function(e) {
-      if (e.which == 16) {
-        qd._shift = true;
-        _modeCache = qd._mode;
-        qd.mode(_modeCache == 'draw' ? 'drag' : 'draw');
-      }
-    }).on('keyup', function(e) {
-      if (e.which == 16) {
-        qd.mode(_modeCache);
-        delete qd._shift;
-      }
-    });
-
-    // handles resetting the viewport when the window size changes
-    $win.resize(_.throttle(function() {
-      qd.reflow();
-    }, 15));
-
-    // handles resetting the viewport when the orientation is changed
-    $doc.on('orientationchange', qd.reflow);
-
-    // return an object with x and y attributes of the event
-    function normalizeEventCoordinates(e) {
-      return { x: e.pageX, y: e.pageY };
-    }
-
-    // return the corrdinates taking into account the
-    // current canvas offet (for correct render location)
-    function coordinatesWithOffset(coords) {
-      return {
-        x: coords.x + qd.offset.x,
-        y: coords.y + qd.offset.y
-      }
-    }
-
-    // combines the above functions
-    function normalizeEventCoordinatesWithOffset(e) {
-      return coordinatesWithOffset(normalizeEventCoordinates(e));
-    }
-
-    // as normalizeEventCoordinates(), but for touch events
-    function normalizeTouchEventCoordinates(e, i) {
-      return {
-        x: e.originalEvent.targetTouches[i || 0].pageX,
-        y: e.originalEvent.targetTouches[i || 0].pageY
-      }      
-    }
-
-    // as normalizeEventCoordinatesWithOffset(), but for touch events
-    function normalizeTouchEventCoordinatesWithOffset(e, i) {
-      return coordinatesWithOffset(normalizeTouchEventCoordinates(e, i));
-    }
-
-    // ===============
-    // Handlers: mouse
-    // ===============
-
-    qd.$window.on('mousedown', function(e) {
-      e.preventDefault();
-
-      if (qd._mode == 'draw') {
-        qd.events.draw.start(normalizeEventCoordinatesWithOffset(e));
-      } else {
-        qd.events.drag.start(normalizeEventCoordinates(e));
-      }
-    }).on('mousemove', function(e) {
-      e.preventDefault();
-
-      if (qd._mode == 'draw') {
-        qd.events.draw.move(normalizeEventCoordinatesWithOffset(e));
-      } else {
-        qd.events.drag.move(normalizeEventCoordinates(e));
-      }
-    }).on('mouseup mouseleave', function(e) {
-      e.preventDefault();
-
-      if (qd._mode == 'draw') {
-        qd.events.draw.stop(normalizeEventCoordinatesWithOffset(e));
-      } else {
-        qd.events.drag.stop(normalizeEventCoordinates(e));
-      }
-    });
-
-    // ===============
-    // Handlers: touch
-    // ===============
-
-    qd.$window.on('touchstart', function(e) {
-      e.preventDefault();
-
-      // slightly delay triggering touchmove
-      qd._touchMoves = 0;
-
-      // track only the original touch
-      if (!qd._trackTouch || !qd._touchCache) {
-        qd._trackTouch = e.originalEvent.targetTouches[0].identifier;
-        qd._touchCache = normalizeTouchEventCoordinates(e);
-      }
-
-      // assume the mode, but do nothing (yet)
-      // we may receive a 2nd touchstart indicating a drag; only
-      // trigger a change if a touchmove event hasn't yet fired
-      if (e.originalEvent.targetTouches.length === 1) {
-        qd.mode('draw');
-      } else if (!qd._drawing) {
-        qd.mode('drag');
-      }
-    }).on('touchmove', function(e) {
-      e.preventDefault();
-
-      // only trigger once a threshhold has been reached
-      qd._touchMoves++;
-
-      // handle the event differently depending on
-      // whether we're drawing or dragging
-      if (qd._touchMoves > 3 && e.originalEvent.targetTouches[0].identifier == qd._trackTouch) {
-        if (qd._mode == 'draw') {
-          if (!qd._drawing) { qd.events.draw.start(coordinatesWithOffset(qd._touchCache)); }
-          qd.events.draw.move(normalizeTouchEventCoordinatesWithOffset(e));
-        } else {
-          // currently, factor in the coordinates of the first touch only
-          if (!qd._dragging) { qd.events.drag.start(qd._touchCache); }
-          qd.events.drag.move(normalizeTouchEventCoordinates(e));
-        }
-      }
-    }).on('touchend', function(e) {
-      e.preventDefault();
-      if (qd._trackTouch) {
-        if (qd._mode == 'draw') {
-          if (!qd._drawing) { qd.events.draw.start(coordinatesWithOffset(qd._touchCache)); }
-          qd.events.draw.stop({ x: 0, y: 0 });
-        } else {
-          qd.events.drag.stop({ x: 0, y: 0 });
-        }
-
-        delete qd._trackTouch;
-        delete qd._touchCache;
-        delete qd._touchMoves;
-      }
-    });
-
+  // draw the edge
+  qd.canvas.rect(0, 0, '100%', '100%').attr({
+    'fill'   : '#eee',
+    'stroke' : 'none'
   });
+
+  // draw a "canvas"
+  qd.paper = qd.canvas.rect(qd._margin, qd._margin, (qd._size - (qd._margin * 2)), (qd._size - (qd._margin * 2))).attr({
+    'fill'         : 'white',
+    'stroke'       : '#ccc',
+    'stroke-width' : 1
+  });
+
+  var radius      = qd.options.pen.size[1] / 2,
+      center      = { x: radius + 10, y: radius + 10 };
+
+  qd.ui.circle(center.x, center.y, radius).attr({
+    'fill'    : '#eee',
+    'stroke'  : 'none',
+    'opacity' : 0.75
+  });
+
+  qd.pen.ui = qd.ui.circle(center.x, center.y, qd.pen._size / 2).attr({
+    'fill'    : qd.pen._color,
+    'stroke'  : 'none',
+    'opacity' : qd.pen._opacity
+  });
+
+  // ========
+  // Paper.js
+  // ========
+
+  paper.view    = new paper.View();
+  paper.project = new paper.Project();
+
+  // =======
+  // Initial
+  // =======
+
+  // gets the initial drawing paths and renders them to the UI
+  if (qd.initial) {
+    _.each(qd.initial, function(serialized) {
+      var path = qd.server.deserializePath(serialized);
+      qd.paths.push(path);
+    });
+  }
+
+  // =========
+  // Keymaster
+  // =========
+
+  // shortcut to colours in the palette
+  _.each(_.without(qd._colors, '#000000'), function(color, i) {
+    key(i+'', function() { qd.pen.color(color); });
+  });
+
+  // ======
+  // jQuery
+  // ======
+
+  // mousewheel support
+  $win.on('mousewheel', _.throttle(function(e, delta) {
+    var attr = qd.pen._mode == 'draw' ? 'size' : 'eraserSize';
+    if (delta > 0) {
+      qd.pen[attr](qd.pen['_' + attr] + 1);
+    } else {
+      qd.pen[attr](qd.pen['_' + attr] - 1);
+    }
+  }, 15));
+
+  // swap modes temporarily while shift key held down
+  var _modeCache;
+  $doc.on('keydown', function(e) {
+    if (e.which == 16) {
+      qd._shift = true;
+      _modeCache = qd._mode;
+      qd.mode(_modeCache == 'draw' ? 'drag' : 'draw');
+    }
+  }).on('keyup', function(e) {
+    if (e.which == 16) {
+      qd.mode(_modeCache);
+      delete qd._shift;
+    }
+  });
+
+  // handles resetting the viewport when the window size changes
+  $win.resize(_.throttle(function() {
+    qd.reflow();
+  }, 15));
+
+  // handles resetting the viewport when the orientation is changed
+  $doc.on('orientationchange', qd.reflow);
+
+  // return an object with x and y attributes of the event
+  function normalizeEventCoordinates(e) {
+    return { x: e.pageX, y: e.pageY };
+  }
+
+  // return the corrdinates taking into account the
+  // current canvas offet (for correct render location)
+  function coordinatesWithOffset(coords) {
+    return {
+      x: coords.x + qd.offset.x,
+      y: coords.y + qd.offset.y
+    }
+  }
+
+  // combines the above functions
+  function normalizeEventCoordinatesWithOffset(e) {
+    return coordinatesWithOffset(normalizeEventCoordinates(e));
+  }
+
+  // as normalizeEventCoordinates(), but for touch events
+  function normalizeTouchEventCoordinates(e, i) {
+    return {
+      x: e.originalEvent.targetTouches[i || 0].pageX,
+      y: e.originalEvent.targetTouches[i || 0].pageY
+    }      
+  }
+
+  // as normalizeEventCoordinatesWithOffset(), but for touch events
+  function normalizeTouchEventCoordinatesWithOffset(e, i) {
+    return coordinatesWithOffset(normalizeTouchEventCoordinates(e, i));
+  }
+
+  // ===============
+  // Handlers: mouse
+  // ===============
+
+  qd.$window.on('mousedown', function(e) {
+    e.preventDefault();
+
+    if (qd._mode == 'draw') {
+      qd.events.draw.start(normalizeEventCoordinatesWithOffset(e));
+    } else {
+      qd.events.drag.start(normalizeEventCoordinates(e));
+    }
+  }).on('mousemove', function(e) {
+    e.preventDefault();
+
+    if (qd._mode == 'draw') {
+      qd.events.draw.move(normalizeEventCoordinatesWithOffset(e));
+    } else {
+      qd.events.drag.move(normalizeEventCoordinates(e));
+    }
+  }).on('mouseup mouseleave', function(e) {
+    e.preventDefault();
+
+    if (qd._mode == 'draw') {
+      qd.events.draw.stop(normalizeEventCoordinatesWithOffset(e));
+    } else {
+      qd.events.drag.stop(normalizeEventCoordinates(e));
+    }
+  });
+
+  // ===============
+  // Handlers: touch
+  // ===============
+
+  qd.$window.on('touchstart', function(e) {
+    e.preventDefault();
+
+    // slightly delay triggering touchmove
+    qd._touchMoves = 0;
+
+    // track only the original touch
+    if (!qd._trackTouch || !qd._touchCache) {
+      qd._trackTouch = e.originalEvent.targetTouches[0].identifier;
+      qd._touchCache = normalizeTouchEventCoordinates(e);
+    }
+
+    // assume the mode, but do nothing (yet)
+    // we may receive a 2nd touchstart indicating a drag; only
+    // trigger a change if a touchmove event hasn't yet fired
+    if (e.originalEvent.targetTouches.length === 1) {
+      qd.mode('draw');
+    } else if (!qd._drawing) {
+      qd.mode('drag');
+    }
+  }).on('touchmove', function(e) {
+    e.preventDefault();
+
+    // only trigger once a threshhold has been reached
+    qd._touchMoves++;
+
+    // handle the event differently depending on
+    // whether we're drawing or dragging
+    if (qd._touchMoves > 3 && e.originalEvent.targetTouches[0].identifier == qd._trackTouch) {
+      if (qd._mode == 'draw') {
+        if (!qd._drawing) { qd.events.draw.start(coordinatesWithOffset(qd._touchCache)); }
+        qd.events.draw.move(normalizeTouchEventCoordinatesWithOffset(e));
+      } else {
+        // currently, factor in the coordinates of the first touch only
+        if (!qd._dragging) { qd.events.drag.start(qd._touchCache); }
+        qd.events.drag.move(normalizeTouchEventCoordinates(e));
+      }
+    }
+  }).on('touchend', function(e) {
+    e.preventDefault();
+    if (qd._trackTouch) {
+      if (qd._mode == 'draw') {
+        if (!qd._drawing) { qd.events.draw.start(coordinatesWithOffset(qd._touchCache)); }
+        qd.events.draw.stop({ x: 0, y: 0 });
+      } else {
+        qd.events.drag.stop({ x: 0, y: 0 });
+      }
+
+      delete qd._trackTouch;
+      delete qd._touchCache;
+      delete qd._touchMoves;
+    }
+  });
+
 });

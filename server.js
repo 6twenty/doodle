@@ -130,29 +130,6 @@ app.get('/', function(req, res) {
   });
 });
 
-// drawing path data:
-// retrieves the json path data for an existing drawing
-// intended for ajax requests to generate the initial drawing paths
-app.get('/:id.json', function(req, res) {
-  console.log('GET /' + req.params.id + '.json');
-
-  var id       = req.params.id,
-      filePath = './drawings/' + id + '.json';
-
-  // send back the json drawing data or return nothing if
-  // this is a new drawing or if the drawing isn't found
-  if (!path.existsSync(filePath)) {
-    res.send(204);
-  } else {
-    fs.readFile(filePath, 'utf8', function(err, json) {
-      if (err) { console.log('Error reading drawing file', err); return res.send(500); };
-      // return the json string or nothing if there is no path data
-      json = JSON.parse(json);
-      if (!json.paths.length) { res.send(204); } else { res.json(json.paths); }
-    });
-  }
-});
-
 // drawing path:
 // loads up an existing drawing or redirects to root
 app.get('/:id', function(req, res) {
@@ -166,7 +143,15 @@ app.get('/:id', function(req, res) {
   if (!path.existsSync(filePath)) {
     res.redirect('/', 307);
   } else {
-    res.render('index', { layout: false });
+    fs.readFile(filePath, 'utf8', function(err, json) {
+      if (err) { console.log('Error reading drawing file', err); return res.send(500); };
+      res.render('index', {
+        layout: false,
+        locals: {
+          initial: JSON.stringify(JSON.parse(json).paths)
+        }
+      });
+    });
   }
 });
 
