@@ -2,7 +2,7 @@
   "name"          : "quickdraw",
   "private"       : true,
   "version"       : "0.0.1",
-  "node"          : "v0.8.1",
+  "node"          : "0.8.1",
   "dependencies"  : {
     "express"      : "3.x",
     "underscore"   : "1.x",
