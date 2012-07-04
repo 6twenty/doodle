@@ -51,7 +51,7 @@
 
 ## Change pen opacity
 
-- iOS: ?
+- iOS:  circular slider
 - desktop: hold alt/option with mousewheel
 
 ## Change pen mode
