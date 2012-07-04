@@ -2,11 +2,10 @@
   "name"          : "quickdraw",
   "private"       : true,
   "version"       : "0.0.1",
-  "node"          : "v0.6.17",
+  "node"          : "v0.8.1",
   "dependencies"  : {
-    "express"           : "2.x",
-    "underscore"        : "1.x",
-    "randomstring"      : "1.x",
-    "beardcomb"         : "0.x"
+    "express"      : "3.x",
+    "underscore"   : "1.x",
+    "randomstring" : "1.x",
   }
 }

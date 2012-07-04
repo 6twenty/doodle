@@ -7,70 +7,82 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
   <meta name="apple-mobile-web-app-capable" content="yes">
 
-  <!-- jquery -->
-  <script src="/jquery.min.js"></script>
-  <script src="/jquery.cookie.min.js"></script>
-  <script src="/jquery.mousewheel.min.js"></script>
+  <link href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQEAYAAABPYyMiAAAABmJLR0T///////8JWPfcAAAACXBIWXMAAABIAAAASABGyWs+AAAAF0lEQVRIx2NgGAWjYBSMglEwCkbBSAcACBAAAeaR9cIAAAAASUVORK5CYII=" rel="icon" type="image/x-icon" />
 
-  <!-- =========
-  Initialization
-  ========== -->
+  <!-- ==============
+  ESSENTIAL RESOURCES
+  =============== -->
 
+  <!-- `yepnope` and `spin` are required in order to begin initializing the app -->
+  <script src="/yepnope.min.js"></script>
+  <script src="/spin.min.js"></script>
+
+  <!-- The initial drawing paths, if this is an existing drawing -->
   <script>
-    // common jquery dom object references
-    var $doc = $(document),
-        $win = $(window);
+    // Declare the global `qd` object
+    var qd = {
+      // Cache this drawing's id
+      id: location.pathname.replace(/\//g, ''),
 
-    // =======
-    // Hijacks
-    // =======
+      // Cache the initial drawing's paths
+      _initial: {{{ initial }}},
 
-    // Prevent right-click
-    $doc.on('contextmenu', function() { return false; });
+      // Loading spinner functions
+      loader: {
+        // Initialize
+        _spinner: new Spinner({
+          lines     : 10,     // The number of lines to draw
+          length    : 10,     // The length of each line
+          width     : 15,     // The line thickness
+          radius    : 25,     // The radius of the inner circle
+          color     : '#aaa', // #rgb or #rrggbb
+          speed     : 1,      // Rounds per second
+          trail     : 60,     // Afterglow percentage
+        }),
 
-    // =========
-    // Pre-setup
-    // =========
+        // Show
+        show: function() {
+          qd.loader._spinner.spin(document.getElementById('loading'));
+        },
 
-    // declare global namespace
-    var qd = {};
+        // Hide
+        hide: function() {
+          qd.loader._spinner.stop();
+          document.getElementById('loading').style.display = 'none';
+        }
+      }
+    }
 
-    // cache the drawing id
-    qd.id = location.pathname.replace(/\//g, '');
+    // Show the loading spinner while the rest of the app loads
+    window.onload = qd.loader.show;
 
-    // cache the ownership status
-    qd.owner = $.cookie('qd_' + qd.id) == '1';
-
-    // ===========
-    // Conditional
-    // ===========
-
-    // conditionally load json polyfill
-    if (!window.JSON) { $.getScript('json3.min.js'); };
-
-    // =============
-    // Initial paths
-    // =============
-
-    qd.initial = {{{ initial }}};
+    // Fetch the assets and declare callbacks
+    // `json3` is loaded if window.JSON is unavailable
+    // jQuery is fetched from Google's CDN, or locally if that fails
+    yepnope({
+      test: window.JSON,
+      nope: 'json3.min.js',
+      load: [
+        'underscore.min.js',
+        'jquery.min.js',
+        'jquery.cookie.min.js',
+        'jquery.mousewheel.min.js',
+        'keymaster.min.js',
+        'raphael.min.js',
+        'paper.min.js',
+        'qd.js'
+      ],
+      complete: function() {
+        qd.init();
+        qd.loader.hide();
+      }
+    });
   </script>
 
-  <!-- underscore (utils) -->
-  <script src="/underscore.min.js"></script>
+  <!-- =
+  STYLES
+  == -->
 
-  <!-- raphael (drawing ui) -->
-  <script src="/raphael.min.js"></script>
-
-  <!-- pathfitter from paper.js (path smoothing) -->
-  <script src="/paper.min.js"></script>
-
-  <!-- keymaster (keyboard shortcuts) -->
-  <script src="/keymaster.min.js"></script>
-
-  <!-- app -->
-  <script src="/qd.js"></script>
-
-  <!-- css -->
   <style>
     * {
       margin: 0; padding: 0;
@@ -88,6 +100,14 @@
 
     .crosshair { cursor: crosshair; }
     .move { cursor: move; }
+
+    #loading {
+      position: absolute;
+      top: 0; bottom: 0;
+      left: 0; right: 0;
+      height: auto; width: auto;
+      background: white;
+    }
 
     #ui {
       position: absolute;
@@ -114,6 +134,8 @@
 </head>
 
 <body class="crosshair">
+  <!-- #loading is a temporary element to display the loading spinner while the app loads -->
+  <div id="loading"></div>
   <!-- #window creates a container with fixed height & width and overflow hidden -->
   <div id="window">
     <!-- #ui holds a separate canvas for fixed position ui elements -->

@@ -13,13 +13,12 @@
 // Initialization
 // ==============
 
-var express   = require('express'),
-    beardcomb = require('beardcomb'),
-    rs        = require('randomstring'),
-    path      = require('path'),
-    fs        = require('fs'),
-    _         = require('underscore'),
-    app       = express.createServer();
+var express = require('express'),
+    rs      = require('randomstring'),
+    path    = require('path'),
+    fs      = require('fs'),
+    _       = require('underscore'),
+    app     = express();
 
 // delete any empty drawings to minimise the number of json files
 fs.readdir('./drawings/', function(err, files) {
@@ -38,13 +37,18 @@ fs.readdir('./drawings/', function(err, files) {
 // Configuration
 // =============
 
-app.configure(function(){
+app.configure(function() {
   app.set('views', __dirname + '/views');
   app.set('view engine', 'html');
-  app.register('.html', beardcomb);
+  app.engine('html', function(path, options, fn) {
+    fs.readFile(path, 'utf8', function(err, str) {
+      if (err) { return fn(err); }
+      fn(null, str.replace('{{{ initial }}}', options.locals.initial));
+    });
+  });
   app.use(express.bodyParser());
-  app.use(express.cookieParser());
-  app.use(express.session({ secret: 'magneto' }));
+  app.use(express.cookieParser('magneto'));
+  app.use(express.session());
   app.use(express.methodOverride());
   app.use(express.static(__dirname + '/public'));
   app.use(express.logger());
@@ -57,7 +61,6 @@ app.configure('development', function() {
 
 app.configure('production', function() {
   app.use(express.errorHandler());
-  // app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
 });
 
 // =======
@@ -72,7 +75,7 @@ app.get('/', function(req, res) {
   var ids = [], id, code;
 
   // ensure the drawings directory exists
-  if (!path.existsSync('./drawings/')) {
+  if (!fs.existsSync('./drawings/')) {
     fs.mkdirSync('./drawings');
   }
 
@@ -103,12 +106,6 @@ app.get('/', function(req, res) {
     id   = generateId();   // unique
     code = rs.generate(7); // random
 
-    // create a json file for this drawing
-    var jsonTemplate = JSON.stringify({ code: code, paths: [] });
-    fs.writeFile('./drawings/' + id + '.json', jsonTemplate, function(err) {
-      if (err) { console.log('Error generating JSON file', err); };
-    });
-
     // date 10 years from now (for cookies)
     var in10yrs = new Date(Date.now() + (3600 * 1000 * 24 * 365 * 10));
 
@@ -125,8 +122,14 @@ app.get('/', function(req, res) {
       httpOnly: true
     });
 
-    // at last: redirect to the drawing
-    res.redirect('/' + id, 307);
+    // create a json file for this drawing
+    var jsonTemplate = JSON.stringify({ code: code, paths: [] });
+    fs.writeFile('./drawings/' + id + '.json', jsonTemplate, function(err) {
+      if (err) { console.log('Error generating JSON file', err); res.send(500); };
+
+      // at last: redirect to the drawing
+      res.redirect(307, '/' + id);
+    });
   });
 });
 
@@ -140,17 +143,13 @@ app.get('/:id', function(req, res) {
 
   // bounce if the drawing file doesn't exist;
   // otherwise, render the view
-  if (!path.existsSync(filePath)) {
-    res.redirect('/', 307);
+  if (!fs.existsSync(filePath)) {
+    res.redirect(307, '/');
   } else {
     fs.readFile(filePath, 'utf8', function(err, json) {
       if (err) { console.log('Error reading drawing file', err); return res.send(500); };
-      res.render('index', {
-        layout: false,
-        locals: {
-          initial: JSON.stringify(JSON.parse(json).paths)
-        }
-      });
+      res.locals.initial = JSON.stringify(JSON.parse(json).paths, null, 2).replace(/\n/g, "\n      ");
+      res.render('index');
     });
   }
 });
@@ -164,7 +163,7 @@ app.patch('/:id', function(req, res) {
 
   // return 404 if the drawing file doesn't exist;
   // otherwise proceed to authenticate and process the request
-  if (!path.existsSync(filePath)) {
+  if (!fs.existsSync(filePath)) {
     res.send(404);
   } else {
     fs.readFile(filePath, 'utf8', function(err, json) {
