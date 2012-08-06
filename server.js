@@ -164,6 +164,7 @@ app.patch(/^\/([a-zA-Z1-9]{7})$/, function(req, res) {
   // return 404 if the drawing file doesn't exist;
   // otherwise proceed to authenticate and process the request
   if (!fs.existsSync(filePath)) {
+    console.log("Cannot patch drawing file that doesn't exist");
     res.send(404);
   } else {
     fs.readFile(filePath, 'utf8', function(err, json) {
@@ -176,6 +177,7 @@ app.patch(/^\/([a-zA-Z1-9]{7})$/, function(req, res) {
           clientCode  = req.cookies['qd_' + id + '_code'];
 
       if (drawingCode != clientCode) {
+        console.log('Code pair mis-match');
         res.send(403); // forbidden
       } else {
         // this route accepts path additions as well as
