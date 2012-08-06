@@ -14,10 +14,10 @@
   =============== -->
 
   <!-- `yepnope` and `spin` are required in order to begin initializing the app -->
-  <script src="/yepnope.min.js"></script>
-  <script src="/spin.min.js"></script>
+  <script src="/yepnope-1.5.4.min.js"></script>
+  <script src="/spin-1.2.5.min.js"></script>
 
-  <!-- The initial drawing paths, if this is an existing drawing -->
+  <!-- Initial setup -->
   <script>
     // Declare the global `qd` object
     var qd = {
@@ -42,6 +42,7 @@
 
         // Show
         show: function() {
+          document.getElementById('loading').style.display = 'block';
           qd.loader._spinner.spin(document.getElementById('loading'));
         },
 
@@ -58,18 +59,18 @@
 
     // Fetch the assets and declare callbacks
     // `json3` is loaded if window.JSON is unavailable
-    // jQuery is fetched from Google's CDN, or locally if that fails
+    // ***TODO*** jQuery is fetched from Google's CDN, or locally if that fails
     yepnope({
       test: window.JSON,
       nope: 'json3.min.js',
       load: [
-        'underscore.min.js',
-        'jquery.min.js',
+        'lodash-0.4.2.min.js',
+        'jquery-1.7.2.min.js',
         'jquery.cookie.min.js',
         'jquery.mousewheel.min.js',
         'keymaster.min.js',
-        'raphael.min.js',
-        'paper.min.js',
+        'raphael-2.1.0.min.js',
+        'paper-0.22.custom.min.js',
         'qd.js'
       ],
       complete: function() {

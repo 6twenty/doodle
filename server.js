@@ -33,7 +33,7 @@ fs.readdir('./drawings/', function(err, files) {
   });
 });
 
-// =============
+// =============  
 // Configuration
 // =============
 
@@ -135,11 +135,11 @@ app.get('/', function(req, res) {
 
 // drawing path:
 // loads up an existing drawing or redirects to root
-app.get('/:id', function(req, res) {
-  console.log('GET /' + req.params.id);
+app.get(/^\/([a-zA-Z1-9]{7})$/, function(req, res) {
+  var id = req.params[0];
+  console.log('GET /' + id);
 
-  var id       = req.params.id,
-      filePath = './drawings/' + id + '.json';
+  var filePath = './drawings/' + id + '.json';
 
   // bounce if the drawing file doesn't exist;
   // otherwise, render the view
@@ -155,11 +155,11 @@ app.get('/:id', function(req, res) {
 });
 
 // add or remove a new path
-app.patch('/:id', function(req, res) {
-  console.log('PATCH', '/' + req.params.id);
+app.patch(/^\/([a-zA-Z1-9]{7})$/, function(req, res) {
+  var id = req.params[0];
+  console.log('PATCH /' + id);
 
-  var id       = req.params.id,
-      filePath = './drawings/' + id + '.json';
+  var filePath = './drawings/' + id + '.json';
 
   // return 404 if the drawing file doesn't exist;
   // otherwise proceed to authenticate and process the request

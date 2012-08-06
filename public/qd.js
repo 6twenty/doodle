@@ -180,7 +180,7 @@ qd.init = function() {
     var path       = qd.paths.pop(),
         serialized = qd.server.serializePath(path);
 
-    path.remove();
+    path._raphael.remove();
     qd.undos.push(serialized);
     qd.server.patch(); // triggers _delete
   }
@@ -228,85 +228,56 @@ qd.init = function() {
     qd.reflow();
   }
 
-  // ============
-  // Events: Draw
-  // ============
+  // ===========
+  // Path object
+  // ===========
+  // 
+  // Handles maintaining the internal paths (both Raphael and Paper.js)
 
-  qd.events      = {};
-  qd.events.draw = {};
+  qd.Path = function() {
+    var path = this;
 
-  // handles the first mousedown event to start a drawing path
-  qd.events.draw.start = function(coords) {
-    if (!qd._drawing) {
-      qd._drawing = true;
-      // initialize a paper path (not rendered)
-      qd._paperPath = new paper.Path();
-      qd._paperPath.moveTo(new paper.Point(coords.x, coords.y));
-      qd._paperPath.lineTo(new paper.Point(coords.x, coords.y));
-      // initialize a raphael path (rendered)
-      qd._raphaelPath = 'M' + [ coords.x, coords.y ].join(',') + 'L';
-      qd._raphaelPath += [ coords.x, coords.y ].join(',');
-      qd._raphaelPath = qd.canvas.path(qd._raphaelPath).attr(qd.path.attrs());
+    // internal cache of segments
+    path._segments = [];
 
-      // remember these coordinates
-      // this is to assist drag.stop() as touchend
-      // doesn't return any coordinates
-      qd._coordsCache = coords;
+    // internal cache of SVG path string
+    path._string = '';
+
+    // internal cache of Raphael path element
+    path._raphael = undefined;
+
+    // point to the start of the path
+    path.moveTo = function(x, y) {
+      // add a paper.Segment to the _segments array
+      path._segments.push(new paper.Segment(x, y));
+      // begin the SVG path string with an M command
+      // and append an L command to begin the drawing
+      path._string = 'M' + [x, y].join(',') + 'L' + [x, y].join(',');
+      path._raphael = qd.canvas.path(path._string).attr(qd.path.attrs());
+
+      return [x, y];
     }
-  }
 
-  // throttled
-  // handles the mousemove events to extend the current drawing path
-  qd.events.draw.move = _.throttle(function(coords) {
-    if (qd._drawing) {
-      // extend the paper path
-      qd._paperPath.lineTo(new paper.Point(coords.x, coords.y));
-      // extend the raphael path
-      qd._raphaelPath.attr('path', qd._raphaelPath.attr('path') + ' ' + [ coords.x, coords.y ].join(','));
-      // testing
-      // qd._customPath.lineTo(new Point(coords.x, coords.y));
+    // draw a line from the previous point to this one
+    path.lineTo = function(x, y) {
+      // add a paper.Segment to the _segments array
+      path._segments.push(new paper.Segment(x, y));
+      // continue the SVG path command
+      path._string += (' ' + [x, y].join(','));
+      path._raphael.attr('path', path._string);
 
-      // remember these coordinates
-      // this is to assist drag.stop() as touchend
-      // doesn't return any coordinates
-      qd._coordsCache = coords;
+      return [x, y];
     }
-  }, 15);
 
-  // handles the mouseup & mouseleave events to complete the drawing path
-  qd.events.draw.stop = function(coords) {
-    if (qd._drawing) {
-      // stop drawing
-      qd._drawing = false;
-
-      // touchend events return 0, 0 so use the previous touchmove coordinates
-      if (!coords.x && !coords.y) {
-        coords = qd._coordsCache;
-        delete qd._coordsCache;
-      }
-
-      // extend the paper path
-      qd._paperPath.lineTo(new paper.Point(coords.x, coords.y));
-      // extend the raphael path
-      qd._raphaelPath.attr('path', qd._raphaelPath.attr('path') + ' ' + [ coords.x, coords.y ].join(','));
-      // testing
-      // qd._customPath.lineTo(new Point(coords.x, coords.y));
-
-      // clear the current path references
-      var rPath = qd._raphaelPath, pPath = qd._paperPath;
-      delete qd._paperPath;
-      delete qd._raphaelPath;
-      // delete qd._customPath;
-
-      // perform line smoothing if there are enough points
-      // when erasing, only minimal line smoothing is applied
+    // simplify and redraw the path
+    path.simplify = function(tolerance) {
       var newPath;
-      if (pPath.segments.length > 3) {
-        pPath.simplify(qd.pen._mode == 'draw' ? (qd.pen._size * 2.5) : 1);
+      if (path._segments.length > 3) {
+        var fitter = new paper.PathFitter(path, tolerance);
+        path._segments = fitter.fit();
 
-        // regenerate the rendered path using the smoothed paper path
         var previousSegment; newPath = 'M';
-        _.each(pPath.segments, function(segment, i) {
+        _.each(path._segments, function(segment, i) {
           var x1 = previousSegment ? (previousSegment.point.x + previousSegment.handleOut.x) : null,
               y1 = previousSegment ? (previousSegment.point.y + previousSegment.handleOut.y) : null,
               x2 = previousSegment ? (segment.point.x + segment.handleIn.x) : null,
@@ -327,20 +298,81 @@ qd.init = function() {
         });
 
         // remove the current rendered path
-        rPath.remove();
+        path._raphael.remove();
 
         // render the new smoothed path
-        newPath = qd.canvas.path(newPath).attr(qd.path.attrs());
+        path._raphael = qd.canvas.path(newPath).attr(qd.path.attrs());
+      }
+    }
+
+  }
+
+  // ============
+  // Events: Draw
+  // ============
+
+  qd.events      = {};
+  qd.events.draw = {};
+
+  // handles the first mousedown event to start a drawing path
+  qd.events.draw.start = function(coords) {
+    if (!qd._drawing) {
+      qd._drawing = true;
+
+      // set up the path and begin drawing
+      qd._path = new qd.Path();
+      qd._path.moveTo(coords.x, coords.y);
+
+      // remember these coordinates
+      // this is to assist drag.stop() as touchend
+      // doesn't return any coordinates
+      qd._coordsCache = coords;
+    }
+  }
+
+  // throttled
+  // handles the mousemove events to extend the current drawing path
+  qd.events.draw.move = _.throttle(function(coords) {
+    if (qd._drawing) {
+      // extend the path drawing
+      qd._path.lineTo(coords.x, coords.y);
+
+      // remember these coordinates
+      // this is to assist drag.stop() as touchend
+      // doesn't return any coordinates
+      qd._coordsCache = coords;
+    }
+  }, 15);
+
+  // handles the mouseup & mouseleave events to complete the drawing path
+  qd.events.draw.stop = function(coords) {
+    if (qd._drawing) {
+      // stop drawing
+      qd._drawing = false;
+
+      // touchend events return 0, 0 so use the previous touchmove coordinates
+      if (!coords.x && !coords.y) {
+        coords = qd._coordsCache;
+        delete qd._coordsCache;
       }
 
-      // add this path to the collection
-      qd.paths.push(newPath || rPath);
+      // extend the path drawing
+      qd._path.lineTo(coords.x, coords.y);
+
+      // smooth the path
+      qd._path.simplify(qd.pen._mode == 'draw' ? (qd.pen._size * 2.5) : 1);
 
       // clear the redo log
       qd.undos = [];
 
+      // add this path to the collection
+      qd.paths.push(qd._path);
+
       // send the new path to the server
-      qd.server.patch(newPath || rPath);
+      qd.server.patch(qd._path);
+
+      // delete the reference
+      delete qd._path;
     }
   }
 
@@ -468,26 +500,28 @@ qd.init = function() {
   // storage as JSON on the server
   qd.server.serializePath = function(path) {
     return {
-      string: path.attr('path') + '',
+      string: path._raphael.attr('path') + '',
       pen: {
-        size: path.attr('stroke-width'),
-        color: path.attr('stroke'),
-        opacity: path.attr('opacity')
+        size: path._raphael.attr('stroke-width'),
+        color: path._raphael.attr('stroke'),
+        opacity: path._raphael.attr('opacity')
       }
     }
   }
 
   // reinstate a path which has been serialized using
   // the above function
-  // Note: this action also renders the path to the UI
+  // note: this action also renders the path to the UI
   qd.server.deserializePath = function(object) {
-    return qd.canvas.path(object.string).attr({
+    var path = new qd.Path();
+    path._raphael = qd.canvas.path(object.string).attr({
       'stroke'          : object.pen.color,
       'opacity'         : object.pen.opacity,
       'stroke-width'    : object.pen.size,
       'stroke-linecap'  : 'round',
       'stroke-linejoin' : 'round'
     });
+    return path;
   }
 
   // make a server request which adds or removes the latest path
@@ -560,10 +594,10 @@ qd.init = function() {
     qd.ui     = Raphael('ui', '100%', '100%');
 
     // store the collection of paths
-    qd.paths = qd.canvas.set();
+    qd.paths = [];
 
     // store the collection of undos
-    qd.undos = qd.canvas.set();
+    qd.undos = [];
 
     // draw the edge
     qd.canvas.rect(0, 0, '100%', '100%').attr({
@@ -599,13 +633,6 @@ qd.init = function() {
       'stroke'  : 'none',
       'opacity' : 0
     });
-
-    // ========
-    // Paper.js
-    // ========
-
-    paper.view    = new paper.View();
-    paper.project = new paper.Project();
 
     // =======
     // Initial
