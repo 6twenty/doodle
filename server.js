@@ -202,5 +202,5 @@ app.patch(/^\/([a-zA-Z1-9]{7})$/, function(req, res) {
 // Listen
 // ======
 
-var port = process.env.app_port || process.env.PORT || 3000; app.listen(port);
+var port = process.env.app_port || process.env.NODE_PORT || process.env.PORT || 3000; app.listen(port);
 console.log("Express server listening on port %d in %s mode", port, app.settings.env);
