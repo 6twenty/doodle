@@ -1,4 +1,5 @@
 .nodester.appconfig
+.appconfig
 node_modules
 drawings/*.json
 .c9revisions
