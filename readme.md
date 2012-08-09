@@ -36,6 +36,7 @@
 - quick access to the url to share (copy to clipboard?)
 - quickdraw.io? quickdr.aw?
 - some support for browsers with no svg/vml capabilities
+- set appropriate cache/expiry headers, particularly for qd.js
 
 # Coverage
 

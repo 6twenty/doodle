@@ -567,14 +567,14 @@ qd.init = function() {
   }
 
   // =========
-  // DOM READY
+  // DOM setup
   // =========
 
   $(function() {
 
-    // ===
-    // DOM
-    // ===
+    // ==============
+    // DOM references
+    // ==============
 
     qd.$body   = $('body');
     qd.$window = $('#window');
@@ -612,27 +612,39 @@ qd.init = function() {
       'stroke-width' : 1
     });
 
-    // draw a visual UI element representing the pen
+    // ================
+    // UI elements: pen
+    // ================
+
     var radius = qd.options.pen.size[1] / 2,
         center = { x: radius + 10, y: radius + 10 };
 
+    // the outer circle
     qd.ui.circle(center.x, center.y, radius).attr({
       'fill'    : '#eee',
       'stroke'  : 'none',
       'opacity' : 0.75
     });
 
+    // the inner circle
     qd.pen.ui = qd.ui.circle(center.x, center.y, qd.pen._size / 2).attr({
       'fill'    : qd.pen._color,
       'stroke'  : 'none',
       'opacity' : qd.pen._opacity
     });
 
+    // an overlay to demonstrate opacity
     qd.pen.uiOverlay = qd.ui.circle(center.x, center.y, radius).attr({
       'fill'    : 'white',
       'stroke'  : 'none',
       'opacity' : 0
     });
+
+    // =================
+    // UI elements: undo
+    // =================
+
+    // ...
 
     // =======
     // Initial
@@ -699,8 +711,10 @@ qd.init = function() {
       }
     }).on('keyup', function(e) {
       if (e.which == 16) {
+        // force current draw/drag to end
+        qd.events[qd._mode].stop({ x: 0, y: 0 });
         qd.mode(_modeCache);
-        delete qd._shift;
+        qd._shift = false;
       }
     });
 
