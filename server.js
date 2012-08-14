@@ -4,10 +4,10 @@
 
 // todo:
 // - more comments
-// - use redis session store for express
+// - use redis session store for express?
 // - zooming
 // - abstract the method for getting a drawing's
-//   json file into a shared helper
+//   json file into a shared helper?
 
 // ==============
 // Initialization
