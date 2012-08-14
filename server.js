@@ -18,15 +18,16 @@ var express = require('express'),
     path    = require('path'),
     fs      = require('fs'),
     _       = require('underscore'),
-    app     = express();
+    app     = express(),
+    drawDir = __dirname + '/drawings/';
 
 // delete any empty drawings to minimise the number of json files
-fs.readdir('./drawings/', function(err, files) {
+fs.readdir(drawDir, function(err, files) {
   _.each(files, function(file) {
     if ((/\.json$/).test(file)) {
-      fs.readFile('./drawings/' + file, 'utf-8', function(err, json) {
+      fs.readFile(drawDir + file, 'utf-8', function(err, json) {
         if (!err && !JSON.parse(json).paths.length) {
-          fs.unlink('./drawings/' + file);
+          fs.unlink(drawDir + file);
         }
       });
     }
@@ -75,14 +76,14 @@ app.get('/', function(req, res) {
   var ids = [], id, code;
 
   // ensure the drawings directory exists
-  if (!fs.existsSync('./drawings/')) {
-    fs.mkdirSync('./drawings');
+  if (!fs.existsSync(drawDir)) {
+    fs.mkdirSync(drawDir);
   }
 
   // in order to proceed, we'll need a list of all
   // currently stored drawing ids, which we can obtain
   // by reading the file names in the drawings directory
-  fs.readdir('./drawings/', function(err, files) {
+  fs.readdir(drawDir, function(err, files) {
     if (err) { console.log('Error reading drawings directory', err); };
 
     // get all drawing ids
@@ -123,9 +124,9 @@ app.get('/', function(req, res) {
     });
 
     // create a json file for this drawing
-    var jsonTemplate = JSON.stringify({ code: code, paths: [] });
-    fs.writeFile('./drawings/' + id + '.json', jsonTemplate, function(err) {
-      if (err) { console.log('Error generating JSON file', err); res.send(500); };
+    var jsonTemplate = '{ "code": ' + code + ', "paths": [] }';
+    fs.writeFile(drawDir + id + '.json', jsonTemplate, function(err) {
+      if (err) { console.log('Error generating JSON file', err); return res.send(500); };
 
       // at last: redirect to the drawing
       res.redirect(307, '/' + id);
@@ -139,7 +140,7 @@ app.get(/^\/([a-zA-Z1-9]{7})$/, function(req, res) {
   var id = req.params[0];
   console.log('GET /' + id);
 
-  var filePath = './drawings/' + id + '.json';
+  var filePath = drawDir + id + '.json';
 
   // bounce if the drawing file doesn't exist;
   // otherwise, render the view
@@ -159,7 +160,7 @@ app.patch(/^\/([a-zA-Z1-9]{7})$/, function(req, res) {
   var id = req.params[0];
   console.log('PATCH /' + id);
 
-  var filePath = './drawings/' + id + '.json';
+  var filePath = drawDir + id + '.json';
 
   // return 404 if the drawing file doesn't exist;
   // otherwise proceed to authenticate and process the request
