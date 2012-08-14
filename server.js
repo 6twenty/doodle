@@ -124,7 +124,7 @@ app.get('/', function(req, res) {
     });
 
     // create a json file for this drawing
-    var jsonTemplate = '{ "code": ' + code + ', "paths": [] }';
+    var jsonTemplate = '{ "code": "' + code + '", "paths": [] }';
     fs.writeFile(drawDir + id + '.json', jsonTemplate, function(err) {
       if (err) { console.log('Error generating JSON file', err); return res.send(500); };
 
