@@ -198,6 +198,7 @@ qd.init = function() {
   }
 
   // private(ish), zooms to the given zoom level
+  // by scaling the canvas and all paths
   qd._zoomTo = function(zoom) {
     // scale the canvas
     qd.canvas.setSize(qd._size, qd._size);
@@ -210,11 +211,12 @@ qd.init = function() {
       'height' : qd._size - (qd._margin * 2)
     });
 
-    // reposition the paths
-    qd.paths.transform('T' + ((qd._size - qd._previousSize) / 2) + ',' + ((qd._size - qd._previousSize) / 2) + 's' + [ zoom, zoom, (qd._previousSize / 2), (qd._previousSize / 2) ].join(','));
-
-    // adjust the path strokes
+    // reposition the paths and adjust their stoke
     _.each(qd.paths, function(path) {
+      // position
+      path.transform('T' + ((qd._size - qd._previousSize) / 2) + ',' + ((qd._size - qd._previousSize) / 2) + 's' + [ zoom, zoom, (qd._previousSize / 2), (qd._previousSize / 2) ].join(','));
+
+      // stroke
       if (!path._originalStrokeWidth) {
         path._originalStrokeWidth = +path.attr('stroke-width');
       }
@@ -225,6 +227,7 @@ qd.init = function() {
     });
 
     // adjust
+    // TODO: is this necessary?
     qd.reflow();
   }
 
@@ -546,7 +549,8 @@ qd.init = function() {
   // Dimensions
   // ==========
 
-  qd.reflow = function() {
+  // TODO: document this function
+  qd.reflow = function(center) {
 
     // recalculate the current window size
     var w = $win.width(),
@@ -562,7 +566,7 @@ qd.init = function() {
     qd.$window.width(w).height(h);
 
     // center the viewport
-    qd.$canvas.css({ left: -qd.offset.x, top: -qd.offset.y });
+    if (center) { qd.$canvas.css({ left: -qd.offset.x, top: -qd.offset.y }); }
 
   }
 
@@ -581,7 +585,7 @@ qd.init = function() {
     qd.$canvas = $('#canvas');
 
     // set up the correct dimensions
-    qd.reflow();
+    qd.reflow(true);
 
     // set the correct cursor
     qd.mode(qd._mode);
@@ -678,6 +682,12 @@ qd.init = function() {
       qd.pen.color('black');
       qd.pen.eraserSize(10);
     });
+
+    // =====
+    // Shake
+    // =====
+
+    $win.on('shake', qd.undo);
 
     // ======
     // jQuery
