@@ -4,8 +4,6 @@
 
 // todo:
 // - more comments
-// - use redis session store for express?
-// - zooming
 // - abstract the method for getting a drawing's
 //   json file into a shared helper?
 
@@ -13,11 +11,11 @@
 // Initialization
 // ==============
 
-var express = require('express'),
+var _       = require('underscore'),
+    express = require('express'),
     rs      = require('randomstring'),
     path    = require('path'),
     fs      = require('fs'),
-    _       = require('underscore'),
     app     = express(),
     drawDir = __dirname + '/drawings/';
 
@@ -44,7 +42,7 @@ app.configure(function() {
   app.engine('html', function(path, options, fn) {
     fs.readFile(path, 'utf8', function(err, str) {
       if (err) { return fn(err); }
-      fn(null, str.replace('{{{ initial }}}', options.locals.initial));
+      fn(null, str.replace('{{{ initial }}}', options.locals.initial).replace('{{{ env }}}', app.settings.env));
     });
   });
   app.use(express.bodyParser());
@@ -203,5 +201,5 @@ app.patch(/^\/([a-zA-Z1-9]{7})$/, function(req, res) {
 // Listen
 // ======
 
-var port = process.env.app_port || process.env.NODE_PORT || process.env.PORT || 3000; app.listen(port);
+var port = process.env.app_port || process.env.NODE_PORT || process.env.PORT || 5000; app.listen(port);
 console.log("Express server listening on port %d in %s mode", port, app.settings.env);
