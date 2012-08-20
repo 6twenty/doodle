@@ -6,6 +6,15 @@
 // - more comments
 // - abstract the method for getting a drawing's
 //   json file into a shared helper?
+// - look into ways to prevent too many json files being created with no paths
+// - look into a way to set only one cookie, not two, on the index response
+
+// cookies:
+// - one public (val = 1) - front end allows editing
+// - one private (val = private id) - back end allows updates
+// - => one public (val = private id) - used for front & back end
+// - => if changed by owner, tough luck!
+// - => if another user tries to become owner, they'd need the private id, but won't have it!
 
 // ==============
 // Initialization
@@ -20,17 +29,15 @@ var _       = require('underscore'),
     drawDir = __dirname + '/drawings/';
 
 // delete any empty drawings to minimise the number of json files
-fs.readdir(drawDir, function(err, files) {
-  _.each(files, function(file) {
-    if ((/\.json$/).test(file)) {
-      fs.readFile(drawDir + file, 'utf-8', function(err, json) {
-        if (!err && !JSON.parse(json).paths.length) {
-          fs.unlink(drawDir + file);
-        }
-      });
-    }
-  });
-});
+// fs.readdir(drawDir, function(err, files) {
+//   _.each(files, function(file) {
+//     fs.readFile(drawDir + file, 'utf-8', function(err, json) {
+//       if (!err && !JSON.parse(json).paths.length) {
+//         fs.unlink(drawDir + file);
+//       }
+//     });
+//   });
+// });
 
 // =============  
 // Configuration
@@ -105,20 +112,11 @@ app.get('/', function(req, res) {
     id   = generateId();   // unique
     code = rs.generate(7); // random
 
-    // date 10 years from now (for cookies)
-    var in10yrs = new Date(Date.now() + (3600 * 1000 * 24 * 365 * 10));
-
-    // set a cookie marking the client as the drawing's owner (10-year expiry)
-    // this tells the front-end app to allow editing
-    res.cookie('qd_' + id, '1', {
-      expires: in10yrs
-    });
-
-    // set a cookie containing the passcode (also 10-year expiry)
+    // set a cookie containing the passcode (10-year expiry)
     // this tells the back-end app to allow updates
-    res.cookie('qd_' + id + '_code', code, {
-      expires: in10yrs,
-      httpOnly: true
+    var in10yrs = new Date(Date.now() + (3600 * 1000 * 24 * 365 * 10));
+    res.cookie('_qd_' + id, code, {
+      expires: in10yrs
     });
 
     // create a json file for this drawing
@@ -143,7 +141,7 @@ app.get(/^\/([a-zA-Z1-9]{7})$/, function(req, res) {
   // bounce if the drawing file doesn't exist;
   // otherwise, render the view
   if (!fs.existsSync(filePath)) {
-    res.redirect(307, '/');
+    res.send(404); // TODO: this should return an actual 404 page
   } else {
     fs.readFile(filePath, 'utf8', function(err, json) {
       if (err) { console.log('Error reading drawing file', err); return res.send(500); };
@@ -173,7 +171,7 @@ app.patch(/^\/([a-zA-Z1-9]{7})$/, function(req, res) {
       // compare the drawing code to the client's cookie
       // return 403 for mis-match
       var drawingCode = json.code,
-          clientCode  = req.cookies['qd_' + id + '_code'];
+          clientCode  = req.cookies['_qd_' + id];
 
       if (drawingCode != clientCode) {
         console.log('Code pair mis-match');
