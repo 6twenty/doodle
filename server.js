@@ -132,7 +132,7 @@ app.get('/', function(req, res) {
 
 // drawing path:
 // loads up an existing drawing or redirects to root
-app.get(/^\/([a-zA-Z1-9]{7})$/, function(req, res) {
+app.get(/^\/([a-zA-Z0-9]{7})$/, function(req, res) {
   var id = req.params[0];
   console.log('GET /' + id);
 
@@ -141,7 +141,8 @@ app.get(/^\/([a-zA-Z1-9]{7})$/, function(req, res) {
   // bounce if the drawing file doesn't exist;
   // otherwise, render the view
   if (!fs.existsSync(filePath)) {
-    res.send(404); // TODO: this should return an actual 404 page
+    console.log("Couldn't find drawing " + filepath);
+    res.send(404, { error: 'here' }); // TODO: this should return an actual 404 page
   } else {
     fs.readFile(filePath, 'utf8', function(err, json) {
       if (err) { console.log('Error reading drawing file', err); return res.send(500); };
@@ -152,7 +153,7 @@ app.get(/^\/([a-zA-Z1-9]{7})$/, function(req, res) {
 });
 
 // add or remove a new path
-app.patch(/^\/([a-zA-Z1-9]{7})$/, function(req, res) {
+app.patch(/^\/([a-zA-Z0-9]{7})$/, function(req, res) {
   var id = req.params[0];
   console.log('PATCH /' + id);
 
@@ -161,7 +162,7 @@ app.patch(/^\/([a-zA-Z1-9]{7})$/, function(req, res) {
   // return 404 if the drawing file doesn't exist;
   // otherwise proceed to authenticate and process the request
   if (!fs.existsSync(filePath)) {
-    console.log("Cannot patch drawing file that doesn't exist");
+    console.log("Cannot find drawing " + filePath);
     res.send(404);
   } else {
     fs.readFile(filePath, 'utf8', function(err, json) {
