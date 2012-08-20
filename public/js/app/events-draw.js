@@ -58,7 +58,7 @@
       qd.undos = [];
 
       // add this path to the collection
-      qd.paths.push(qd._path);
+      qd.paths.add(qd._path);
 
       // send the new path to the server
       qd.server.patch(qd._path);

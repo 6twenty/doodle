@@ -100,11 +100,11 @@ $(function() {
   // ================
 
   // handles resetting the viewport when the window size changes
-  $win.resize(_.throttle(function() {
-    qd.reflow();
-  }, 15));
+  // $win.resize(_.throttle(function() {
+  //   qd.reflow();
+  // }, 15));
 
   // handles resetting the viewport when the orientation is changed
-  $doc.on('orientationchange', qd.reflow);
+  // $doc.on('orientationchange', qd.reflow);
 
 });

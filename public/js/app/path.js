@@ -22,10 +22,12 @@
     path.moveTo = function(x, y) {
       // add a paper.Segment to the _segments array
       path._segments.push(new paper.Segment(x, y));
+
       // begin the SVG path string with an M command
       // and append an L command to begin the drawing
       path._string = 'M' + [x, y].join(',') + 'L' + [x, y].join(',');
       path._raphael = qd.canvas.path(path._string).attr(qd.path.attrs());
+      path._raphael.transform('T' + [ -qd.offset.x, -qd.offset.y ].join(','));
 
       return [x, y];
     }
@@ -34,6 +36,7 @@
     path.lineTo = function(x, y) {
       // add a paper.Segment to the _segments array
       path._segments.push(new paper.Segment(x, y));
+      
       // continue the SVG path command
       path._string += (' ' + [x, y].join(','));
       path._raphael.attr('path', path._string);
@@ -74,6 +77,7 @@
 
         // render the new smoothed path
         path._raphael = qd.canvas.path(newPath).attr(qd.path.attrs());
+        path._raphael.transform('T' + [ -qd.offset.x, -qd.offset.y ].join(','));
       }
     }
 

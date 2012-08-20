@@ -6,6 +6,40 @@
 
 ;(function() {
 
+  // Custom array: initialize (internal reference to a raphael set)
+  Array.prototype.initialize = function() {
+    var set = this.set = qd.canvas.set();
+    _.each(this, function(path) {
+      set.push(path._raphael);
+    });
+  }
+
+  // Custom array: scale
+  Array.prototype.scale = function(factor) {
+    if (!this.set) { this.initialize(); }
+    var set = this.set;
+    qd._transform.s = 'S' + [ factor, factor, qd.center.x, qd.center.y ].join(',');
+    set.transform(qd._transform.toString());
+    _.each(set, function(path) {
+      var n = +path.attr('stroke-width');
+      path.attr('stroke-width', n * factor);
+    });
+  }
+
+  // // Custom array: add (push)
+  Array.prototype.add = function(path) {
+    if (!this.set) { this.initialize(); }
+    this.set.push(path._raphael);
+    return Array.prototype.push.apply(this, arguments);
+  };
+
+  // Custom array: remove (pop)
+  Array.prototype.remove = function(path) {
+    if (!this.set) { this.initialize(); }
+    this.set.pop(path._raphael);
+    return Array.prototype.pop.apply(this, arguments);
+  };
+
   // expire the pen's attributes cache and update the UI pen
   qd.pen.update = function() {
     qd.path._attrsChanged = true;
@@ -39,11 +73,11 @@
   qd.undo = function() {
     if (!qd.paths.length) { return false; };
 
-    var path       = qd.paths.pop(),
+    var path       = qd.paths.remove(),
         serialized = qd.server.serializePath(path);
 
     path._raphael.remove();
-    qd.undos.push(serialized);
+    qd.undos.add(serialized);
     qd.server.patch(); // triggers _delete
   }
 
@@ -52,31 +86,11 @@
   qd.redo = function() {
     if (!qd.undos.length) { return false; };
 
-    var serialized = qd.undos.pop(),
+    var serialized = qd.undos.remove(),
         path       = qd.server.deserializePath(serialized);
 
-    qd.paths.push(path);
+    qd.paths.add(path);
     qd.server.patch(path);
-  }
-
-  // recalculate the current offset and (optionally)
-  // reposition the viewport in the center of the canvas
-  qd.reflow = function(center) {
-    // recalculate the current window size
-    var w = $win.width(),
-        h = $win.height();
-
-    // calculate the offset
-    qd.offset = {
-      x: (qd._size - w) / 2,
-      y: (qd._size - h) / 2
-    };
-
-    // set the #window element's size to match the main window
-    qd.$window.width(w).height(h);
-
-    // center the viewport
-    if (center) { qd.$canvas.css({ left: -qd.offset.x, top: -qd.offset.y }); }
   }
 
   // ================
