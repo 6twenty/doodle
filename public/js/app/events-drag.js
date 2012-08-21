@@ -27,9 +27,8 @@
       qd._coordsCache = coords;
 
       // position the canvas in the viewport
-      if (!qd.paths.set) { qd.paths.initialize(); }
       qd._transform.t = 'T' + [ offset.x, offset.y ].join(',');
-      qd.paths.set.transform(qd._transform.toString());
+      qd.paths.transform(qd._transform.toString());
     }
   }, 15);
 

@@ -70,6 +70,10 @@ $(function() {
   qd.canvas = Raphael('canvas', '100%', '100%');
   qd.ui     = Raphael('ui', '100%', '100%');
 
+  // Set up the collections
+  qd.paths = new qd.Collection();
+  qd.undos = new qd.Collection();
+
   // Drawing canvas: draw a visual "canvas"
   qd.canvas.rect(0, 0, '100%', '100%').attr({
     'fill'         : 'white',
@@ -84,23 +88,21 @@ $(function() {
   // Gets the initial drawing paths and renders them to the UI
   _.each(qd._initial, function(serialized) {
     var path = qd.server.deserializePath(serialized);
-    qd.paths.add(path);
+    qd.paths.push(path);
   });
 
   // Remove the initial paths cache from memory
   delete qd._initial;
 
   // Move to the center of the drawing
-  if (qd.paths.set) {
-    var bbox = qd.paths.set.getBBox();
+  if (qd.paths._array.length) {
+    var bbox = qd.paths.getBBox();
     qd.events.drag.start({ x: 0, y: 0 });
     qd.events.drag.move({
       x: -(bbox.x - qd.center.x) - (bbox.width / 2),
       y: -(bbox.y - qd.center.y) - (bbox.height / 2)
     });
     qd.events.drag.stop({ x: 0, y: 0 });
-  } else {
-    qd.paths.initialize();
   }
 
 });

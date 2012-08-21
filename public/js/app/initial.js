@@ -17,8 +17,4 @@
     qd.pen['_' + attr] = qd.defaults.pen[attr];
   });
 
-  // store collections of paths & undos
-  qd.paths = [];
-  qd.undos = [];
-
 })();

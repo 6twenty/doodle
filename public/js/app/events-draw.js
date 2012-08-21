@@ -55,10 +55,10 @@
       qd._path.simplify(qd.pen._mode == 'draw' ? (qd.pen._size * 2.5) : 1);
 
       // clear the redo log
-      qd.undos = [];
+      qd.undos = new qd.Collection();
 
       // add this path to the collection
-      qd.paths.add(qd._path);
+      qd.paths.push(qd._path);
 
       // send the new path to the server
       qd.server.patch(qd._path);
