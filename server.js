@@ -20,7 +20,7 @@
 // Initialization
 // ==============
 
-var _       = require('underscore'),
+var _       = require('lodash'),
     express = require('express'),
     rs      = require('randomstring'),
     path    = require('path'),
@@ -49,7 +49,7 @@ app.configure(function() {
   app.engine('html', function(path, options, fn) {
     fs.readFile(path, 'utf8', function(err, str) {
       if (err) { return fn(err); }
-      fn(null, str.replace('{{{ initial }}}', options.locals.initial).replace('{{{ env }}}', app.settings.env));
+      fn(null, str.replace('{{{ initial }}}', options.initial).replace('{{{ env }}}', app.settings.env));
     });
   });
   app.use(express.bodyParser());

@@ -27,13 +27,21 @@
   =============== -->
 
   <!--
-    `yepnope` handles fetching js resources
-    `spin` provides a loading indicator
+    `yepnope` (via CDN) handles fetching js resources
+    `spin` provides a loading indicator (merged with preinitialize in production)
     `preinitialize` begins the app's initialization
   -->
-  <script src="/js/libs/yepnope-1.5.4.min.js"></script>
-  <script src="/js/libs/spin-1.2.5.min.js"></script>
-  <script src="/js/app/preinitialize.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/yepnope/1.5.4/yepnope.min.js"></script>
+  <script>
+    window.yepnope || document.write('<script src="/js/libs/yepnope-1.5.4.min.js"><\/script>');
+
+    if (qd._env != 'production') {
+      document.write('<script src="/js/libs/spin-1.2.5.min.js"><\/script>');
+      document.write('<script src="/js/app/preinitialize.js"><\/script>');
+    } else {
+      document.write('<script src="/js/preinitialize.min.js"><\/script>');
+    }
+  </script>
 </head>
 
 <body class="crosshair">

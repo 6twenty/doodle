@@ -45,12 +45,8 @@
   var assets = [ '/js/app.min.js' ];
   if (qd._env != 'production') {
     assets = [
-      // libraries
-      '/js/libs/lodash-0.4.2.min.js',
-      '/js/libs/jquery-1.8.0.min.js',
-      '/js/libs/raphael-2.1.0.min.js',
-      '/js/libs/paper-0.22.custom.min.js',
-      // plugins/tools
+      // libs
+      '/js/libs/paper.custom.min.js',
       '/js/libs/jquery.cookie.min.js',
       '/js/libs/jquery.mousewheel.min.js',
       '/js/libs/keymaster.min.js',
@@ -62,6 +58,7 @@
       '/js/app/initial.js',
       '/js/app/getters-setters.js',
       '/js/app/utility.js',
+      '/js/app/collection.js',
       '/js/app/path.js',
       '/js/app/events-drag.js',
       '/js/app/events-draw.js',
@@ -76,17 +73,34 @@
     ]
   }
 
+  yepnope.errorTimeout = 4000;
+
   // Fetch the assets and declare callbacks
-  // `json3` is loaded if window.JSON is unavailable
-  // TODO: fetch jQuery from Google's CDN, or locally if that fails
-  yepnope({
+  // `json3` is loaded only if window.JSON is unavailable
+  // `json3`, `jquery`, `raphael`, and `lodash` are all pulled from CDN
+  // when possible (with local fallbacks)
+  // All other assets are minified and concatenated in production
+  yepnope([{
     test: window.JSON,
-    nope: '/js/libs/json3.min.js',
+    nope: {
+      json : '//cdnjs.cloudflare.com/ajax/libs/json3/3.2.3/json3.min.js'
+    },
+    load: {
+      jquery  : '//cdnjs.cloudflare.com/ajax/libs/jquery/1.8.0/jquery-1.8.0.min.js',
+      raphael : '//cdnjs.cloudflare.com/ajax/libs/raphael/2.1.0/raphael-min.js',
+      lodash  : '//cdnjs.cloudflare.com/ajax/libs/lodash.js/0.5.1/lodash.min.js'
+    },
+    callback: {
+      json    : function() { !window.JSON && yepnope('/js/libs/fallbacks/json-3.2.2.min.js'); },
+      jquery  : function() { !window.jQuery && yepnope('/js/libs/fallbacks/jquery-1.8.0.min.js'); },
+      raphael : function() { !window.Raphael && yepnope('/js/libs/fallbacks/raphael-2.1.0.min.js'); },
+      lodash  : function() { !window._ && yepnope('/js/libs/fallbacks/lodash-0.5.1.min.js'); },
+    }
+  }, {
     load: assets,
     complete: function() {
-      // hide the loading spinner once the app is fully initialized
       $(qd.loader.hide);
     }
-  });
+  }]);
 
 })();
