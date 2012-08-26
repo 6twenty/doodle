@@ -13,9 +13,9 @@
     return {
       string: path._raphael.attr('path') + '',
       pen: {
-        size: path._raphael.attr('stroke-width'),
-        color: path._raphael.attr('stroke'),
-        opacity: path._raphael.attr('opacity')
+        size: path._penSize,
+        color: path.attrs.stroke,
+        opacity: path.attrs.opacity
       }
     }
   }
@@ -25,13 +25,17 @@
   // note: this action also renders the path to the UI
   qd.server.deserializePath = function(object) {
     var path = new qd.Path();
-    path._raphael = qd.canvas.path(object.string).attr({
+    // assign attrs
+    path._penSize = object.pen.size;
+    path.attrs = {
       'stroke'          : object.pen.color,
       'opacity'         : object.pen.opacity,
       'stroke-width'    : object.pen.size,
       'stroke-linecap'  : 'round',
       'stroke-linejoin' : 'round'
-    });
+    }
+    // render
+    path._raphael = qd.canvas.path(object.string).attr(path.attrs);
     return path;
   }
 

@@ -51,11 +51,11 @@
       // extend the path drawing
       qd._path.lineTo(coords.x, coords.y);
 
-      // smooth the path
-      qd._path.simplify(qd.pen._mode == 'draw' ? (qd.pen._size * 2.5) : 1);
+      // smooth the path and account for current pan offset & zoom factor
+      qd._path.finalize(qd.pen._mode == 'draw' ? (qd.pen._size * 2.5) : 1);
 
       // clear the redo log
-      qd.undos = new qd.Collection();
+      qd.undos.clear();
 
       // add this path to the collection
       qd.paths.push(qd._path);

@@ -56,18 +56,19 @@
   });
 
   // zoom level (requires valid range)
-  // qd.zoom = function(newVal) {
-  //   var range = qd.options.zoom;
-  //   if (_.isFinite(newVal) && newVal >= range[0] && newVal <= range[1]) {
-  //     this._zoom          = +newVal.toFixed(2);
-  //     this._previousSize  = this._size;
-  //     this._size          = this._originalSize * this._zoom;
-  //     this._margin        = this._originalMargin * this._zoom;
-  //     this._zoomTo(this._zoom); // deferred, see section "UI & Drawing"
-  //     return this._zoom;
-  //   } else {
-  //     return this._zoom;
-  //   }
-  // }
+  qd.zoom = function(newVal) {
+    var range = qd.options.zoom;
+    if (_.isFinite(newVal) && newVal >= range[0] && newVal <= range[1]) {
+      this._zoom = +newVal.toFixed(2);
+      qd.path._attrsChanged = true;
+      this.paths._scale(this._zoom);
+      // adjust the offset
+      qd.offset.x = qd.offset.x * this._zoom;
+      qd.offset.y = qd.offset.y * this._zoom;
+      return this._zoom;
+    } else {
+      return this._zoom;
+    }
+  }
 
 })();

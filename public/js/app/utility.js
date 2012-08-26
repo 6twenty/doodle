@@ -23,7 +23,7 @@
       qd.path._attrsCache = {
         'stroke'          : qd.pen._mode == 'draw' ? qd.pen._color : 'white',
         'opacity'         : qd.pen._mode == 'draw' ? qd.pen._opacity : 1,
-        'stroke-width'    : qd.pen._mode == 'draw' ? qd.pen._size : qd.pen._eraserSize,
+        'stroke-width'    : (qd.pen._mode == 'draw' ? qd.pen._size : qd.pen._eraserSize) * qd._zoom,
         'stroke-linecap'  : 'round',
         'stroke-linejoin' : 'round'
       }
@@ -63,27 +63,29 @@
   // Normalize events
   // ================
 
+  // these functions were suitable to the previous method of panning; may not apply any more
+
   // return an object with x and y attributes of the event
-  qd.normalize.eventCoordinates = function(e) {
+  qd.normalize.coordinates = function(e) {
     return { x: e.pageX, y: e.pageY };
   }
 
   // return the corrdinates taking into account the
   // current canvas offet (for correct render location)
-  qd.normalize.coordinatesWithOffset = function(coords) {
-    return {
-      x: coords.x + qd.offset.x,
-      y: coords.y + qd.offset.y
-    }
-  }
+  // qd.normalize.coordinatesWithOffset = function(coords) {
+  //   return {
+  //     x: coords.x + qd.offset.x,
+  //     y: coords.y + qd.offset.y
+  //   }
+  // }
 
   // combines the above functions
-  qd.normalize.eventCoordinatesWithOffset = function(e) {
-    return qd.normalize.coordinatesWithOffset(qd.normalize.eventCoordinates(e));
-  }
+  // qd.normalize.eventCoordinatesWithOffset = function(e) {
+  //   return qd.normalize.coordinatesWithOffset(qd.normalize.eventCoordinates(e));
+  // }
 
   // as normalizeEventCoordinates(), but for touch events
-  qd.normalize.touchEventCoordinates = function(e, i) {
+  qd.normalize.touchCoordinates = function(e, i) {
     return {
       x: e.originalEvent.targetTouches[i || 0].pageX,
       y: e.originalEvent.targetTouches[i || 0].pageY
@@ -91,8 +93,8 @@
   }
 
   // as normalizeEventCoordinatesWithOffset(), but for touch events
-  qd.normalize.touchEventCoordinatesWithOffset = function(e, i) {
-    return qd.normalize.coordinatesWithOffset(qd.normalize.touchEventCoordinates(e, i));
-  }
+  // qd.normalize.touchEventCoordinatesWithOffset = function(e, i) {
+  //   return qd.normalize.coordinatesWithOffset(qd.normalize.touchEventCoordinates(e, i));
+  // }
 
 })();

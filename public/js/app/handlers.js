@@ -13,28 +13,13 @@ $(function() {
 
   qd.$window.on('mousedown', function(e) {
     e.preventDefault();
-
-    if (qd._mode == 'draw') {
-      qd.events.draw.start(qd.normalize.eventCoordinatesWithOffset(e));
-    } else {
-      qd.events.drag.start(qd.normalize.eventCoordinates(e));
-    }
+    qd.events[qd._mode].start(qd.normalize.coordinates(e));
   }).on('mousemove', function(e) {
     e.preventDefault();
-
-    if (qd._mode == 'draw') {
-      qd.events.draw.move(qd.normalize.eventCoordinatesWithOffset(e));
-    } else {
-      qd.events.drag.move(qd.normalize.eventCoordinates(e));
-    }
+    qd.events[qd._mode].move(qd.normalize.coordinates(e));
   }).on('mouseup mouseleave', function(e) {
     e.preventDefault();
-
-    if (qd._mode == 'draw') {
-      qd.events.draw.stop(qd.normalize.eventCoordinatesWithOffset(e));
-    } else {
-      qd.events.drag.stop(qd.normalize.eventCoordinates(e));
-    }
+    qd.events[qd._mode].stop(qd.normalize.coordinates(e));
   });
 
   // ===============
@@ -50,7 +35,7 @@ $(function() {
     // track only the original touch
     if (!qd._trackTouch || !qd._touchCache) {
       qd._trackTouch = e.originalEvent.targetTouches[0].identifier;
-      qd._touchCache = qd.normalize.touchEventCoordinates(e);
+      qd._touchCache = qd.normalize.touchCoordinates(e);
     }
 
     // assume the mode, but do nothing (yet)
@@ -71,19 +56,19 @@ $(function() {
     // whether we're drawing or dragging
     if (qd._touchMoves > 3 && e.originalEvent.targetTouches[0].identifier == qd._trackTouch) {
       if (qd._mode == 'draw') {
-        if (!qd._drawing) { qd.events.draw.start(qd.normalize.coordinatesWithOffset(qd._touchCache)); }
-        qd.events.draw.move(qd.normalize.touchEventCoordinatesWithOffset(e));
+        if (!qd._drawing) { qd.events.draw.start(qd.normalize.coordinates(qd._touchCache)); }
+        qd.events.draw.move(qd.normalize.touchCoordinates(e));
       } else {
         // currently, factor in the coordinates of the first touch only
         if (!qd._dragging) { qd.events.drag.start(qd._touchCache); }
-        qd.events.drag.move(qd.normalize.touchEventCoordinates(e));
+        qd.events.drag.move(qd.normalize.touchCoordinates(e));
       }
     }
   }).on('touchend', function(e) {
     e.preventDefault();
     if (qd._trackTouch) {
       if (qd._mode == 'draw') {
-        if (!qd._drawing) { qd.events.draw.start(qd.normalize.coordinatesWithOffset(qd._touchCache)); }
+        if (!qd._drawing) { qd.events.draw.start(qd.normalize.coordinates(qd._touchCache)); }
         qd.events.draw.stop({ x: 0, y: 0 });
       } else {
         qd.events.drag.stop({ x: 0, y: 0 });
@@ -100,11 +85,9 @@ $(function() {
   // ================
 
   // handles resetting the viewport when the window size changes
-  // $win.resize(_.throttle(function() {
-  //   qd.reflow();
-  // }, 15));
+  $win.resize(_.throttle(qd._center, 15));
 
   // handles resetting the viewport when the orientation is changed
-  // $doc.on('orientationchange', qd.reflow);
+  $doc.on('orientationchange', qd._center);
 
 });

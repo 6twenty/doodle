@@ -16,6 +16,14 @@
     // Internal cache of raphael paths in a raphael set
     collection._set = qd.canvas.set();
 
+    // Empty the arrays (resets the collection)
+    collection.clear = function() {
+      if (collection._array.length) {
+        collection._array = [];
+        collection._set.clear();
+      }
+    }
+
     // Custom "push" function
     collection.push = function(path) {
       // push the raphael object into the set
@@ -44,8 +52,8 @@
       qd._transform.s = 'S' + [ scale, scale, qd.center.x, qd.center.y ].join(',');
       collection.transform(qd._transform.toString());
       _.each(collection._array, function(path) {
-        if (!path._penSize) { path._penSize = +path._raphael.attr('stroke-width'); }
-        path._raphael.attr('stroke-width', path._penSize * scale);
+        // if (!path._penSize) { path._penSize = +path._raphael.attr('stroke-width'); }
+        path._raphael.attr('stroke-width', +path._penSize * scale);
       });
     }
 

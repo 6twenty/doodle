@@ -18,6 +18,20 @@
   // Hijack and block right-clicks
   $doc.on('contextmenu', function() { return false; });
 
+  // Function to get the height & width of the viewport
+  // and calculate the center coordinates
+  qd._center = function() {
+    // Get the current window size
+    var w = $win.width(),
+        h = $win.height();
+
+    // Get the center point
+    qd.center = {
+      x: w / 2,
+      y: h / 2
+    }
+  }
+
 })();
 
 $(function() {
@@ -37,16 +51,9 @@ $(function() {
 
   // Set the correct cursor by setting the mode
   qd.mode(qd._mode);
-  
-  // Calculate the current window size
-  var w = $win.width(),
-      h = $win.height();
 
-  // Get the center point
-  qd.center = {
-    x: w / 2,
-    y: h / 2
-  }
+  // Cache the coordinates at the center of the viewport
+  qd._center();
 
   // Track the pan offset
   qd.offset = {
