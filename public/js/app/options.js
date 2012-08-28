@@ -9,7 +9,7 @@
 
   // globals
   qd.options.mode = [ 'draw', 'drag' ];
-  qd.options.zoom = [ 0, 10 ];
+  qd.options.zoom = [ 0.1, 5 ];
 
   // pen
   qd.options.pen.mode       = [ 'draw', 'erase' ];

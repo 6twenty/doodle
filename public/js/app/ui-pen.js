@@ -7,15 +7,15 @@
 $(function() {
 
   var radius = qd.options.pen.size[1] / 2,
-      center = { x: radius + 13, y: radius + 13 };
+      center = { x: radius + 20, y: radius + 20 };
 
   // pattern fill for the outer ring
-  qd.ui.circle(center.x, center.y, radius).attr({
+  qd.ui.circle(center.x, center.y, radius + 3).attr({
     'fill' : 'url(/img/pattern.png)'
   });
 
   // shadow (a) for the outer ring
-  qd.ui.circle(center.x + 1, center.y + 1, radius).attr({
+  qd.ui.circle(center.x + 1, center.y + 1, radius + 3).attr({
     'fill'          : 'none',
     'stroke'        : '#000',
     'stroke-width'  : 6,
@@ -23,7 +23,7 @@ $(function() {
   });
 
   // shadow (b) for the outer ring
-  qd.ui.circle(center.x + 2, center.y + 2, radius).attr({
+  qd.ui.circle(center.x + 2, center.y + 2, radius + 3).attr({
     'fill'          : 'none',
     'stroke'        : '#000',
     'stroke-width'  : 6,
@@ -31,7 +31,7 @@ $(function() {
   });
 
   // the outer ring
-  qd.pen.uiRing = qd.ui.circle(center.x, center.y, radius).attr({
+  qd.pen.uiRing = qd.ui.circle(center.x, center.y, radius + 3).attr({
     'stroke'        : '#fff',
     'stroke-width'  : 6
   });

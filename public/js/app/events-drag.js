@@ -53,11 +53,7 @@
       // work out the final offset
       var origin   = qd.events.drag._origin,
           distance = { x: coords.x - origin.x, y: coords.y - origin.y },
-          offset   = { x: qd.offset.x - distance.x, y:qd.offset.y - distance.y };
-
-      // apply the zoom factor
-      offset.x = offset.x / qd._zoom;
-      offset.y = offset.y / qd._zoom;
+          offset   = { x: qd.offset.x - distance.x, y: qd.offset.y - distance.y };
 
       // store the current offset
       qd.offset = offset;

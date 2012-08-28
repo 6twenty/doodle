@@ -10,13 +10,16 @@
   // jQuery
   // ======
 
-  // swap modes temporarily while shift key held down
+  // swap modes temporarily while shift key held down,
+  // and track the state of the shift and alt keys
   var _modeCache;
   $doc.on('keydown', function(e) {
     if (e.which == 16) {
       qd._shift = true;
       _modeCache = qd._mode;
       qd.mode(_modeCache == 'draw' ? 'drag' : 'draw');
+    } else if (e.which == 18) {
+      qd._alt = true;
     }
   }).on('keyup', function(e) {
     if (e.which == 16) {
@@ -24,6 +27,8 @@
       qd.events[qd._mode].stop({ x: 0, y: 0 });
       qd.mode(_modeCache);
       qd._shift = false;
+    } else if (e.which == 18) {
+      qd._alt = false;
     }
   });
 
@@ -76,18 +81,27 @@
 
   // scroll with mousewheel to change pen size
   // hold shift as well to change opacity instead
-  var degrees = { opacity: 0.01, size: 1 };
+  var degrees = { opacity: 0.03, size: 1.3 };
   $win.on('mousewheel', _.throttle(function(e, delta) {
     var attr   = qd.pen._mode == 'erase' ? 'eraserSize' : 'size',
-        degree = degrees[qd._shift ? 'opacity' : 'size'],
+        degree = degrees[qd._shift ? 'size' : 'opacity'],
         neg    = delta < 0,
-        prop   = qd._shift ? 'opacity' : attr;
+        prop   = qd._shift ? attr : 'opacity';
+
+    if (!qd._shift && !qd._alt) {
+      degree = qd._zoom * 0.03;
+      if (degree < 0.01) { degree = 0.01; }
+    }
 
     // adjust direction
     if (neg) { degree = -degree; }
 
     // apply the change
-    qd.pen[prop](qd.pen['_' + prop] + degree);
-  }, 15));
+    if (qd._alt || qd._shift) {
+      qd.pen[prop](qd.pen['_' + prop] + degree);
+    } else {
+      qd.zoom(qd._zoom + degree);
+    }
+  }, 30));
 
 })();

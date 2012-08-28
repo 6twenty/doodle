@@ -25,6 +25,12 @@
     var w = $win.width(),
         h = $win.height();
 
+    // Cache
+    qd.window = {
+      width: w,
+      height: h
+    }
+
     // Get the center point
     qd.center = {
       x: w / 2,
@@ -38,7 +44,7 @@ $(function() {
 
   // Get the ownership of the drawing - the value of this
   // cookie should be a random 7-character string
-  // qd.owner = $.cookie('_qd_' + qd.id).length == 7;
+  // qd.owner = $.cookie('_qd_'); // ...
 
   // ===
   // DOM
@@ -101,15 +107,23 @@ $(function() {
   // Remove the initial paths cache from memory
   delete qd._initial;
 
-  // Move to the center of the drawing
+  // Move to the center of the drawing &
+  // scale the drawing to fill the viewport
   if (qd.paths._array.length) {
     var bbox = qd.paths.getBBox();
+
+    // move
     qd.events.drag.start({ x: 0, y: 0 });
     qd.events.drag.move({
       x: -(bbox.x - qd.center.x) - (bbox.width / 2),
       y: -(bbox.y - qd.center.y) - (bbox.height / 2)
     });
     qd.events.drag.stop({ x: 0, y: 0 });
+
+    // scale
+    var w = qd.window.width / (bbox.width + (qd.window.width * 0.1)),
+        h = qd.window.height / (bbox.height + (qd.window.height * 0.1));
+    qd.zoom(w > h ? h : w);
   }
 
 });

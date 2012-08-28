@@ -58,13 +58,17 @@
   // zoom level (requires valid range)
   qd.zoom = function(newVal) {
     var range = qd.options.zoom;
-    if (_.isFinite(newVal) && newVal >= range[0] && newVal <= range[1]) {
-      this._zoom = +newVal.toFixed(2);
+    if (_.isFinite(newVal)) {
+      var prevZoom = this._zoom;
+      newVal = +newVal.toFixed(2);
+      if (newVal < range[0]) { newVal = range[0]; }
+      if (newVal > range[1]) { newVal = range[1]; }
+      this._zoom = newVal;
       qd.path._attrsChanged = true;
       this.paths._scale(this._zoom);
       // adjust the offset
-      qd.offset.x = qd.offset.x * this._zoom;
-      qd.offset.y = qd.offset.y * this._zoom;
+      qd.offset.x = (qd.offset.x / prevZoom) * this._zoom;
+      qd.offset.y = (qd.offset.y / prevZoom) * this._zoom;
       return this._zoom;
     } else {
       return this._zoom;
