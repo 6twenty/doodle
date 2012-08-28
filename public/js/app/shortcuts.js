@@ -49,17 +49,17 @@
   // toggle the help window
   key('/, shift+/', function() {
     if (qd.help._open) {
-      qd.help.set.stop().animate({ transform: 'T0,-1000' }, 300);
+      qd.help.set.transform('T0,-1000');
       qd.help._open = false;
     } else {
-      qd.help.set.stop().animate({ transform: 'T0,0' }, 300);
+      qd.help.set.transform('T0,0');
       qd.help._open = true;
     }
   });
 
   // close the help window
   key('esc', function() {
-    qd.help.set.stop().animate({ transform: 'T0,-1000' }, 300);
+    qd.help.set.transform('T0,-1000');
     qd.help._open = false;
   });
 
