@@ -84,10 +84,10 @@ $(function() {
   // Handlers: window
   // ================
 
-  // handles resetting the viewport when the window size changes
+  // handles resetting the viewport center when the window size changes
   $win.resize(_.throttle(qd._center, 15));
 
-  // handles resetting the viewport when the orientation is changed
+  // handles resetting the viewport center when the orientation is changed
   $doc.on('orientationchange', qd._center);
 
 });

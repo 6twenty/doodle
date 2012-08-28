@@ -1,21 +1,3 @@
-// =====
-// Notes
-// =====
-
-// todo:
-// - more comments
-// - abstract the method for getting a drawing's
-//   json file into a shared helper?
-// - look into ways to prevent too many json files being created with no paths
-// - look into a way to set only one cookie, not two, on the index response
-
-// cookies:
-// - one public (val = 1) - front end allows editing
-// - one private (val = private id) - back end allows updates
-// - => one public (val = private id) - used for front & back end
-// - => if changed by owner, tough luck!
-// - => if another user tries to become owner, they'd need the private id, but won't have it!
-
 // ==============
 // Initialization
 // ==============
@@ -28,17 +10,6 @@ var _       = require('lodash'),
     app     = express(),
     drawDir = __dirname + '/drawings/';
 
-// delete any empty drawings to minimise the number of json files
-// fs.readdir(drawDir, function(err, files) {
-//   _.each(files, function(file) {
-//     fs.readFile(drawDir + file, 'utf-8', function(err, json) {
-//       if (!err && !JSON.parse(json).paths.length) {
-//         fs.unlink(drawDir + file);
-//       }
-//     });
-//   });
-// });
-
 // =============  
 // Configuration
 // =============
@@ -49,14 +20,15 @@ app.configure(function() {
   app.engine('html', function(path, options, fn) {
     fs.readFile(path, 'utf8', function(err, str) {
       if (err) { return fn(err); }
-      fn(null, str.replace('{{{ initial }}}', options.initial).replace('{{{ env }}}', app.settings.env));
+      str = str.replace('{{{ env }}}', app.settings.env);
+      str = str.replace('{{{ initial }}}', options.initial);
+      fn(null, str);
     });
   });
   app.use(express.bodyParser());
-  app.use(express.cookieParser('magneto'));
-  app.use(express.session());
+  app.use(express.cookieParser());
   app.use(express.methodOverride());
-  app.use(express.static(__dirname + '/public'));
+  app.use(express.static(__dirname + '/public')); // todo: remove this and have nginx serve the static content
   app.use(express.logger());
   app.use(app.router);
 });
@@ -70,6 +42,29 @@ app.configure('production', function() {
 });
 
 // =======
+// Helpers
+// =======
+
+// parse cookie data (returns an object)
+function parseCookie(string) {
+  var obj = {}, pairs = (string || '').split('|');
+  _.each(pairs, function(pair) {
+    var split = pair.split(':');
+    obj[split[0]] = split[1];
+  });
+  return obj;
+}
+
+// serialize cookie data (returns a string)
+function serializeCookie(object) {
+  var arr = [];
+  _.forOwn(object, function(val, key) {
+    arr.push([ key, val ].join(':')); 
+  });
+  return arr.join('|');
+}
+
+// =======
 // Routing
 // =======
 
@@ -78,7 +73,7 @@ app.configure('production', function() {
 app.get('/', function(req, res) {
   console.log('GET /');
 
-  var ids = [], id, code;
+  var ids = [], id, code, codePair = {};
 
   // ensure the drawings directory exists
   if (!fs.existsSync(drawDir)) {
@@ -88,45 +83,46 @@ app.get('/', function(req, res) {
   // in order to proceed, we'll need a list of all
   // currently stored drawing ids, which we can obtain
   // by reading the file names in the drawings directory
-  fs.readdir(drawDir, function(err, files) {
-    if (err) { console.log('Error reading drawings directory', err); };
+  var files = fs.readdirSync(drawDir);
 
-    // get all drawing ids
-    _.each(files, function(file) {
-      // ignore non-json files
-      (/\.json$/).test(file) && ids.push(file.replace('.json', ''));
-    });
+  // get all drawing ids
+  _.each(files, function(file) {
+    // ignore non-json files
+    (/\.json$/).test(file) && ids.push(file.replace('.json', ''));
+  });
 
-    // creates a new unique id
-    function generateId() {
-      id = rs.generate(7).toLowerCase();
-      // ensure it's unique
-      if (_.include(ids, id)) {
-        return generateId();
-      } else {
-        return id;
-      }
+  // creates a new unique id
+  function generateId() {
+    id = rs.generate(7).toLowerCase();
+    // ensure it's unique
+    if (_.include(ids, id)) {
+      return generateId();
+    } else {
+      return id;
     }
+  }
 
-    // set an id and code for this drawing
-    id   = generateId();   // unique
-    code = rs.generate(7); // random
+  // set an id and code for this drawing
+  id   = generateId();   // unique
+  code = rs.generate(7); // random
+  codePair[id] = code;
 
-    // set a cookie containing the passcode (10-year expiry)
-    // this tells the back-end app to allow updates
-    var in10yrs = new Date(Date.now() + (3600 * 1000 * 24 * 365 * 10));
-    res.cookie('_qd_' + id, code, {
-      expires: in10yrs
+  // build the cookie data
+  var _qd_ = parseCookie(req.cookies._qd_);
+  _.extend(_qd_, codePair);
+
+  // create a json file for this drawing
+  var jsonTemplate = '{ "code": "' + code + '", "paths": [] }';
+  fs.writeFile(drawDir + id + '.json', jsonTemplate, function(err) {
+    if (err) { console.log('Error generating JSON file', err); return res.send(500); };
+
+    // set the cookie
+    res.cookie('_qd_', serializeCookie(_qd_), {
+      expires: new Date(Date.now() + (3600 * 1000 * 24 * 365 * 10))
     });
 
-    // create a json file for this drawing
-    var jsonTemplate = '{ "code": "' + code + '", "paths": [] }';
-    fs.writeFile(drawDir + id + '.json', jsonTemplate, function(err) {
-      if (err) { console.log('Error generating JSON file', err); return res.send(500); };
-
-      // at last: redirect to the drawing
-      res.redirect(307, '/' + id);
-    });
+    // at last: redirect to the drawing
+    res.redirect(307, '/' + id);
   });
 });
 
@@ -142,7 +138,7 @@ app.get(/^\/([a-zA-Z0-9]{7})$/, function(req, res) {
   // otherwise, render the view
   if (!fs.existsSync(filePath)) {
     console.log("Couldn't find drawing " + filepath);
-    res.send(404, { error: 'here' }); // TODO: this should return an actual 404 page
+    res.send(404); // TODO: this should return an actual 404 page
   } else {
     fs.readFile(filePath, 'utf8', function(err, json) {
       if (err) { console.log('Error reading drawing file', err); return res.send(500); };
@@ -172,7 +168,7 @@ app.patch(/^\/([a-zA-Z0-9]{7})$/, function(req, res) {
       // compare the drawing code to the client's cookie
       // return 403 for mis-match
       var drawingCode = json.code,
-          clientCode  = req.cookies['_qd_' + id];
+          clientCode  = parseCookie(req.cookies._qd_)[id];
 
       if (drawingCode != clientCode) {
         console.log('Code pair mis-match');
