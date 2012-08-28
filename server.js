@@ -47,9 +47,9 @@ app.configure('production', function() {
 
 // parse cookie data (returns an object)
 function parseCookie(string) {
-  var obj = {}, pairs = (string || '').split('|');
+  var obj = {}, pairs = string ? string.split('_') : [];
   _.each(pairs, function(pair) {
-    var split = pair.split(':');
+    var split = pair.split('-');
     obj[split[0]] = split[1];
   });
   return obj;
@@ -59,9 +59,9 @@ function parseCookie(string) {
 function serializeCookie(object) {
   var arr = [];
   _.forOwn(object, function(val, key) {
-    arr.push([ key, val ].join(':')); 
+    arr.push([ key, val ].join('-')); 
   });
-  return arr.join('|');
+  return arr.join('_');
 }
 
 // =======
