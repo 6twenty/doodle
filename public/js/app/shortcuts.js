@@ -94,7 +94,7 @@
     }
 
     // adjust direction
-    if (neg) { degree = -degree; }
+    if (!neg) { degree = -degree; }
 
     // apply the change
     if (qd._alt || qd._shift) {
