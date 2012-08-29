@@ -1,7 +1,7 @@
 var buildify = require('buildify');
 
 // the preinitialize script
-buildify()
+buildify(__dirname, { quiet: true })
   .changeDir('public/js/')
   .load('app/preinitialize.js')
   .uglify()
@@ -12,7 +12,7 @@ buildify()
   .save('preinitialize.min.js');
 
 // the core app files, minus assets loaded from CDN
-buildify().changeDir('public/js/').concat([
+buildify(__dirname, { quiet: true }).changeDir('public/js/').concat([
   'app/namespaces.js',
   'app/options.js',
   'app/defaults.js',
