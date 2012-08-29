@@ -53,7 +53,10 @@
       type     : 'POST',
       url      : '/' + qd.id,
       data     : data,
-      dataType : 'json'
+      dataType : 'json',
+      complete : function() {
+        qd.loader.hide();
+      }
     });
   }
 

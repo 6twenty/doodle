@@ -42,6 +42,9 @@
       // stop drawing
       qd._drawing = false;
 
+      // show the spinner
+      qd.loader.show();
+
       // touchend events return 0, 0 so use the previous touchmove coordinates
       if (!coords.x && !coords.y) {
         coords = qd._coordsCache;

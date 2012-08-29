@@ -15,13 +15,13 @@
   qd.loader = {
     // Initialize
     _spinner: new Spinner({
-      lines     : 10,     // The number of lines to draw
-      length    : 10,     // The length of each line
-      width     : 15,     // The line thickness
-      radius    : 25,     // The radius of the inner circle
-      color     : '#aaa', // #rgb or #rrggbb
-      speed     : 1,      // Rounds per second
-      trail     : 60,     // Afterglow percentage
+      lines  : 10,     // The number of lines to draw
+      length : 10,     // The length of each line
+      width  : 15,     // The line thickness
+      radius : 25,     // The radius of the inner circle
+      color  : '#aaa', // #rgb or #rrggbb
+      speed  : 1,      // Rounds per second
+      trail  : 60,     // Afterglow percentage
     }),
 
     // Show
@@ -99,8 +99,28 @@
   }, {
     load: assets,
     complete: function() {
-      $(qd.loader.hide);
+      $(function() {
+        // hide the spinner
+        qd.loader.hide();
+        // change the spinner attributes
+        qd.loader._spinner = new Spinner({
+          lines  : 9,      // The number of lines to draw
+          length : 3,      // The length of each line
+          width  : 3,      // The line thickness
+          radius : 5,      // The radius of the inner circle
+          color  : '#aaa', // #rgb or #rrggbb
+          speed  : 1,      // Rounds per second
+          trail  : 60,     // Afterglow percentage
+        });
+        // and re-position
+        $('#loading').css({
+          left       : 'auto',
+          bottom     : 'auto',
+          height     : '40px',
+          width      : '40px',
+          background : 'none'
+        });
+      });
     }
   }]);
-
 })();

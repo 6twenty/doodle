@@ -59,42 +59,20 @@
     qd.server.patch(path);
   }
 
-  // ================
-  // Normalize events
-  // ================
-
-  // these functions were suitable to the previous method of panning; may not apply any more
+  // =========
+  // Normalize
+  // =========
 
   // return an object with x and y attributes of the event
   qd.normalize.coordinates = function(e) {
-    return { x: e.pageX, y: e.pageY };
+    if (_.isObject(e.originalEvent) && e.originalEvent.targetTouches) {
+      return {
+        x: e.originalEvent.targetTouches[0].pageX,
+        y: e.originalEvent.targetTouches[0].pageY
+      }
+    } else {
+      return { x: e.pageX, y: e.pageY };
+    }
   }
-
-  // return the corrdinates taking into account the
-  // current canvas offet (for correct render location)
-  // qd.normalize.coordinatesWithOffset = function(coords) {
-  //   return {
-  //     x: coords.x + qd.offset.x,
-  //     y: coords.y + qd.offset.y
-  //   }
-  // }
-
-  // combines the above functions
-  // qd.normalize.eventCoordinatesWithOffset = function(e) {
-  //   return qd.normalize.coordinatesWithOffset(qd.normalize.eventCoordinates(e));
-  // }
-
-  // as normalizeEventCoordinates(), but for touch events
-  qd.normalize.touchCoordinates = function(e, i) {
-    return {
-      x: e.originalEvent.targetTouches[i || 0].pageX,
-      y: e.originalEvent.targetTouches[i || 0].pageY
-    }      
-  }
-
-  // as normalizeEventCoordinatesWithOffset(), but for touch events
-  // qd.normalize.touchEventCoordinatesWithOffset = function(e, i) {
-  //   return qd.normalize.coordinatesWithOffset(qd.normalize.touchEventCoordinates(e, i));
-  // }
 
 })();
