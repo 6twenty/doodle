@@ -12,3 +12,4 @@ An experimental vector web-based drawing application.
 ### Todo
 
 - Most of the UI and controls
+- Pinch to zoom
