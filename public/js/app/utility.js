@@ -64,11 +64,20 @@
   // =========
 
   // return an object with x and y attributes of the event
-  qd.normalize.coordinates = function(e) {
+  qd.normalize.coordinates = function(e, multi) {
     if (_.isObject(e.originalEvent) && e.originalEvent.targetTouches) {
-      return {
-        x: e.originalEvent.targetTouches[0].pageX,
-        y: e.originalEvent.targetTouches[0].pageY
+      var touches = e.originalEvent.targetTouches;
+      var a = { x: touches[0].pageX, y: touches[0].pageY };
+      if (multi) {
+        var b = { x: touches[1].pageX, y: touches[1].pageY };
+        return {
+          x: a.x + ((b.x - a.x) / 2),
+          y: a.y + ((b.y - a.y) / 2),
+          a: a,
+          b: b
+        }
+      } else {
+        return a;
       }
     } else {
       return { x: e.pageX, y: e.pageY };
