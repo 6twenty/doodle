@@ -27,8 +27,10 @@
     '#d17060', // red    [pale]
     '#f49f14', // yellow [strong]
     '#fae014', // yellow [pale]
-    '#000000', // black
-    '#ffffff'  // white
+    '#000000', // black  [long]
+    '#000',    // black  [short]
+    '#ffffff', // white  [long]
+    '#fff'     // white  [short]
   ];
 
 })();

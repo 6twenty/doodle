@@ -13,7 +13,7 @@
 
   // pen
   qd.defaults.pen.mode       = 'draw';
-  qd.defaults.pen.color      = 'black';
+  qd.defaults.pen.color      = '#000';
   qd.defaults.pen.size       = 10;
   qd.defaults.pen.eraserSize = 10;
   qd.defaults.pen.opacity    = 1;

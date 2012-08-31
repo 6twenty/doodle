@@ -30,12 +30,13 @@
     path.attrs = {
       'stroke'          : object.pen.color,
       'opacity'         : object.pen.opacity,
-      'stroke-width'    : object.pen.size,
+      'stroke-width'    : object.pen.size * qd._zoom,
       'stroke-linecap'  : 'round',
       'stroke-linejoin' : 'round'
     }
     // render
     path._raphael = qd.canvas.path(object.string).attr(path.attrs);
+    path._raphael.transform(qd._transform.toString());
     return path;
   }
 

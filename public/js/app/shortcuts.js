@@ -47,26 +47,30 @@
   // revert to defaults
   key('d', function() {
     _.each([ 'color', 'size', 'eraserSize', 'opacity' ], function(attr) {
-      qd.pen['_' + attr] = qd.defaults.pen[attr];
+      qd.pen[attr](qd.defaults.pen[attr]);
     });
   });
 
+  // undo & redo
+  key('command+z, control+z', qd.undo);
+  key('command+shift+z, control+shift+z', qd.redo);
+
   // toggle the help window
-  key('/, shift+/', function() {
-    if (qd.help._open) {
-      qd.help.set.transform('T0,-1000');
-      qd.help._open = false;
-    } else {
-      qd.help.set.transform('T0,0');
-      qd.help._open = true;
-    }
-  });
+  // key('/, shift+/', function() {
+  //   if (qd.help._open) {
+  //     qd.help.set.transform('T0,-1000');
+  //     qd.help._open = false;
+  //   } else {
+  //     qd.help.set.transform('T0,0');
+  //     qd.help._open = true;
+  //   }
+  // });
 
   // close the help window
-  key('esc', function() {
-    qd.help.set.transform('T0,-1000');
-    qd.help._open = false;
-  });
+  // key('esc', function() {
+  //   qd.help.set.transform('T0,-1000');
+  //   qd.help._open = false;
+  // });
 
   // =====
   // Shake
