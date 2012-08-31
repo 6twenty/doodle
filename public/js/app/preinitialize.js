@@ -86,13 +86,13 @@
       json : '//cdnjs.cloudflare.com/ajax/libs/json3/3.2.3/json3.min.js'
     },
     load: {
-      jquery  : '//cdnjs.cloudflare.com/ajax/libs/jquery/1.8.0/jquery-1.8.0.min.js',
+      jquery  : '//cdnjs.cloudflare.com/ajax/libs/jquery/1.8.0/jquery-1.8.1.min.js',
       raphael : '//cdnjs.cloudflare.com/ajax/libs/raphael/2.1.0/raphael-min.js',
       lodash  : '//cdnjs.cloudflare.com/ajax/libs/lodash.js/0.5.1/lodash.min.js'
     },
     callback: {
       json    : function() { !window.JSON && yepnope('/js/libs/fallbacks/json-3.2.2.min.js'); },
-      jquery  : function() { !window.jQuery && yepnope('/js/libs/fallbacks/jquery-1.8.0.min.js'); },
+      jquery  : function() { !window.jQuery && yepnope('/js/libs/fallbacks/jquery-1.8.1.min.js'); },
       raphael : function() { !window.Raphael && yepnope('/js/libs/fallbacks/raphael-2.1.0.min.js'); },
       lodash  : function() { !window._ && yepnope('/js/libs/fallbacks/lodash-0.5.1.min.js'); },
     }
