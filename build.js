@@ -23,6 +23,7 @@ buildify(__dirname, { quiet: true }).changeDir('public/js/').concat([
   'app/path.js',
   'app/events-drag.js',
   'app/events-draw.js',
+  'app/events-zoom.js',
   'app/events-ui.js',
   'app/server.js',
   'app/page.js',
