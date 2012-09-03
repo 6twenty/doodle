@@ -87,24 +87,26 @@
   // hold shift as well to change opacity instead
   var degrees = { opacity: 0.03, size: 1.3 };
   $win.on('mousewheel', _.throttle(function(e, delta) {
-    var attr   = qd.pen._mode == 'erase' ? 'eraserSize' : 'size',
-        degree = degrees[qd._shift ? 'size' : 'opacity'],
-        neg    = delta < 0,
-        prop   = qd._shift ? attr : 'opacity';
+    if (!qd._drawing) {
+      var attr   = qd.pen._mode == 'erase' ? 'eraserSize' : 'size',
+          degree = degrees[qd._shift ? 'size' : 'opacity'],
+          neg    = delta < 0,
+          prop   = qd._shift ? attr : 'opacity';
 
-    if (!qd._shift && !qd._alt) {
-      degree = qd._zoom * 0.03;
-      if (degree < 0.01) { degree = 0.01; }
-    }
+      if (!qd._shift && !qd._alt) {
+        degree = qd._zoom * 0.03;
+        if (degree < 0.01) { degree = 0.01; }
+      }
 
-    // adjust direction
-    if (!neg) { degree = -degree; }
+      // adjust direction
+      if (!neg) { degree = -degree; }
 
-    // apply the change
-    if (qd._alt || qd._shift) {
-      qd.pen[prop](qd.pen['_' + prop] + degree);
-    } else {
-      qd.zoom(qd._zoom + degree);
+      // apply the change
+      if (qd._alt || qd._shift) {
+        qd.pen[prop](qd.pen['_' + prop] + degree);
+      } else {
+        qd.zoom(qd._zoom + degree);
+      }
     }
   }, 30));
 
