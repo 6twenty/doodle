@@ -26,6 +26,8 @@ $(function() {
   // Handlers: touch
   // ===============
 
+  // TODO: track all targetTouches (or changedTouches), not just the first touch
+
   qd.$window.on('touchstart', function(e) {
     e.preventDefault();
 
@@ -63,18 +65,13 @@ $(function() {
         // motion of each touch, and track the zoom factor by monitoring
         // the distance between each touch
         var coords = qd.normalize.coordinates(e, true);
-        // for panning
-        if (!qd._dragging) { qd.events.drag.start(coords); }
-        qd.events.drag.move(coords);
-        // for zooming
-        var distance = Math.sqrt(Math.pow((coords.b.x - coords.a.x), 2) + Math.pow((coords.a.y - coords.b.y), 2));
-        if (!qd._touchDistance) {
-          qd._touchDistance = distance;
-          qd._zoomCache = qd._zoom;
-        } else {
-          var factor = distance / qd._touchDistance;
-          qd.zoom(qd._zoomCache * factor);
+
+        if (!qd._dragging) {
+          qd.events.drag.start(coords);
         }
+
+        qd.events.drag.move(coords);
+        qd.events.zoom(coords);
       }
     }
   }).on('touchend', function(e) {

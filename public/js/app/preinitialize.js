@@ -62,6 +62,7 @@
       '/js/app/path.js',
       '/js/app/events-drag.js',
       '/js/app/events-draw.js',
+      '/js/app/events-zoom.js',
       '/js/app/events-ui.js',
       '/js/app/server.js',
       '/js/app/page.js',
