@@ -6,14 +6,37 @@
 
 ;(function() {
 
+  // prevent drawing or dragging initiating
+  qd.stopPropagation = function(el) {
+    $(el.node).on('mousedown touchstart', function(e) {
+      e.stopPropagation();
+    });
+  }
+
   // expire the pen's attributes cache and update the UI pen
-  qd.pen.update = function() {
+  qd.pen.update = function(attr) {
     qd.path._attrsChanged = true;
     qd.pen.uiPen.attr({
       'r'       : (qd.pen._mode == 'draw' ? qd.pen._size : qd.pen._eraserSize) / 2,
       'fill'    : qd.pen._mode == 'draw' ? qd.pen._color : 'white',
       'opacity' : qd.pen._mode == 'draw' ? qd.pen._opacity : 1
     });
+
+    if (attr == 'opacity') {
+      // update the length of the progress bar arc
+      qd.pen.progress.attr({
+        'opacity'        : (0.5 * qd.pen._opacity) + 0.5,
+        'stroke-linecap' : qd.pen._opacity == 1 ? 'square' : 'round',
+        'arc'            : [qd.ui._center.x, qd.ui._center.y, (qd.pen._opacity * 100), 100, qd.ui._radius + 3]
+      });
+
+      // update the position of the dot marker 
+      var end = qd.pen.progress.attr('path')[1].slice(6, 8);
+      qd.pen.progressDot.attr({
+        'cx' : end[0],
+        'cy' : end[1]
+      });
+    }
   }
 
   // path attributes are cached until changed

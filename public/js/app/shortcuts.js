@@ -87,7 +87,7 @@
   // hold shift as well to change opacity instead
   var degrees = { opacity: 0.03, size: 1.3 };
   $win.on('mousewheel', _.throttle(function(e, delta) {
-    if (!qd._drawing) {
+    if (!qd._drawing && !qd._sliding && !qd._sizing) {
       var attr   = qd.pen._mode == 'erase' ? 'eraserSize' : 'size',
           degree = degrees[qd._shift ? 'size' : 'opacity'],
           neg    = delta < 0,

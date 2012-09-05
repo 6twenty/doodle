@@ -87,7 +87,7 @@
       json : '//cdnjs.cloudflare.com/ajax/libs/json3/3.2.3/json3.min.js'
     },
     load: {
-      jquery  : '//cdnjs.cloudflare.com/ajax/libs/jquery/1.8.0/jquery-1.8.1.min.js',
+      jquery  : '//cdnjs.cloudflare.com/ajax/libs/jquery/1.8.0/jquery-1.8.0.min.js',
       raphael : '//cdnjs.cloudflare.com/ajax/libs/raphael/2.1.0/raphael-min.js',
       lodash  : '//cdnjs.cloudflare.com/ajax/libs/lodash.js/0.5.1/lodash.min.js'
     },

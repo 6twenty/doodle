@@ -47,7 +47,7 @@
       var range = qd.options.pen[key];
       if (_.isFinite(newVal) && newVal >= range[0] && newVal <= range[1]) {
         this['_' + key] = +newVal.toFixed(2); // round to 2 decimal places
-        qd.pen.update(); // update the UI
+        qd.pen.update(key); // update the UI
         return this['_' + key];
       } else {
         return this['_' + key];
