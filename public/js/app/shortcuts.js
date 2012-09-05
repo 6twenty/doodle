@@ -17,7 +17,7 @@
     if (e.which == 16) {
       qd._shift = true;
       _modeCache = qd._mode;
-      qd.mode(_modeCache == 'draw' ? 'drag' : 'draw');
+      qd.owner && qd.mode(_modeCache == 'draw' ? 'drag' : 'draw');
     } else if (e.which == 18) {
       qd._alt = true;
     }
@@ -25,7 +25,7 @@
     if (e.which == 16) {
       // force current draw/drag to end
       qd.events[qd._mode].stop({ x: 0, y: 0 });
-      qd.mode(_modeCache);
+      qd.owner && qd.mode(_modeCache);
       qd._shift = false;
     } else if (e.which == 18) {
       qd._alt = false;
@@ -37,23 +37,29 @@
   // =========
 
   // shortcut to change pen colour & opacity
-  _.each([ 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 ], function(num, i) {
-    // opacity: number keys
-    key('' + num, function() { qd.pen.opacity(num ? +('0.' + num) : 1); });
-    // colour: shift + number keys
-    key('shift+' + num, function() { qd.pen.color(qd.options.pen.color[i]); });
-  });
+  if (qd.owner) {
+    _.each([ 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 ], function(num, i) {
+      // opacity: number keys
+      key('' + num, function() { qd.pen.opacity(num ? +('0.' + num) : 1); });
+      // colour: shift + number keys
+      key('shift+' + num, function() { qd.pen.color(qd.options.pen.color[i]); });
+    });
+  }
 
   // revert to defaults
-  key('d', function() {
-    _.each([ 'color', 'size', 'eraserSize', 'opacity' ], function(attr) {
-      qd.pen[attr](qd.defaults.pen[attr]);
+  if (qd.owner) {
+    key('d', function() {
+      _.each([ 'color', 'size', 'eraserSize', 'opacity' ], function(attr) {
+        qd.pen[attr](qd.defaults.pen[attr]);
+      });
     });
-  });
+  }
 
   // undo & redo
-  key('command+z, control+z', qd.undo);
-  key('command+shift+z, control+shift+z', qd.redo);
+  if (qd.owner) {
+    key('command+z, control+z', qd.undo);
+    key('command+shift+z, control+shift+z', qd.redo);
+  }
 
   // toggle the help window
   // key('/, shift+/', function() {
@@ -77,7 +83,7 @@
   // =====
 
   // shake to undo
-  $win.on('shake', qd.undo);
+  qd.owner && $win.on('shake', qd.undo);
 
   // ==========
   // Mousewheel
@@ -103,7 +109,7 @@
 
       // apply the change
       if (qd._alt || qd._shift) {
-        qd.pen[prop](qd.pen['_' + prop] + degree);
+        qd.owner && qd.pen[prop](qd.pen['_' + prop] + degree);
       } else {
         qd.zoom(qd._zoom + degree);
       }

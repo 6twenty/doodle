@@ -7,7 +7,7 @@
 ;(function() {
 
   // globals
-  qd.defaults.mode = 'draw';
+  qd.defaults.mode = 'drag';
   qd.defaults.zoom = 1;
   qd.defaults.size = 3200;
 

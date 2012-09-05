@@ -9,7 +9,7 @@
 
   // app mode (drawing or panning)
   qd.mode = function(newVal) {
-    if (newVal && _.include(qd.options.mode, newVal)) {
+    if (qd.owner && newVal && _.include(qd.options.mode, newVal)) {
       this._mode = newVal;
       // apply an appropriate class to the <body>
       qd.$body.removeClass('crosshair move').addClass(this._mode == 'draw' ? 'crosshair' : 'move');
@@ -21,7 +21,7 @@
 
   // pen mode (drawing or erasing)
   qd.pen.mode = function(newVal) {
-    if (newVal && _.include(qd.options.pen.mode, newVal)) {
+    if (qd.owner && newVal && _.include(qd.options.pen.mode, newVal)) {
       this._mode = newVal;
       qd.pen.update(); // update the UI
       return this._mode;
@@ -32,7 +32,7 @@
 
   // pen color (accepts one of the preset css colours)
   qd.pen.color = function(newVal) {
-    if (newVal && _.include(qd.options.pen.color, newVal)) {
+    if (qd.owner && newVal && _.include(qd.options.pen.color, newVal)) {
       this._color = newVal;
       qd.pen.update(); // update the UI
       return this._color;
@@ -41,11 +41,11 @@
     }
   }
 
-  // pen/eraser size, & opacity (requires valid range)
+  // pen/eraser size (requires valid range)
   _.each([ 'size', 'eraserSize', 'opacity' ], function(key) {
     qd.pen[key] = function(newVal) {
       var range = qd.options.pen[key];
-      if (_.isFinite(newVal) && newVal >= range[0] && newVal <= range[1]) {
+      if (qd.owner && _.isFinite(newVal) && newVal >= range[0] && newVal <= range[1]) {
         this['_' + key] = +newVal.toFixed(2); // round to 2 decimal places
         qd.pen.update(key); // update the UI
         return this['_' + key];

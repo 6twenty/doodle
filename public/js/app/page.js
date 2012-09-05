@@ -42,9 +42,15 @@
 
 $(function() {
 
-  // Get the ownership of the drawing - the value of this
-  // cookie should be a random 7-character string
-  // qd.owner = $.cookie('_qd_'); // ...
+  // Find out if this user is the owner of the drawing
+  var cookie = $.cookie('_qd_'),
+      pairs  = cookie ? cookie.split('_') : [],
+      object = {};
+  _.each(pairs, function(pair) {
+    var split = pair.split('-');
+    object[split[0]] = split[1];
+  });
+  qd.owner = !!object[qd.id];
 
   // ===
   // DOM
@@ -56,6 +62,7 @@ $(function() {
   qd.$canvas = $('#canvas');
 
   // Set the correct cursor by setting the mode
+  if (qd.owner) { qd._mode = 'draw'; }
   qd.mode(qd._mode);
 
   // Cache the coordinates at the center of the viewport
