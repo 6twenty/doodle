@@ -91,11 +91,6 @@ helpers.setup = function(req, res, next, paths) {
   if (!paths) { paths = []; }
   var ids = [], id, code, codePair = {};
 
-  // ensure the drawings directory exists
-  if (!fs.existsSync(drawDir)) {
-    fs.mkdirSync(drawDir);
-  }
-
   // in order to proceed, we'll need a list of all
   // currently stored drawing ids, which we can obtain
   // by reading the file names in the drawings directory
