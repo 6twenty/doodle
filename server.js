@@ -45,8 +45,11 @@ app.configure('production', function() {
 // Helpers
 // =======
 
+var helpers = {};
+helpers.cookies = {};
+
 // parse cookie data (returns an object)
-function parseCookie(string) {
+helpers.cookies.parse = function(string) {
   var obj = {}, pairs = string ? string.split('_') : [];
   _.each(pairs, function(pair) {
     var split = pair.split('-');
@@ -56,7 +59,7 @@ function parseCookie(string) {
 }
 
 // serialize cookie data (returns a string)
-function serializeCookie(object) {
+helpers.cookies.serialize = function(object) {
   var arr = [];
   _.forOwn(object, function(val, key) {
     arr.push([ key, val ].join('-')); 
@@ -64,15 +67,28 @@ function serializeCookie(object) {
   return arr.join('_');
 }
 
-// =======
-// Routing
-// =======
+// generates a new random & unique code
+helpers.codeGenerator = function(existing) {
+  var id = rs.generate(7).toLowerCase();
+  // ensure it's unique
+  if (_.include(existing, id)) {
+    return helpers.codeGenerator();
+  } else {
+    return id;
+  }
+}
 
-// root path:
-// sets up and redirects to new drawings
-app.get('/', function(req, res) {
-  console.log('GET /');
+// pulls the drawing ID from params and builds
+// the path to the drawing's json file
+helpers.getInfo = function(req, res, next) {
+  var id = res.locals.id = req.params[0];
+  res.locals.filePath = drawDir + id + '.json';
+  next();
+}
 
+// sets up a new drawing
+helpers.setup = function(req, res, next, paths) {
+  if (!paths) { paths = []; }
   var ids = [], id, code, codePair = {};
 
   // ensure the drawings directory exists
@@ -85,111 +101,124 @@ app.get('/', function(req, res) {
   // by reading the file names in the drawings directory
   var files = fs.readdirSync(drawDir);
 
-  // get all drawing ids
+  // get a list of existing ids
   _.each(files, function(file) {
     // ignore non-json files
     (/\.json$/).test(file) && ids.push(file.replace('.json', ''));
   });
 
-  // creates a new unique id
-  function generateId() {
-    id = rs.generate(7).toLowerCase();
-    // ensure it's unique
-    if (_.include(ids, id)) {
-      return generateId();
-    } else {
-      return id;
-    }
-  }
-
   // set an id and code for this drawing
-  id   = generateId();   // unique
+  id   = helpers.codeGenerator(ids); // unique
   code = rs.generate(7); // random
   codePair[id] = code;
 
   // build the cookie data
-  var _qd_ = parseCookie(req.cookies._qd_);
+  var _qd_ = helpers.cookies.parse(req.cookies._qd_);
   _.extend(_qd_, codePair);
 
   // create a json file for this drawing
-  var jsonTemplate = '{ "code": "' + code + '", "paths": [] }';
+  var jsonTemplate = '{ "code": "' + code + '", "paths": ' + JSON.stringify(paths) + ' }';
   fs.writeFile(drawDir + id + '.json', jsonTemplate, function(err) {
-    if (err) { console.log('Error generating JSON file', err); return res.send(500); };
+    if (err) { console.log('Error generating JSON file', err); return next(500); };
 
     // set the cookie
-    res.cookie('_qd_', serializeCookie(_qd_), {
+    res.cookie('_qd_', helpers.cookies.serialize(_qd_), {
       expires: new Date(Date.now() + (3600 * 1000 * 24 * 365 * 10))
     });
 
-    // at last: redirect to the drawing
-    res.redirect(307, '/' + id);
+    // finish up
+    next(null, id);
+  });
+}
+
+// get an existing drawing
+helpers.retrieve = function(req, res, next) {
+  var id = req.params[0], filePath = drawDir + id + '.json';
+
+  // make sure the drawing file exists
+  if (!fs.existsSync(filePath)) {
+    console.log("Couldn't find drawing " + filepath);
+    next(404);
+  } else {
+    fs.readFile(filePath, 'utf8', function(err, json) {
+      if (err) { console.log('Error reading drawing file', err); return next(500); };
+      next(null, JSON.parse(json));
+    });
+  }
+}
+
+// =======
+// Routing
+// =======
+
+// sets up and redirects to new drawings
+app.get('/', function(req, res) {
+  console.log('GET /');
+
+  helpers.setup(req, res, function(err, id) {
+    if (err) {
+      res.send(err);
+    } else {
+      res.redirect(307, '/' + id);
+    }
+  })
+});
+
+// load up an existing drawing
+app.get(/^\/([a-zA-Z0-9]{7})$/, helpers.getInfo, function(req, res) {
+  console.log('GET /' + res.locals.id);
+
+  helpers.retrieve(req, res, function(err, json) {
+    if (err) { res.send(err); }
+    res.locals.initial = JSON.stringify(json.paths, null, 2).replace(/\n/g, "\n      ");
+    res.render('index');
   });
 });
 
-// drawing path:
-// loads up an existing drawing or redirects to root
-app.get(/^\/([a-zA-Z0-9]{7})$/, function(req, res) {
-  var id = req.params[0];
-  console.log('GET /' + id);
+// add or remove a new path
+app.patch(/^\/([a-zA-Z0-9]{7})$/, helpers.getInfo, function(req, res) {
+  console.log('PATCH /' + res.locals.id);
 
-  var filePath = drawDir + id + '.json';
+  helpers.retrieve(req, res, function(err, json) {
+    if (err) { res.send(err); }
 
-  // bounce if the drawing file doesn't exist;
-  // otherwise, render the view
-  if (!fs.existsSync(filePath)) {
-    console.log("Couldn't find drawing " + filepath);
-    res.send(404); // TODO: this should return an actual 404 page
-  } else {
-    fs.readFile(filePath, 'utf8', function(err, json) {
-      if (err) { console.log('Error reading drawing file', err); return res.send(500); };
-      res.locals.initial = JSON.stringify(JSON.parse(json).paths, null, 2).replace(/\n/g, "\n      ");
-      res.render('index');
-    });
-  }
+    // compare the drawing code to the client's cookie
+    // return 403 for mis-match
+    var drawingCode = json.code,
+        clientCode  = helpers.cookies.parse(req.cookies._qd_)[res.locals.id];
+
+    if (drawingCode != clientCode) {
+      console.log('Code pair mis-match');
+      res.send(403); // forbidden
+    } else {
+      // this route accepts path additions as well as
+      // deletions, which are identified by the _delete param
+      if (req.body._delete == '1') {
+        json.paths.pop();
+      } else {
+        json.paths.push(JSON.parse(req.body.path));
+      }
+
+      // write the changes back
+      fs.writeFile(res.locals.filePath, JSON.stringify(json), function(err) {
+        if (err) { console.log('Error saving JSON file', err); };
+        res.send(err ? 500 : 200);
+      });
+    }
+  });
 });
 
-// add or remove a new path
-app.patch(/^\/([a-zA-Z0-9]{7})$/, function(req, res) {
-  var id = req.params[0];
-  console.log('PATCH /' + id);
+// clone a drawing
+app.get(/^\/([a-zA-Z0-9]{7})\/clone$/, helpers.getInfo, function(req, res) {
+  console.log('GET /' + res.locals.id);
 
-  var filePath = drawDir + id + '.json';
+  helpers.retrieve(req, res, function(err, json) {
+    if (err) { res.send(err); }
 
-  // return 404 if the drawing file doesn't exist;
-  // otherwise proceed to authenticate and process the request
-  if (!fs.existsSync(filePath)) {
-    console.log("Cannot find drawing " + filePath);
-    res.send(404);
-  } else {
-    fs.readFile(filePath, 'utf8', function(err, json) {
-      if (err) { console.log('Error reading drawing file', err); return res.send(500); };
-      json = JSON.parse(json);
-
-      // compare the drawing code to the client's cookie
-      // return 403 for mis-match
-      var drawingCode = json.code,
-          clientCode  = parseCookie(req.cookies._qd_)[id];
-
-      if (drawingCode != clientCode) {
-        console.log('Code pair mis-match');
-        res.send(403); // forbidden
-      } else {
-        // this route accepts path additions as well as
-        // deletions, which are identified by the _delete param
-        if (req.body._delete == '1') {
-          json.paths.pop();
-        } else {
-          json.paths.push(JSON.parse(req.body.path));
-        }
-
-        // write the changes back
-        fs.writeFile(filePath, JSON.stringify(json), function(err) {
-          if (err) { console.log('Error saving JSON file', err); };
-          res.send(err ? 500 : 200);
-        });
-      }
-    });
-  }
+    helpers.setup(req, res, function(err, id) {
+      err ? res.send(err) : res.redirect(307, '/' + id);
+    }, json.paths);
+  });
 });
 
 // ======
