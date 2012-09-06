@@ -54,14 +54,7 @@ $(function() {
       'stroke-width'    : 6,
       'stroke-linecap'  : 'square',
       'opacity'         : 1,
-      'arc'             : [center.x, center.y, 100, 100, radius + 3]
-    });
-
-    // progress bar dot
-    qd.pen.progressDot = qd.ui.circle(center.x, center.y - radius - 3, 2).attr({
-      'fill'    : '#000',
-      'stroke'  : 'none',
-      'opacity' : 0.5
+      'arc'             : [center.x, center.y, 1000, 1000, radius + 3]
     });
 
     // invisible hit area: pen ui
@@ -70,18 +63,33 @@ $(function() {
       'opacity' : 0
     });
 
-    // block event propagation
-    qd.stopPropagation(qd.pen.uiArea);
-
-    // invisible hit area: ring
-    qd.pen.uiRing = qd.ui.circle(center.x, center.y, radius + 9).attr({
-      'stroke'        : '#fff',
-      'stroke-width'  : 18,
-      'opacity'       : 0
+    // progress bar dot
+    qd.pen.progressDot = qd.ui.circle(center.x, center.y - radius - 3, 2).attr({
+      'fill'    : '#fff',
+      'stroke'  : 'none',
+      'opacity' : 1
     });
 
-    // toggle cursor
-    qd.pen.uiRing.hover(function() {
+    // invisible hit area: progress handle
+    qd.pen.progressHandle = qd.ui.circle(center.x, center.y - radius - 3, 16).attr({
+      'fill'    : '#fff',
+      'stroke'  : 'none',
+      'opacity' : 0
+    });
+
+    // toggle cursor: pen size
+    qd.pen.uiArea.hover(function() {
+      if (!qd._drawing && !qd._dragging) {
+        qd.$body.css('cursor', 'default');
+      }
+    }, function() {
+      if (!qd._drawing && !qd._dragging) {
+        qd.$body.css('cursor', '');
+      }
+    });
+
+    // toggle cursor: handle
+    qd.pen.progressHandle.hover(function() {
       if (!qd._drawing && !qd._dragging) {
         qd.$body.css('cursor',  qd._sizing ? 'default' : 'pointer');
       }
@@ -92,18 +100,8 @@ $(function() {
     });
 
     // block event propagation
-    qd.stopPropagation(qd.pen.uiRing);
-
-    // toggle cursor
-    qd.pen.uiArea.hover(function() {
-      if (!qd._drawing && !qd._dragging) {
-        qd.$body.css('cursor', 'default');
-      }
-    }, function() {
-      if (!qd._drawing && !qd._dragging) {
-        qd.$body.css('cursor', '');
-      }
-    });
+    qd.stopPropagation(qd.pen.uiArea);
+    qd.stopPropagation(qd.pen.progressHandle);
 
   }
 });

@@ -20,7 +20,7 @@ $(function() {
 
   // ring slider
   if (qd.owner) {
-    qd.pen.uiRing.drag(_.throttle(function(dx, dy, x, y, e) {
+    qd.pen.progressHandle.drag(_.throttle(function(dx, dy, x, y, e) {
       // target point
       var p1 = { x: x, y: y };
 
@@ -36,12 +36,24 @@ $(function() {
       // calculate the angle and convert to degrees and a percentage value
       var angle   = 2 * Math.atan2(p1.y - p0.y, p1.x - p0.x),
           degrees = Math.round((angle * 180 / Math.PI) * 100) / 100,
-          percent = parseInt((degrees / 360) * 100),
-          opacity = percent / 100.0;
+          percent = parseFloat((degrees / 360.0) * 1000),
+          opacity = percent / 1000.0;
 
       if (Math.abs(opacity - qd.pen._opacity) < 0.1) {
         // update the opacity
         qd.pen.opacity(opacity);
+
+        // update the length of the progress bar arc
+        qd.pen.progress.attr({
+          'opacity'        : (opacity / 2) + 0.5,
+          'stroke-linecap' : qd.pen._opacity == 1 ? 'square' : 'round',
+          'arc'            : [ center.x, center.y, percent + 2, 1000, radius + 3 ]
+        });
+
+        // update the position of the dot marker
+        var rotation = 'R' + [ degrees, center.x, center.y ].join(',');
+        qd.pen.progressDot.transform(rotation);
+        qd.pen.progressHandle.transform(rotation);
       } else {
         // snap if close to the extremes
         if (opacity < 0.1 || opacity > 0.9) {
