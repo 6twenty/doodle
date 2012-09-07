@@ -44,6 +44,8 @@ app.configure('production', function() {
   app.use(express.errorHandler());
 });
 
+var dev = app.settings.env == 'development';
+
 // =======
 // Helpers
 // =======
@@ -90,7 +92,7 @@ var middleware = [];
 
 // set up the middleware cache
 middleware.push(function(req, res, next) {
-  console.log('[Middleware]: Setup: cache');
+  dev && console.log('[Middleware]: Setup: cache');
 
   var cache = {};
   cache.user = {};
@@ -101,7 +103,7 @@ middleware.push(function(req, res, next) {
 
 // extract the drawing ID, if present
 middleware.push(function(req, res, next) {
-  console.log('[Middleware]: Setup: drawing ID');
+  dev && console.log('[Middleware]: Setup: drawing ID');
   var cache = res.locals.cache;
 
   if (req.params.length) {
@@ -119,7 +121,7 @@ middleware.push(function(req, res, next) {
 
 // extract the user ID from the cookie, if available
 middleware.push(function(req, res, next) {
-  console.log('[Middleware]: Setup: user ID');
+  dev && console.log('[Middleware]: Setup: user ID');
   var cache = res.locals.cache;
 
   var cookie = req.cookies._qd_;
@@ -135,7 +137,7 @@ middleware.push(function(req, res, next) {
 
 // create a new user ID if need be
 middleware.push(function(req, res, next) {
-  console.log('[Middleware]: Setup: user ID');
+  dev && console.log('[Middleware]: Setup: user ID');
   var cache = res.locals.cache;
   if (cache.user.id) { return next(); }
 
@@ -170,7 +172,7 @@ middleware.push(function(req, res, next) {
 
 // create a new drawing ID if need be
 middleware.push(function(req, res, next) {
-  console.log('[Middleware]: Setup: drawing ID');
+  dev && console.log('[Middleware]: Setup: drawing ID');
   var cache = res.locals.cache;
   if (cache.drawing.id) { return next(); }
 
@@ -197,7 +199,7 @@ middleware.push(function(req, res, next) {
 
 // find out if the user & drawing files exist
 middleware.push(function(req, res, next) {
-  console.log('[Middleware]: Setup: existence');
+  dev && console.log('[Middleware]: Setup: existence');
   var cache = res.locals.cache;
 
   cache.user.exists = fs.existsSync(cache.user.path);
@@ -209,7 +211,7 @@ middleware.push(function(req, res, next) {
 
 // retrieve or set up the user data
 middleware.push(function(req, res, next) {
-  console.log('[Middleware]: Setup: user data');
+  dev && console.log('[Middleware]: Setup: user data');
   var cache = res.locals.cache;
 
   // if the user file exists, read it, otherwise just use template
@@ -240,7 +242,7 @@ middleware.push(function(req, res, next) {
 
 // retrieve or set up the drawing data
 middleware.push(function(req, res, next) {
-  console.log('[Middleware]: Setup: drawing data');
+  dev && console.log('[Middleware]: Setup: drawing data');
   var cache = res.locals.cache;
 
   // if the drawing file exists, read it, otherwise just use template
@@ -267,7 +269,7 @@ middleware.push(function(req, res, next) {
 
 // add this drawing to the user's collection, if need be
 middleware.push(function(req, res, next) {
-  console.log('[Middleware]: Setup: ownership');
+  dev && console.log('[Middleware]: Setup: ownership');
   var cache = res.locals.cache;
 
   if (cache.drawing.create && cache.drawing.exists) {
@@ -285,7 +287,7 @@ middleware.push(function(req, res, next) {
 
 // find out if this user is the owner of the drawing
 middleware.push(function(req, res, next) {
-  console.log('[Middleware]: Setup: ownership');
+  dev && console.log('[Middleware]: Setup: ownership');
   var cache = res.locals.cache;
 
   cache.user.owner = _.include(cache.user.data, cache.drawing.id);
@@ -304,7 +306,7 @@ middleware.push(function(req, res, next) {
 // quickdraw.io/
 // sets up and redirects to a new drawing
 app.get('/', middleware, function(req, res) {
-  console.log('[Route]: GET /');
+  dev && console.log('[Route]: GET /');
   var cache = res.locals.cache;
 
   res.redirect(307, '/' + cache.drawing.id)
@@ -313,7 +315,7 @@ app.get('/', middleware, function(req, res) {
 // quickdraw.io/:id
 // loads an existing drawing
 app.get(/^\/([a-zA-Z0-9]{7})$/, middleware, function(req, res) {
-  console.log('[Route]: GET /:id');
+  dev && console.log('[Route]: GET /:id');
   var cache = res.locals.cache;
 
   res.locals.initial = JSON.stringify(cache.drawing.data.paths);
@@ -324,7 +326,7 @@ app.get(/^\/([a-zA-Z0-9]{7})$/, middleware, function(req, res) {
 // quickdraw.io/:id
 // adds or removes a new path
 app.patch(/^\/([a-zA-Z0-9]{7})$/, middleware, function(req, res) {
-  console.log('[Route]: PATCH /:id');
+  dev && console.log('[Route]: PATCH /:id');
   var cache = res.locals.cache;
   res.send(200);
 });
@@ -332,7 +334,7 @@ app.patch(/^\/([a-zA-Z0-9]{7})$/, middleware, function(req, res) {
 // quickdraw.io/:id/clone
 // clones a drawing
 app.get(/^\/([a-zA-Z0-9]{7})\/clone$/, middleware, function(req, res) {
-  console.log('[Route]: GET /:id/clone');
+  dev && console.log('[Route]: GET /:id/clone');
   var cache = res.locals.cache;
   res.send(200);
 });
