@@ -17,7 +17,7 @@
     if (e.which == 16) {
       qd._shift = true;
       _modeCache = qd._mode;
-      qd.owner && qd.mode(_modeCache == 'draw' ? 'drag' : 'draw');
+      qd._owner && qd.mode(_modeCache == 'draw' ? 'drag' : 'draw');
     } else if (e.which == 18) {
       qd._alt = true;
     }
@@ -25,7 +25,7 @@
     if (e.which == 16) {
       // force current draw/drag to end
       qd.events[qd._mode].stop({ x: 0, y: 0 });
-      qd.owner && qd.mode(_modeCache);
+      qd._owner && qd.mode(_modeCache);
       qd._shift = false;
     } else if (e.which == 18) {
       qd._alt = false;
@@ -37,7 +37,7 @@
   // =========
 
   // shortcut to change pen colour & opacity
-  if (qd.owner) {
+  if (qd._owner) {
     _.each([ 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 ], function(num, i) {
       // opacity: number keys
       key('' + num, function() { qd.pen.opacity(num ? +('0.' + num) : 1); });
@@ -47,7 +47,7 @@
   }
 
   // revert to defaults
-  if (qd.owner) {
+  if (qd._owner) {
     key('d', function() {
       _.each([ 'color', 'size', 'eraserSize', 'opacity' ], function(attr) {
         qd.pen[attr](qd.defaults.pen[attr]);
@@ -56,7 +56,7 @@
   }
 
   // undo & redo
-  if (qd.owner) {
+  if (qd._owner) {
     key('command+z, control+z', qd.undo);
     key('command+shift+z, control+shift+z', qd.redo);
   }
@@ -83,7 +83,7 @@
   // =====
 
   // shake to undo
-  qd.owner && $win.on('shake', qd.undo);
+  qd._owner && $win.on('shake', qd.undo);
 
   // ==========
   // Mousewheel
@@ -109,7 +109,7 @@
 
       // apply the change
       if (qd._alt || qd._shift) {
-        qd.owner && qd.pen[prop](qd.pen['_' + prop] + degree);
+        qd._owner && qd.pen[prop](qd.pen['_' + prop] + degree);
       } else {
         qd.zoom(qd._zoom + degree);
       }

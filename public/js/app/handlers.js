@@ -11,7 +11,7 @@ $(function() {
   // Handlers: UI
   // ============
 
-  if (qd.owner) {
+  if (qd._owner) {
     var radius        = qd.ui._radius,
         center        = qd.ui._center,
         circumference = 2 * Math.PI * (radius + 3),
@@ -19,7 +19,7 @@ $(function() {
   }
 
   // ring slider
-  if (qd.owner) {
+  if (qd._owner) {
     qd.pen.progressHandle.drag(_.throttle(function(dx, dy, x, y, e) {
       // target point
       var p1 = { x: x, y: y };
@@ -68,7 +68,7 @@ $(function() {
   }
 
   // pen resizing
-  if (qd.owner) {
+  if (qd._owner) {
     qd.pen.uiArea.drag(_.throttle(function(dx, dy, x, y, e) {
       // work out the distances to the center point
       var distanceToCenter = {

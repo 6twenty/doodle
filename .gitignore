@@ -2,6 +2,7 @@
 .appconfig
 node_modules
 drawings/*.json
+users/*.json
 .c9revisions
 public/js/preinitialize.min.js
 public/js/app.min.js

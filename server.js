@@ -2,13 +2,15 @@
 // Initialization
 // ==============
 
-var _       = require('lodash'),
-    express = require('express'),
-    rs      = require('randomstring'),
-    path    = require('path'),
-    fs      = require('fs'),
-    app     = express(),
-    drawDir = __dirname + '/drawings/';
+var _          = require('lodash'),
+    express    = require('express'),
+    crypto     = require('crypto'),
+    rs         = require('randomstring'),
+    path       = require('path'),
+    fs         = require('fs'),
+    app        = express(),
+    drawingDir = __dirname + '/drawings/',
+    userDir    = __dirname + '/users/';
 
 // =============  
 // Configuration
@@ -22,6 +24,7 @@ app.configure(function() {
       if (err) { return fn(err); }
       str = str.replace('{{{ env }}}', app.settings.env);
       str = str.replace('{{{ initial }}}', options.initial);
+      str = str.replace('{{{ owner }}}', options.owner);
       fn(null, str);
     });
   });
@@ -46,174 +49,292 @@ app.configure('production', function() {
 // =======
 
 var helpers = {};
-helpers.cookies = {};
+helpers.templates = {};
 
-// parse cookie data (returns an object)
-helpers.cookies.parse = function(string) {
-  var obj = {}, pairs = string ? string.split('_') : [];
-  _.each(pairs, function(pair) {
-    var split = pair.split('-');
-    obj[split[0]] = split[1];
-  });
-  return obj;
+// encryption
+helpers.encrypt = function(text) {
+  var cipher = crypto.createCipher('aes-256-cbc', 'rvjdlesbx');
+  var crypted = cipher.update(text, 'utf8',' hex');
+  crypted += cipher.final('hex');
+  return crypted;
 }
 
-// serialize cookie data (returns a string)
-helpers.cookies.serialize = function(object) {
-  var arr = [];
-  _.forOwn(object, function(val, key) {
-    arr.push([ key, val ].join('-')); 
-  });
-  return arr.join('_');
+// decryption
+helpers.decrypt = function(text) {
+  var decipher = crypto.createDecipher('aes-256-cbc', 'rvjdlesbx');
+  var dec = decipher.update(text, 'hex', 'utf8');
+  dec += decipher.final('utf8');
+  return dec;
 }
 
-// generates a new random & unique code
+// generates a new random & optionally unique code
 helpers.codeGenerator = function(existing) {
   var id = rs.generate(7).toLowerCase();
-  // ensure it's unique
-  if (_.include(existing, id)) {
+  // ensure it's unique if need be
+  if (existing && _.include(existing, id)) {
     return helpers.codeGenerator();
   } else {
     return id;
   }
 }
 
-// pulls the drawing ID from params and builds
-// the path to the drawing's json file
-helpers.getInfo = function(req, res, next) {
-  var id = res.locals.id = req.params[0];
-  res.locals.filePath = drawDir + id + '.json';
+// new user/drawing templates
+helpers.templates.user = [];
+helpers.templates.drawing = { paths: [] };
+
+// ==========
+// Middleware
+// ==========
+
+var middleware = [];
+
+// set up the middleware cache
+middleware.push(function(req, res, next) {
+  console.log('[Middleware]: Setup: cache');
+
+  var cache = {};
+  cache.user = {};
+  cache.drawing = {};
+  res.locals.cache = cache;
   next();
-}
+});
 
-// sets up a new drawing
-helpers.setup = function(req, res, next, paths) {
-  if (!paths) { paths = []; }
-  var ids = [], id, code, codePair = {};
+// extract the drawing ID, if present
+middleware.push(function(req, res, next) {
+  console.log('[Middleware]: Setup: drawing ID');
+  var cache = res.locals.cache;
 
-  // in order to proceed, we'll need a list of all
-  // currently stored drawing ids, which we can obtain
-  // by reading the file names in the drawings directory
-  var files = fs.readdirSync(drawDir);
+  if (req.params.length) {
+    var id = req.params[0];
+    cache.drawing.id = id;
+    cache.drawing.path = drawingDir + id + '.json';
+    cache.drawing.create = false;
+  } else {
+    cache.drawing.create = true;
+  }
 
-  // get a list of existing ids
-  _.each(files, function(file) {
-    // ignore non-json files
-    (/\.json$/).test(file) && ids.push(file.replace('.json', ''));
-  });
+  res.locals.cache = cache;
+  next();
+});
 
-  // set an id and code for this drawing
-  id   = helpers.codeGenerator(ids); // unique
-  code = rs.generate(7); // random
-  codePair[id] = code;
+// extract the user ID from the cookie, if available
+middleware.push(function(req, res, next) {
+  console.log('[Middleware]: Setup: user ID');
+  var cache = res.locals.cache;
 
-  // build the cookie data
-  var _qd_ = helpers.cookies.parse(req.cookies._qd_);
-  _.extend(_qd_, codePair);
+  var cookie = req.cookies._qd_;
+  if (cookie) {
+    var id = helpers.decrypt(cookie);
+    cache.user.id = id;
+    cache.user.path = userDir + id + '.json';
+  }
 
-  // create a json file for this drawing
-  var jsonTemplate = '{ "code": "' + code + '", "paths": ' + JSON.stringify(paths) + ' }';
-  fs.writeFile(drawDir + id + '.json', jsonTemplate, function(err) {
-    if (err) { console.log('Error generating JSON file', err); return next(500); };
+  res.locals.cache = cache;
+  next();
+});
 
-    // set the cookie
-    res.cookie('_qd_', helpers.cookies.serialize(_qd_), {
+// create a new user ID if need be
+middleware.push(function(req, res, next) {
+  console.log('[Middleware]: Setup: user ID');
+  var cache = res.locals.cache;
+  if (cache.user.id) { return next(); }
+
+  // get the existing user IDs
+  fs.readdir(userDir, function(err, files) {
+    if (err) { console.log('[Error]: Unable to read users directory'); return res.send(500); }
+
+    // get a list of existing IDs
+    var ids = [];
+    _.each(files, function(file) {
+      // ignore non-json files
+      (/\.json$/).test(file) && ids.push(+file.replace('.json', ''));
+    });
+
+    // custom sort comparison
+    function compare(a, b) { return a - b; }
+
+    // find and cache the next sequential ID
+    var id = ids.length ? _.last(ids.sort(compare)) + 1 : 1;
+    cache.user.id = id;
+    cache.user.path = userDir + id + '.json';
+
+    // set a cookie with the encrypted user ID
+    res.cookie('_qd_', helpers.encrypt(id + ''), {
       expires: new Date(Date.now() + (3600 * 1000 * 24 * 365 * 10))
     });
 
-    // finish up
-    next(null, id);
+    res.locals.cache = cache;
+    next();
   });
-}
+});
 
-// get an existing drawing
-helpers.retrieve = function(req, res, next) {
-  var id = req.params[0], filePath = drawDir + id + '.json';
+// create a new drawing ID if need be
+middleware.push(function(req, res, next) {
+  console.log('[Middleware]: Setup: drawing ID');
+  var cache = res.locals.cache;
+  if (cache.drawing.id) { return next(); }
 
-  // make sure the drawing file exists
-  if (!fs.existsSync(filePath)) {
-    console.log("Couldn't find drawing " + filepath);
-    next(404);
+  // get the existing user IDs
+  fs.readdir(drawingDir, function(err, files) {
+    if (err) { console.log('[Error]: Unable to read drawings directory'); return res.send(500); }
+
+    // get a list of existing IDs
+    var ids = [];
+    _.each(files, function(file) {
+      // ignore non-json files
+      (/\.json$/).test(file) && ids.push(file.replace('.json', ''));
+    });
+
+    // generate a new unique ID for this drawing
+    var id = helpers.codeGenerator(ids);
+    cache.drawing.id = id;
+    cache.drawing.path = drawingDir + id + '.json';
+
+    res.locals.cache = cache;
+    next();
+  });
+});
+
+// find out if the user & drawing files exist
+middleware.push(function(req, res, next) {
+  console.log('[Middleware]: Setup: existence');
+  var cache = res.locals.cache;
+
+  cache.user.exists = fs.existsSync(cache.user.path);
+  cache.drawing.exists = fs.existsSync(cache.drawing.path);
+
+  res.locals.cache = cache;
+  next();
+});
+
+// retrieve or set up the user data
+middleware.push(function(req, res, next) {
+  console.log('[Middleware]: Setup: user data');
+  var cache = res.locals.cache;
+
+  // if the user file exists, read it, otherwise just use template
+  // note: don't write a new file if a new drawing is being created,
+  // as the user file will be created in a subsequent middleware function
+  if (cache.user.exists) {
+    fs.readFile(cache.user.path, 'utf8', function(err, json) {
+      if (err) { console.log('[Error]: Unable to read user file', err); return res.send(500); }
+      cache.user.data = JSON.parse(json);
+      res.locals.cache = cache;
+      next();
+    });
   } else {
-    fs.readFile(filePath, 'utf8', function(err, json) {
-      if (err) { console.log('Error reading drawing file', err); return next(500); };
-      next(null, JSON.parse(json));
+    cache.user.data = helpers.templates.user;
+    if (cache.drawing.create) {
+      res.locals.cache = cache;
+      next();
+    } else {
+      fs.writeFile(cache.user.path, JSON.stringify(cache.user.data), function(err) {
+        if (err) { console.log('[Error]: Unable to write user file', err); return res.send(500); }
+        cache.user.exists = true;
+        res.locals.cache = cache;
+        next();
+      });
+    }
+  }
+});
+
+// retrieve or set up the drawing data
+middleware.push(function(req, res, next) {
+  console.log('[Middleware]: Setup: drawing data');
+  var cache = res.locals.cache;
+
+  // if the drawing file exists, read it, otherwise just use template
+  // note: drawings are only created as a result of hitting the root
+  if (cache.drawing.exists) {
+    fs.readFile(cache.drawing.path, 'utf8', function(err, json) {
+      if (err) { console.log('[Error]: Unable to read drawing file', err); return res.send(500); }
+      cache.drawing.data = JSON.parse(json);
+      res.locals.cache = cache;
+      next();
+    });
+  } else {
+    if (!cache.drawing.create) { return res.send(404); }
+
+    cache.drawing.data = helpers.templates.drawing;
+    fs.writeFile(cache.drawing.path, JSON.stringify(cache.drawing.data), function(err) {
+      if (err) { console.log('[Error]: Unable to write drawing file', err); res.send(500); }
+      cache.drawing.exists = true;
+      res.locals.cache = cache;
+      next();
     });
   }
-}
+});
+
+// add this drawing to the user's collection, if need be
+middleware.push(function(req, res, next) {
+  console.log('[Middleware]: Setup: ownership');
+  var cache = res.locals.cache;
+
+  if (cache.drawing.create && cache.drawing.exists) {
+    cache.user.data.push(cache.drawing.id);
+    fs.writeFile(cache.user.path, JSON.stringify(cache.user.data), function(err) {
+      if (err) { console.log('[Error]: Unable to write user file', err); return res.send(500); }
+      cache.user.exists = true;
+      res.locals.cache = cache;
+      next();
+    });
+  } else {
+    next();
+  }
+});
+
+// find out if this user is the owner of the drawing
+middleware.push(function(req, res, next) {
+  console.log('[Middleware]: Setup: ownership');
+  var cache = res.locals.cache;
+
+  cache.user.owner = _.include(cache.user.data, cache.drawing.id);
+
+  res.locals.cache = cache;
+  next();
+});
+
+// PATCH - updates a drawing. middleware?
+// /clone - copies a drawing. middleware?
 
 // =======
 // Routing
 // =======
 
-// sets up and redirects to new drawings
-app.get('/', function(req, res) {
-  console.log('GET /');
+// quickdraw.io/
+// sets up and redirects to a new drawing
+app.get('/', middleware, function(req, res) {
+  console.log('[Route]: GET /');
+  var cache = res.locals.cache;
 
-  helpers.setup(req, res, function(err, id) {
-    if (err) {
-      res.send(err);
-    } else {
-      res.redirect(307, '/' + id);
-    }
-  })
+  res.redirect(307, '/' + cache.drawing.id)
 });
 
-// load up an existing drawing
-app.get(/^\/([a-zA-Z0-9]{7})$/, helpers.getInfo, function(req, res) {
-  console.log('GET /' + res.locals.id);
+// quickdraw.io/:id
+// loads an existing drawing
+app.get(/^\/([a-zA-Z0-9]{7})$/, middleware, function(req, res) {
+  console.log('[Route]: GET /:id');
+  var cache = res.locals.cache;
 
-  helpers.retrieve(req, res, function(err, json) {
-    if (err) { res.send(err); }
-    res.locals.initial = JSON.stringify(json.paths, null, 2).replace(/\n/g, "\n      ");
-    res.render('index');
-  });
+  res.locals.initial = JSON.stringify(cache.drawing.data.paths);
+  res.locals.owner = JSON.stringify(cache.user.owner);
+  res.render('index');
 });
 
-// add or remove a new path
-app.patch(/^\/([a-zA-Z0-9]{7})$/, helpers.getInfo, function(req, res) {
-  console.log('PATCH /' + res.locals.id);
-
-  helpers.retrieve(req, res, function(err, json) {
-    if (err) { res.send(err); }
-
-    // compare the drawing code to the client's cookie
-    // return 403 for mis-match
-    var drawingCode = json.code,
-        clientCode  = helpers.cookies.parse(req.cookies._qd_)[res.locals.id];
-
-    if (drawingCode != clientCode) {
-      console.log('Code pair mis-match');
-      res.send(403); // forbidden
-    } else {
-      // this route accepts path additions as well as
-      // deletions, which are identified by the _delete param
-      if (req.body._delete == '1') {
-        json.paths.pop();
-      } else {
-        json.paths.push(JSON.parse(req.body.path));
-      }
-
-      // write the changes back
-      fs.writeFile(res.locals.filePath, JSON.stringify(json), function(err) {
-        if (err) { console.log('Error saving JSON file', err); };
-        res.send(err ? 500 : 200);
-      });
-    }
-  });
+// quickdraw.io/:id
+// adds or removes a new path
+app.patch(/^\/([a-zA-Z0-9]{7})$/, middleware, function(req, res) {
+  console.log('[Route]: PATCH /:id');
+  var cache = res.locals.cache;
+  res.send(200);
 });
 
-// clone a drawing
-app.get(/^\/([a-zA-Z0-9]{7})\/clone$/, helpers.getInfo, function(req, res) {
-  console.log('GET /' + res.locals.id);
-
-  helpers.retrieve(req, res, function(err, json) {
-    if (err) { res.send(err); }
-
-    helpers.setup(req, res, function(err, id) {
-      err ? res.send(err) : res.redirect(307, '/' + id);
-    }, json.paths);
-  });
+// quickdraw.io/:id/clone
+// clones a drawing
+app.get(/^\/([a-zA-Z0-9]{7})\/clone$/, middleware, function(req, res) {
+  console.log('[Route]: GET /:id/clone');
+  var cache = res.locals.cache;
+  res.send(200);
 });
 
 // ======

@@ -5,7 +5,7 @@
 // Build the UI elements representing the pen.
 
 $(function() {
-  if (qd.owner) {
+  if (qd._owner) {
 
     var radius = qd.options.pen.size[1] / 2,
         center = { x: radius + 20, y: radius + 20 };
