@@ -1,0 +1,6 @@
+panning & zooming: apply translate/scale on <g>
+round all pixels
+scale with origin: transform="matrix(sx, 0, 0, sy, sx*cx, sy*cy)"
+parsing json: eval is faster, but must guarantee no arbitrary code can get in
+manage cookies with document.cookie or lightweight lib
+use more recent paper.js?
