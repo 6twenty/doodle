@@ -120,6 +120,7 @@ $(function() {
 
   // Gets the initial drawing paths and renders them to the UI
   _.each(qd._initial, function(serialized) {
+    serialized = JSON.parse(serialized);
     var path = qd.server.deserializePath(serialized);
     qd.paths.push(path);
   });

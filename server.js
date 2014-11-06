@@ -327,8 +327,15 @@ app.get(/^\/([a-zA-Z0-9]{7})$/, middleware, function(req, res) {
 // adds or removes a new path
 app.patch(/^\/([a-zA-Z0-9]{7})$/, middleware, function(req, res) {
   dev && console.log('[Route]: PATCH /:id');
+  var path = req.body.path;
   var cache = res.locals.cache;
-  res.send(200);
+  cache.drawing.data.paths.push(path);
+  fs.writeFile(cache.drawing.path, JSON.stringify(cache.drawing.data), function(err) {
+    if (err) { console.log('[Error]: Unable to write drawing file', err); res.send(500); }
+    cache.drawing.exists = true;
+    res.locals.cache = cache;
+    res.send(200);
+  });
 });
 
 // quickdraw.io/:id/clone
