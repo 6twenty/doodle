@@ -28,7 +28,5 @@ svg:not(:root) {
 
 path {
   fill: none;
-  stroke-width: 5;
-  stroke: black;
   stroke-linecap: round;
 }
