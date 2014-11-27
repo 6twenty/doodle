@@ -1,25 +1,19 @@
 (function(undefined) {
   var Base = new function() {
-    var hidden = /^(statics|enumerable|beans|preserve)$/,
-
+    var hidden = /^(statics|preserve)$/,
       create = Object.create,
-
       describe = Object.getOwnPropertyDescriptor,
-
       _define = Object.defineProperty,
-
       define = function(obj, name, desc) {
         return _define(obj, name, desc);
       };
 
-    function inject(dest, src, enumerable, beans, preserve) {
+    function inject(dest, src, preserve) {
       var beansNames = {};
 
       function field(name, val) {
         val = val || (val = describe(src, name))
             && (val.get ? val : val.value);
-        if (typeof val === 'string' && val[0] === '#')
-          val = dest[val.substring(1)] || val;
         var isFunc = typeof val === 'function',
           res = val,
           prev = preserve || isFunc
@@ -29,7 +23,7 @@
         if (!preserve || !prev) {
           if (isFunc && prev)
             val.base = prev;
-          if (isFunc && beans !== false
+          if (isFunc
               && (bean = name.match(/^([gs]et|is)(([A-Z])(.*))$/)))
             beansNames[bean[3].toLowerCase() + bean[4]] = bean[2];
           if (!res || isFunc || !res.get || typeof res.get !== 'function'
@@ -38,7 +32,7 @@
           if ((describe(dest, name)
               || { configurable: true }).configurable) {
             res.configurable = true;
-            res.enumerable = enumerable;
+            res.enumerable = true;
           }
           define(dest, name, res);
         }
@@ -52,7 +46,7 @@
           var part = beansNames[name],
             set = dest['set' + part],
             get = dest['get' + part] || set && dest['is' + part];
-          if (get && (beans === true || get.length === 0))
+          if (get && get.length === 0)
             field(name, { get: get, set: set });
         }
       }
@@ -66,11 +60,10 @@
       inject: function(src) {
         if (src) {
           var statics = src.statics === true ? src : src.statics,
-            beans = src.beans,
             preserve = src.preserve;
           if (statics !== src)
-            inject(this.prototype, src, src.enumerable, beans, preserve);
-          inject(this, statics, true, beans, preserve);
+            inject(this.prototype, src, preserve);
+          inject(this, statics, preserve);
         }
         for (var i = 1, l = arguments.length; i < l; i++)
           this.inject(arguments[i]);
@@ -93,7 +86,7 @@
         inject(ctor, this, true);
         return arguments.length ? this.inject.apply(ctor, arguments) : ctor;
       }
-    }, true).inject({
+    }).inject({
       statics: {
         create: create,
 
@@ -107,103 +100,24 @@
   };
 
   Base.inject({
-
     statics: {
-
       exports: {},
-
       extend: function extend() {
         var res = extend.base.apply(this, arguments),
           name = res.prototype._class;
         if (name && !Base.exports[name])
           Base.exports[name] = res;
         return res;
-      },
-
-      read: function(list, start, options, length) {
-        if (this === Base) {
-          var value = this.peek(list, start);
-          list.__index++;
-          return value;
-        }
-        var proto = this.prototype,
-          readIndex = proto._readIndex,
-          index = start || readIndex && list.__index || 0;
-        if (!length)
-          length = list.length - index;
-        var obj = list[index];
-        if (obj instanceof this
-          || options && options.readNull && obj == null && length <= 1) {
-          if (readIndex)
-            list.__index = index + 1;
-          return obj && options && options.clone ? obj.clone() : obj;
-        }
-        obj = Base.create(this.prototype);
-        if (readIndex)
-          obj.__read = true;
-        obj = obj.initialize.apply(obj, index > 0 || length < list.length
-          ? Array.prototype.slice.call(list, index, index + length)
-          : list) || obj;
-        if (readIndex) {
-          list.__index = index + obj.__read;
-          obj.__read = undefined;
-        }
-        return obj;
-      },
-
-      peek: function(list, start) {
-        return list[list.__index = start || list.__index || 0];
-      },
-
-      readAll: function(list, start, options) {
-        var res = [],
-          entry;
-        for (var i = start || 0, l = list.length; i < l; i++) {
-          res.push(Array.isArray(entry = list[i])
-              ? this.read(entry, 0, options)
-              : this.read(list, i, options, 1));
-        }
-        return res;
-      },
-
-      readNamed: function(list, name, start, options, length) {
-        var value = this.getNamed(list, name),
-          hasObject = value !== undefined;
-        if (hasObject) {
-          var filtered = list._filtered;
-          if (!filtered) {
-            filtered = list._filtered = Base.create(list[0]);
-            filtered._filtering = list[0];
-          }
-          filtered[name] = undefined;
-        }
-        return this.read(hasObject ? [value] : list, start, options, length);
-      },
-
-      getNamed: function(list, name) {
-        var arg = list[0];
-        if (list._hasObject === undefined)
-          list._hasObject = list.length === 1 && Base.isPlainObject(arg);
-        if (list._hasObject)
-          return name ? arg[name] : list._filtered || arg;
-      },
-
-      hasNamed: function(list, name) {
-        return !!this.getNamed(list, name);
       }
     }
   });
 
   var Point = Base.extend({
     _class: 'Point',
-    _readIndex: true,
 
-    initialize: function Point(arg0, arg1) {
-      var hasY = typeof arg1 === 'number';
-      this.x = arg0;
-      this.y = hasY ? arg1 : arg0;
-      if (this.__read)
-        this.__read = hasY ? 2 : 1;
+    initialize: function Point(x, y) {
+      this.x = x;
+      this.y = y;
     },
 
     set: function(x, y) {
@@ -214,10 +128,7 @@
 
     equals: function(point) {
       return this === point || point
-          && (this.x === point.x && this.y === point.y
-            || Array.isArray(point)
-              && this.x === point[0] && this.y === point[1])
-          || false;
+          && (this.x === point.x && this.y === point.y);
     },
 
     clone: function() {
@@ -228,9 +139,8 @@
       return Math.sqrt(this.x * this.x + this.y * this.y);
     },
 
-    getDistance: function() {
-      var point = Point.read(arguments),
-        x = point.x - this.x,
+    getDistance: function(point) {
+      var x = point.x - this.x,
         y = point.y - this.y,
         d = x * x + y * y;
       return Math.sqrt(d);
@@ -245,32 +155,27 @@
       return point;
     },
 
-    add: function() {
-      var point = Point.read(arguments);
+    add: function(point) {
       return new Point(this.x + point.x, this.y + point.y);
     },
 
-    subtract: function() {
-      var point = Point.read(arguments);
+    subtract: function(point) {
       return new Point(this.x - point.x, this.y - point.y);
     },
 
-    multiply: function() {
-      var point = Point.read(arguments);
-      return new Point(this.x * point.x, this.y * point.y);
+    multiply: function(n) {
+      return new Point(this.x * n, this.y * n);
     },
 
-    divide: function() {
-      var point = Point.read(arguments);
-      return new Point(this.x / point.x, this.y / point.y);
+    divide: function(n) {
+      return new Point(this.x / n, this.y / n);
     },
 
     negate: function() {
       return new Point(-this.x, -this.y);
     },
 
-    dot: function() {
-      var point = Point.read(arguments);
+    dot: function(point) {
       return this.x * point.x + this.y * point.y;
     }
   });
@@ -278,11 +183,9 @@
   var Segment = Base.extend({
     _class: 'Segment',
 
-    initialize: function Segment(arg0, arg1, arg2, arg3, arg4, arg5) {
-      var count = arguments.length,
-        point, handleIn, handleOut;
-      if (count === 0) {
-      } else if (count === 1) {
+    initialize: function Segment(arg0, arg1) {
+      var point, handleIn, handleOut;
+      if (arg0 && !arg1) {
         if (arg0.point) {
           point = arg0.point;
           handleIn = arg0.handleIn;
@@ -290,16 +193,11 @@
         } else {
           point = arg0;
         }
-      } else if (count === 2 && typeof arg0 === 'number') {
+      } else if ((arg0 && arg1) && typeof arg0 === 'number') {
         point = arguments;
-      } else if (count <= 3) {
+      } else {
         point = arg0;
         handleIn = arg1;
-        handleOut = arg2;
-      } else {
-        point = arg0 !== undefined ? [ arg0, arg1 ] : null;
-        handleIn = arg2 !== undefined ? [ arg2, arg3 ] : null;
-        handleOut = arg4 !== undefined ? [ arg4, arg5 ] : null;
       }
       new SegmentPoint(point, this, '_point');
       new SegmentPoint(handleIn, this, '_handleIn');
@@ -314,8 +212,7 @@
       return this._handleIn;
     },
 
-    setHandleIn: function() {
-      var point = Point.read(arguments);
+    setHandleIn: function(point) {
       this._handleIn.set(point.x, point.y);
     },
 
@@ -323,8 +220,7 @@
       return this._handleOut;
     },
 
-    setHandleOut: function() {
-      var point = Point.read(arguments);
+    setHandleOut: function(point) {
       this._handleOut.set(point.x, point.y);
     }
   });
@@ -338,10 +234,7 @@
         y = point[1];
       } else {
         var pt = point;
-        if ((x = pt.x) === undefined) {
-          pt = Point.read(arguments);
-          x = pt.x;
-        }
+        x = pt.x;
         y = pt.y;
       }
       this._x = x;
@@ -369,7 +262,7 @@
   var Path = Base.extend({
     _class: 'Path',
 
-    initialize: function Path(arg) {
+    initialize: function Path() {
       this._closed = false;
       this._segments = [];
     },
@@ -381,31 +274,24 @@
     setSegments: function(segments) {
       this._segments.length = 0;
       if (segments && segments.length > 0)
-        this._add(Segment.readAll(segments));
+        this._add(segments);
     },
 
-    _add: function(segs, index) {
+    _add: function (_segs) {
+      var segs = [];
+      for (var i=0, l=_segs.length; i<l; i++) {
+        segs.push(new Segment(_segs[i]));
+      }
       var segments = this._segments,
         amount = segs.length,
-        append = index == null,
-        index = append ? segments.length : index;
+        index = segments.length;
       for (var i = 0; i < amount; i++) {
         var segment = segs[i];
         segment._path = this;
         segment._index = index + i;
       }
-      if (append) {
-        segments.push.apply(segments, segs);
-      } else {
-        segments.splice.apply(segments, [index, 0].concat(segs));
-        for (var i = index + amount, l = segments.length; i < l; i++)
-          segments[i]._index = i;
-      }
+      segments.push.apply(segments, segs);
       return segs;
-    },
-
-    add: function(segment) {
-      this._add([ Segment.read(arguments) ])[0];
     },
 
     simplify: function(tolerance) {
@@ -607,4 +493,5 @@
   var paper = new (Base.inject(Base.exports))();
   window.Path = paper.Path;
   window.Point = paper.Point;
+  window.Segment = paper.Segment;
 })();
