@@ -1,12 +1,15 @@
 (function () {
 
   var XMLNS, SVG;
-  var _pointer,
-      _currentPath,
+  var _pool,
+      _pointer,
+      _path,
+      _detached,
       _mouseDown,
       _shiftDown,
-      _size = 5,
-      _colour = '#000';
+      _size = 50,
+      _colour = '#000',
+      _d;
 
   // Constants
   // ---------
@@ -18,6 +21,7 @@
   // Globals
   // -------
 
+  _pool      = [];
   _pointer   = new Point();
   _mouseDown = false;
   _shiftDown = false;
@@ -36,7 +40,6 @@
     window.addEventListener(eventType, function (e) {
       _mouseDown = false;
       _shiftDown = e.shiftKey;
-      _currentPath = null;
     });
   });
 
@@ -68,56 +71,102 @@
   // Functions
   // ---------
 
+  // Retrieves a point from the pool or instantiates a new one
+  function getPoint() {
+    if (_pool.length > 0) {
+      return _pool.pop();
+    } else {
+      return new Point();
+    }
+  }
+
+  // Puts a set of points back in the pool
+  function releasePoints(points) {
+    for (var i=points.length-1; i >= 0; i--) {
+      _pool.push(points[i]);
+    };
+  }
+
   function mode() {
     if (_mouseDown && _shiftDown) return 'drag';
     if (_mouseDown && !_shiftDown) return 'draw';
   }
 
+  function handleDefault() {
+    if (_path) _path = null;
+    _els = null;
+  }
+
   function handleDrag() {
-    console.log('panning', _pointer);
+
   }
 
   function handleDraw() {
-    if (!_currentPath) setupPath();
+    if (!_path) setupPath();
 
-    // Append current point to the path; but only if
-    // the current pointer is sufficient distance from previous
-    var distance = detectDistance();
-    if (distance > 0) {
-      _currentPath.add(_pointer.clone());
-      _currentPath.raw.push([_pointer.x, _pointer.y]);
+    if (detectDistance() > 0) {
+      var point = getPoint();
+      point.x = _pointer.x;
+      point.y = _pointer.y;
+      _path.points.push(point);
     }
 
     // Render/re-render the path
     drawPath();
   }
 
-  function handleDefault() {
-    if (_currentPath) _currentPath = null;
+  function setupPath() {
+    _path = {};
+    _path.simplePath = new Path();
+    _path.cache = [];
+    _path.points = [ _pointer ];
+    _path.counter = 1;
+    _path.smoothPoints = [];
+    _path.el = document.createElementNS(XMLNS, 'path');
+    _path.el.setAttribute('stroke', _colour);
+    _path.el.setAttribute('stroke-width', _size);
+    _path.detached = true;
   }
 
-  function setupPath() {
-    _currentPath = new Path();
-    _currentPath.detached = true;
-    _currentPath.add(_pointer.clone());
-    _currentPath.raw = [[ _pointer.x, _pointer.y ]];
+  function attachPath() {
+    _path.detached = false;
+    SVG.insertBefore(_path.el, null);
+  }
+
+  function detectDistance() {
+    var point = _path.points[_path.points.length-1];
+    return point.getDistance(_pointer);
   }
 
   function drawPath() {
-    if (_currentPath.detached) attachPath();
-    var simplePath = new Path();
-    simplePath.setSegments(_currentPath.raw);
-    simplePath.simplify(10);
-    var d = compilePathString(simplePath.segments);
-    _currentPath.el.setAttribute('d', d);
+    if (_els) {
+      _els.forEach(function (a) { SVG.removeChild(a); });
+      _els = [];
+    }
+    if (_path.points.length === 1) {
+      _path.cache = _cache.concat(_path.points);
+      _path.points = [];
+      _path.simplePath.setSegments(_path.cache);
+      _path.simplePath.simplify(10);
+      _path.smoothPoints = _path.simplePath.getSegments();
+      _path.d = compileSmoothPathString();
+    } else {
+      _path.d = compilePathString();
+    }
+    _path.el.setAttribute('d', _path.d);
+    if (_path.detached) attachPath();
   }
 
-  function compilePathString(segments) {
-    // build a new SVG string for the path
+  function compileSmoothPathString() {
+    var segments = _path.smoothPoints;
     var previousSegment = segments[0];
     var startPoint = segments[0].point;
     var pathString = 'M' + startPoint.x + ' ' + startPoint.y;
-    segments.slice(1, segments.length).forEach(function(segment) {
+
+    renderRectAt(startPoint.x, startPoint.y);
+
+    for (var i=1, l=segments.length; i<l; i++) {
+      var segment = segments[i];
       var x = segment.point.x;
       var y = segment.point.y;
       var x1 = previousSegment.point.x + previousSegment.handleOut.x;
@@ -125,9 +174,14 @@
       var x2 = segment.point.x + segment.handleIn.x;
       var y2 = segment.point.y + segment.handleIn.y;
 
+      renderRectAt(x, y);
+      renderRectAt(x1, y1);
+      renderRectAt(x2, y2);
+      renderLine(x2, y2, segment.point.x + segment.handleOut.x, segment.point.y + segment.handleOut.y);
+
       pathString += ('C' + [ x1, y1, x2, y2, x, y ].join(' '));
       previousSegment = segment;
-    });
+    }
 
     if (segments.length < 2) {
       pathString += ('L' + startPoint.x + ' ' + startPoint.y);
@@ -136,18 +190,25 @@
     return pathString;
   }
 
-  // TODO: batch the DOM attachment + setAttribute together
-  function attachPath() {
-    _currentPath.detached = false;
-    _currentPath.el = document.createElementNS(XMLNS, 'path');
-    _currentPath.el.setAttribute('stroke', _colour);
-    _currentPath.el.setAttribute('stroke-width', _size);
-    SVG.insertBefore(_currentPath.el, null);
+  function renderRectAt(x, y) {
+    window._els = window._els || [];
+    var rect = document.createElementNS(XMLNS, 'rect');
+    rect.setAttribute('x', x-2);
+    rect.setAttribute('y', y-2);
+    rect.setAttribute('width', 4);
+    rect.setAttribute('height', 4);
+    rect.setAttribute('style', 'fill:green;stroke:none;');
+    _els.push(rect);
+    SVG.insertBefore(rect, null);
   }
 
-  function detectDistance() {
-    var point = _currentPath.segments[_currentPath.segments.length-1].point;
-    return point.getDistance(_pointer);
+  function renderLine(x1, y1, x2, y2) {
+    window._els = window._els || [];
+    var line = document.createElementNS(XMLNS, 'path');
+    line.setAttribute('d', 'M' + x1 + ' ' + y1 + 'L' + x2 + ' ' + y2);
+    line.setAttribute('style', 'stroke:green;stroke-width:1px;fill:none;');
+    _els.push(line);
+    SVG.insertBefore(line, null);
   }
 
   // API
