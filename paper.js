@@ -193,15 +193,13 @@
         } else {
           point = arg0;
         }
-      } else if ((arg0 && arg1) && typeof arg0 === 'number') {
-        point = arguments;
       } else {
         point = arg0;
         handleIn = arg1;
       }
-      new SegmentPoint(point, this, '_point');
-      new SegmentPoint(handleIn, this, '_handleIn');
-      new SegmentPoint(handleOut, this, '_handleOut');
+      this._point = new SegmentPoint(point);
+      this._handleIn = new SegmentPoint(handleIn);
+      this._handleOut = new SegmentPoint(handleOut);
     },
 
     getPoint: function() {
@@ -226,7 +224,7 @@
   });
 
   var SegmentPoint = Point.extend({
-    initialize: function SegmentPoint(point, owner, key) {
+    initialize: function SegmentPoint(point) {
       var x, y, selected;
       if (!point) {
         x = y = 0;
@@ -239,7 +237,6 @@
       }
       this._x = x;
       this._y = y;
-      owner[key] = this;
     },
 
     getX: function() {
@@ -263,7 +260,6 @@
     _class: 'Path',
 
     initialize: function Path() {
-      this._closed = false;
       this._segments = [];
     },
 
@@ -288,7 +284,6 @@
       for (var i = 0; i < amount; i++) {
         var segment = segs[i];
         segment._path = this;
-        segment._index = index + i;
       }
       segments.push.apply(segments, segs);
       return segs;
