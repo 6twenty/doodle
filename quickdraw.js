@@ -35,10 +35,10 @@
   }
 
   function Path(origin, opts) {
-    this.points = { live: [], flux: [], frozen: [] };
+    this.points = { live: [], permanent: [], frozen: [] };
     this.origin = origin.clone();
     this.endLive = this.origin;
-    this.endFlux = this.origin;
+    this.endPermanent = this.origin;
     this.d = 'M' + this.origin.toString() + ' ';
 
     this.el = document.createElementNS(XMLNS, 'path');
@@ -54,29 +54,29 @@
       this.endLive = point.clone();
       this.points.live.push(this.endLive);
 
-      distance = this.endLive.distance(this.endFlux);
+      distance = this.endLive.distance(this.endPermanent);
       if (distance < 30) return;
-      this.endFlux = this.endLive;
-      this.points.flux.push(this.endFlux);
+      this.endPermanent = this.endLive;
+      this.points.permanent.push(this.endPermanent);
       this.points.live = [];
     },
 
-    // need to "freeze" flux points whose curves won't change
+    // need to "freeze" permanent points whose curves won't change
     render: function render() {
-      var flux;
-      if (this.points.flux.length < 10) {
-        flux = this.points.flux.map(function (point) {
+      var permanent;
+      if (this.points.permanent.length < 10) {
+        permanent = this.points.permanent.map(function (point) {
           return 'L' + point.toString();
         }).join(' ');
       } else {
-        flux = catmullRom2bezier(this.flatten('flux'));
+        permanent = catmullRom2bezier(this.flatten('permanent'));
       }
 
       var live = this.points.live.map(function (point) {
         return 'L' + point.toString();
       }).join(' ');
 
-      var d = this.d + [ flux, live ].join(' ');
+      var d = this.d + [ permanent, live ].join(' ');
       this.el.setAttribute('d', d);
     },
 
