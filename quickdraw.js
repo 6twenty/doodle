@@ -37,7 +37,10 @@
     // C  c1x,c1y  c2x,c2y  x,y
     curveTo: function curveTo() {
       if (!this.bezier) return '';
-      return 'C' + [ this.cp1.join(','), this.cp2.join(','), this.toArray().join(',') ].join(' ');
+      var cp1 = this.cp1.toArray().join(',');
+      var cp2 = this.cp2.toArray().join(',');
+      var point = this.toArray().join(',');
+      return 'C' + [ cp1, cp1, point ].join(' ');
     },
 
     clone: function clone() {
@@ -111,15 +114,13 @@
 
         nextPoint.bezier = true;
 
-        nextPoint.cp1 = [
-          Math.round((-previousPoint.x + 6 * point.x + nextPoint.x) / 6),
-          Math.round((-previousPoint.y + 6 * point.y + nextPoint.y) / 6)
-        ];
+        nextPoint.cp1 = new Point();
+        nextPoint.cp1.x = Math.round((-previousPoint.x + 6 * point.x + nextPoint.x) / 6);
+        nextPoint.cp1.y = Math.round((-previousPoint.y + 6 * point.y + nextPoint.y) / 6);
 
-        nextPoint.cp2 = [
-          Math.round((point.x + 6 * nextPoint.x - farPoint.x) / 6),
-          Math.round((point.y + 6 * nextPoint.y - farPoint.y) / 6)
-        ];
+        nextPoint.cp2 = new Point();
+        nextPoint.cp2.x = Math.round((point.x + 6 * nextPoint.x - farPoint.x) / 6);
+        nextPoint.cp2.y = Math.round((point.y + 6 * nextPoint.y - farPoint.y) / 6);
 
         return true;
       });
