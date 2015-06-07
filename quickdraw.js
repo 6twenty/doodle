@@ -4,10 +4,6 @@
   // -----
 
   // - Need to freeze permanent points whose curves won't change
-  // - Need to "complete" the path when drawing ends:
-  //   - Store last point as permanent
-  //   - Generate curves again
-  //   - Re-render
   // - Need to modify the distance threshold by the velocity,
   //   so that slow movements result in greater fidelity
   // - May need to try to detect sharp change in direction, and
@@ -33,8 +29,15 @@
       return [ this.x, this.y ];
     },
 
-    toString: function toString() {
-      return this.toArray().join(',');
+    // L  x,y
+    lineTo: function lineTo() {
+      return 'L' + this.toArray().join(',');
+    },
+
+    // C  c1x,c1y  c2x,c2y  x,y
+    curveTo: function curveTo() {
+      if (!this.bezier) return '';
+      return 'C' + [ this.cp1.join(','), this.cp2.join(','), this.toArray().join(',') ].join(' ');
     },
 
     clone: function clone() {
@@ -53,7 +56,7 @@
     this.origin = origin.clone();
     this.endLive = this.origin;
     this.endPermanent = this.origin;
-    this.d = 'M' + this.origin.toString() + ' ';
+    this.d = 'M' + [ this.origin.x, this.origin.y ].join(',') + ' ';
 
     this.el = document.createElementNS(XMLNS, 'path');
     this.el.setAttribute('stroke', opts.colour);
@@ -76,65 +79,52 @@
     },
 
     render: function render() {
-      var permanent;
-      if (this.points.permanent.length < 3) {
-        permanent = this.points.permanent.map(function (point) {
-          return 'L' + point.toString();
-        }).join(' ');
-      } else {
-        permanent = catmullRom2bezier(this.flatten('permanent'));
+      if (this.points.permanent.length > 1) {
+        this.generateCurves();
       }
 
+      var permanent = this.points.permanent.map(function (point) {
+        return point.curveTo();
+      }).join(' ');
+
       var live = this.points.live.map(function (point) {
-        return 'L' + point.toString();
+        return point.lineTo();
       }).join(' ');
 
       var d = this.d + [ permanent, live ].join(' ');
       this.el.setAttribute('d', d);
     },
 
-    flatten: function flatten(set) {
-      return this.points[set].reduce(function(a, b) {
-        a = a instanceof Point ? a.toArray() : a;
-        b = b instanceof Point ? b.toArray() : b;
-        return a.concat(b);
+    // Catmull-Rom
+    generateCurves: function () {
+      var points = this.points.permanent;
+
+      points.every(function (point, i) {
+        var previousPoint = points[i-1];
+        var nextPoint = points[i+1];
+        var farPoint = points[i+2];
+
+        previousPoint = previousPoint || point;
+        farPoint = farPoint || nextPoint;
+
+        if (!farPoint) return false;
+
+        nextPoint.bezier = true;
+
+        nextPoint.cp1 = [
+          Math.round((-previousPoint.x + 6 * point.x + nextPoint.x) / 6),
+          Math.round((-previousPoint.y + 6 * point.y + nextPoint.y) / 6)
+        ];
+
+        nextPoint.cp2 = [
+          Math.round((point.x + 6 * nextPoint.x - farPoint.x) / 6),
+          Math.round((point.y + 6 * nextPoint.y - farPoint.y) / 6)
+        ];
+
+        return true;
       });
     }
   }
-
-  // Catmull-Rom
-  // -----------
-
-  // Requires a *flat* array of numbers
-  // Refactor to take an array of points (x,y pairs) instead
-  // Then update the point to add the control points
-  function catmullRom2bezier(crp) {
-    var d = [];
-
-    for (var i = 0, iLen = crp.length; iLen - 2 > i; i += 2) {
-      var p = [
-        {x: +crp[i - 2], y: +crp[i - 1]},
-        {x: +crp[i],     y: +crp[i + 1]},
-        {x: +crp[i + 2], y: +crp[i + 3]},
-        {x: +crp[i + 4], y: +crp[i + 5]}
-      ];
-
-      if (iLen - 4 == i) {
-        p[3] = p[2];
-      } else if (!i) {
-        p[0] = {x: +crp[i], y: +crp[i + 1]};
-      }
-
-      d.push(["C",
-        [(-p[0].x + 6 * p[1].x + p[2].x) / 6, (-p[0].y + 6 * p[1].y + p[2].y) / 6].join(','),
-        [( p[1].x + 6 * p[2].x - p[3].x) / 6, ( p[1].y + 6 * p[2].y - p[3].y) / 6].join(','),
-        [p[2].x, p[2].y].join(',')
-      ].join(' '));
-    }
-
-    return d.join('');
-  }
-
 
   // Main loop
   // ---------
