@@ -75,7 +75,13 @@
       this.points.live.push(this.endLive);
 
       distance = this.endLive.distance(this.endPermanent);
-      if (!setPermanent && distance < app.state.threshold) return;
+      this.endLive.timestamp = Date.now();
+      this.motion(this.endLive, this.endPermanent, distance);
+
+      var threshold = app.state.threshold * this.endLive.velocity;
+      if (threshold < 5) threshold = 5;
+      if (!setPermanent && distance < threshold) return;
+
       this.endPermanent = this.endLive;
       this.points.permanent.push(this.endPermanent);
       this.points.live = [];
@@ -123,6 +129,16 @@
 
         return true;
       });
+    },
+
+    // Returns direction and velocity for `point`
+    motion: function (point, previousPoint, distance) {
+      if (!previousPoint) return;
+      var time = point.timestamp - previousPoint.timestamp;
+      var velocity = distance / time;
+      var angleDeg = Math.atan2(previousPoint.y - point.y, previousPoint.x - point.x) * 180 / Math.PI;
+      point.velocity = velocity;
+      point.angle = angleDeg;
     }
   }
 
@@ -165,7 +181,7 @@
   app.paths = [];
 
   app.state = {
-    threshold: 20,
+    threshold: 50,
     mousedown: false,
     drawing: false,
     pointer: new Point(),
