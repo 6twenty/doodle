@@ -1,4 +1,4 @@
-(function () {
+(function (app) {
 
   // Notes
   // -----
@@ -132,39 +132,40 @@
   requestAnimationFrame(function loop() {
 
     // Is drawing if mousedown
-    if (this.state.mousedown) {
+    if (app.state.mousedown) {
 
       // If not previously drawing, set up path
-      if (!this.state.drawing) {
-        this.setupPath();
-        this.state.drawing = true;
+      if (!app.state.drawing) {
+        app.setupPath();
+        app.state.drawing = true;
       }
 
-      this.handleDraw();
+      app.handleDraw();
 
     // If was previously drawing, cache the path
-    } else if (this.state.drawing) {
+    } else if (app.state.drawing) {
 
-      this.path.update(this.state.pointer, true);
-      this.path.render();
-      this.paths.push(this.path);
-      this.path = null;
-      this.state.drawing = false;
+      app.path.update(app.state.pointer, true);
+      app.path.render();
+      app.paths.push(app.path);
+      app.path = null;
+      app.state.drawing = false;
 
     }
 
     // Infinite loop
-    requestAnimationFrame(loop.bind(this));
+    requestAnimationFrame(loop);
 
-  }.bind(this));
+  });
 
   // State
   // -----
 
-  this.path = null;
-  this.paths = [];
+  app.path = null;
+  app.paths = [];
 
-  this.state = {
+  app.state = {
+    threshold: 20,
     mousedown: false,
     drawing: false,
     pointer: new Point(),
@@ -172,35 +173,35 @@
     size: 10
   }
 
-  this.mouseup = function mouseup(e) {
-    this.state.mousedown = false;
+  app.mouseup = function mouseup(e) {
+    app.state.mousedown = false;
   }
 
-  window.addEventListener('mouseup', this.mouseup.bind(this));
-  window.addEventListener('mouseleave', this.mouseup.bind(this));
+  window.addEventListener('mouseup', app.mouseup);
+  window.addEventListener('mouseleave', app.mouseup);
 
-  this.mousemove = function mousemove(e) {
-    this.state.mousedown = e.which === 1;
-    this.state.pointer.x = e.pageX;
-    this.state.pointer.y = e.pageY;
+  app.mousemove = function mousemove(e) {
+    app.state.mousedown = e.which === 1;
+    app.state.pointer.x = e.pageX;
+    app.state.pointer.y = e.pageY;
   }
 
-  window.addEventListener('mousemove', this.mousemove.bind(this));
-  window.addEventListener('mousedown', this.mousemove.bind(this));
+  window.addEventListener('mousemove', app.mousemove);
+  window.addEventListener('mousedown', app.mousemove);
 
   // Drawing
   // -------
 
-  this.setupPath = function setupPath() {
-    this.path = new Path(this.state.pointer, {
-      colour: this.state.colour,
-      size: this.state.size
+  app.setupPath = function setupPath() {
+    app.path = new Path(app.state.pointer, {
+      colour: app.state.colour,
+      size: app.state.size
     });
   }
 
-  this.handleDraw = function handleDraw() {
-    this.path.update(this.state.pointer);
-    this.path.render();
+  app.handleDraw = function handleDraw() {
+    app.path.update(app.state.pointer);
+    app.path.render();
   }
 
-}).call({});
+})({});
