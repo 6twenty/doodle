@@ -82,12 +82,11 @@
     },
 
     render: function render() {
-      if (this.points.permanent.length > 1) {
-        this.generateCurves();
-      }
+      var bezier = this.points.permanent.length > 1;
+      if (bezier) this.generateCurves();
 
       var permanent = this.points.permanent.map(function (point) {
-        return point.curveTo();
+        return bezier ? point.curveTo() : point.lineTo();
       }).join(' ');
 
       var live = this.points.live.map(function (point) {
