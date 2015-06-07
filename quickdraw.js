@@ -1,5 +1,19 @@
 (function () {
 
+  // Notes
+  // -----
+
+  // - Need to freeze permanent points whose curves won't change
+  // - Need to "complete" the path when drawing ends:
+  //   - Store last point as permanent
+  //   - Generate curves again
+  //   - Re-render
+  // - Need to modify the distance threshold by the velocity,
+  //   so that slow movements result in greater fidelity
+  // - May need to try to detect sharp change in direction, and
+  //   force an additional point (or points) around the apex
+  //   (perhaps just keep *all* "live" points?)
+
   // Constants
   // ---------
 
@@ -48,23 +62,22 @@
   }
 
   Path.prototype = {
-    update: function update(point) {
+    update: function update(point, setPermanent) {
       var distance = point.distance(this.endLive);
-      if (distance === 0) return;
+      if (!setPermanent && distance === 0) return;
       this.endLive = point.clone();
       this.points.live.push(this.endLive);
 
       distance = this.endLive.distance(this.endPermanent);
-      if (distance < 30) return;
+      if (!setPermanent && distance < 30) return;
       this.endPermanent = this.endLive;
       this.points.permanent.push(this.endPermanent);
       this.points.live = [];
     },
 
-    // need to "freeze" permanent points whose curves won't change
     render: function render() {
       var permanent;
-      if (this.points.permanent.length < 10) {
+      if (this.points.permanent.length < 3) {
         permanent = this.points.permanent.map(function (point) {
           return 'L' + point.toString();
         }).join(' ');
@@ -92,6 +105,9 @@
   // Catmull-Rom
   // -----------
 
+  // Requires a *flat* array of numbers
+  // Refactor to take an array of points (x,y pairs) instead
+  // Then update the point to add the control points
   function catmullRom2bezier(crp) {
     var d = [];
 
@@ -139,6 +155,8 @@
     // If was previously drawing, cache the path
     } else if (this.state.drawing) {
 
+      this.path.update(this.state.pointer, true);
+      this.path.render();
       this.paths.push(this.path);
       this.path = null;
       this.state.drawing = false;
