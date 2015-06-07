@@ -75,7 +75,7 @@
       this.points.live.push(this.endLive);
 
       distance = this.endLive.distance(this.endPermanent);
-      if (!setPermanent && distance < 30) return;
+      if (!setPermanent && distance < 20) return;
       this.endPermanent = this.endLive;
       this.points.permanent.push(this.endPermanent);
       this.points.live = [];
