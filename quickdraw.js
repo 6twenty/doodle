@@ -136,9 +136,9 @@
       if (!previousPoint) return;
       var time = point.timestamp - previousPoint.timestamp;
       var velocity = distance / time;
-      var angleDeg = Math.atan2(previousPoint.y - point.y, previousPoint.x - point.x) * 180 / Math.PI;
+      var angle = Math.atan2(previousPoint.y - point.y, previousPoint.x - point.x);
       point.velocity = velocity;
-      point.angle = angleDeg;
+      point.angle = angle;
     }
   }
 
