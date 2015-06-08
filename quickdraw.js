@@ -22,6 +22,7 @@
   function Point(x, y) {
     this.x = x || 0;
     this.y = y || 0;
+    this.timestamp = Date.now();
   }
 
   Point.prototype = {
@@ -51,6 +52,10 @@
       var x = this.x - point.x;
       var y = this.y - point.y;
       return Math.sqrt((x*x) + (y*y));
+    },
+
+    equalTo: function equals(point) {
+      this.x === point.x && this.y === point.y;
     }
   }
 
@@ -69,21 +74,17 @@
 
   Path.prototype = {
     update: function update(point, setPermanent) {
-      var distance = point.distance(this.endLive);
-      if (!setPermanent && distance === 0) return;
-      this.endLive = point.clone();
-      this.points.live.push(this.endLive);
+      if (!setPermanent && point.equalTo(this.endLive)) return;
+      this.endLive = point = point.clone();
+      this.points.live.push(point);
 
-      distance = this.endLive.distance(this.endPermanent);
-      this.endLive.timestamp = Date.now();
-      this.motion(this.endLive, this.endPermanent, distance);
+      this.motion(point, this.endPermanent);
 
-      var threshold = app.state.threshold * this.endLive.velocity;
-      if (threshold < 5) threshold = 5;
-      if (!setPermanent && distance < threshold) return;
+      var threshold = app.state.threshold * point.velocity;
+      if (!setPermanent && this.points.live.length < threshold) return;
 
-      this.endPermanent = this.endLive;
-      this.points.permanent.push(this.endPermanent);
+      this.endPermanent = point;
+      this.points.permanent.push(point);
       this.points.live = [];
     },
 
@@ -132,12 +133,13 @@
     },
 
     // Returns direction and velocity for `point`
-    motion: function (point, previousPoint, distance) {
+    motion: function (point, previousPoint) {
       if (!previousPoint) return;
       var time = point.timestamp - previousPoint.timestamp;
+      var distance = point.distance(previousPoint);
       var velocity = distance / time;
       var angle = Math.atan2(previousPoint.y - point.y, previousPoint.x - point.x);
-      point.velocity = velocity;
+      point.velocity = 1 + velocity;
       point.angle = angle;
     }
   }
@@ -181,7 +183,7 @@
   app.paths = [];
 
   app.state = {
-    threshold: 50,
+    threshold: 1,
     mousedown: false,
     drawing: false,
     pointer: new Point(),
