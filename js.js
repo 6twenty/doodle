@@ -69,7 +69,7 @@
     Point.pool.push(new Point());
   }
 
-  Point.get = function (x, y) {
+  Point.get = function get(x, y) {
     if (this.pool.length === 0) {
       return new Point(x, y);
     } else {
@@ -114,11 +114,11 @@
       var bezier = this.points.permanent.length > 1;
       if (bezier) this.generateCurves();
 
-      var permanent = this.points.permanent.map(function (point) {
+      var permanent = this.points.permanent.map(function mapPermanent(point) {
         return bezier ? point.curveTo() : point.lineTo();
       }).join(' ');
 
-      var live = this.points.live.map(function (point) {
+      var live = this.points.live.map(function mapLive(point) {
         return point.lineTo();
       }).join(' ');
 
@@ -128,37 +128,36 @@
 
     // Catmull-Rom
     generateCurves: function generateCurves() {
-      var points = this.points.permanent;
-      var origin = this.origin;
+      this.points.permanent.every(this.generateCurve.bind(this));
+    },
 
-      points.every(function (point, i) {
-        if (i === 0) {
-          var previousPoint = origin;
-          var nextPoint = points[i];
-          var farPoint = points[i+1];
-        } else {
-          var previousPoint = points[i-1];
-          var nextPoint = points[i+1];
-          var farPoint = points[i+2];
-        }
+    generateCurve: function generateCurve(point, i, points) {
+      if (i === 0) {
+        var previousPoint = this.origin;
+        var nextPoint = points[i];
+        var farPoint = points[i+1];
+      } else {
+        var previousPoint = points[i-1];
+        var nextPoint = points[i+1];
+        var farPoint = points[i+2];
+      }
 
-        previousPoint = previousPoint || point;
-        farPoint = farPoint || nextPoint;
+      previousPoint = previousPoint || point;
+      farPoint = farPoint || nextPoint;
 
-        if (!farPoint) return false;
+      if (!farPoint) return false;
 
-        nextPoint.bezier = true;
+      nextPoint.bezier = true;
 
-        var cp1x = Math.round((-previousPoint.x + 6 * point.x + nextPoint.x) / 6);
-        var cp1y = Math.round((-previousPoint.y + 6 * point.y + nextPoint.y) / 6);
-        nextPoint.cp1 = Point.get(cp1x, cp1y);
+      var cp1x = Math.round((-previousPoint.x + 6 * point.x + nextPoint.x) / 6);
+      var cp1y = Math.round((-previousPoint.y + 6 * point.y + nextPoint.y) / 6);
+      nextPoint.cp1 = Point.get(cp1x, cp1y);
 
-        var cp2x = Math.round((point.x + 6 * nextPoint.x - farPoint.x) / 6);
-        var cp2y = Math.round((point.y + 6 * nextPoint.y - farPoint.y) / 6);
-        nextPoint.cp2 = Point.get(cp2x, cp2y);
+      var cp2x = Math.round((point.x + 6 * nextPoint.x - farPoint.x) / 6);
+      var cp2y = Math.round((point.y + 6 * nextPoint.y - farPoint.y) / 6);
+      nextPoint.cp2 = Point.get(cp2x, cp2y);
 
-        return true;
-      });
+      return true;
     },
 
     // Returns direction and velocity for `point`
