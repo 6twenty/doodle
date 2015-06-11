@@ -4,11 +4,8 @@
   // -----
 
   // - Need to freeze permanent points whose curves won't change
-  // - Need to modify the distance threshold by the velocity,
-  //   so that slow movements result in greater fidelity
   // - May need to try to detect sharp change in direction, and
   //   force an additional point (or points) around the apex
-  //   (perhaps just keep *all* "live" points?)
 
   // Constants
   // ---------
@@ -67,8 +64,8 @@
     this.d = 'M' + [ this.origin.x, this.origin.y ].join(',') + ' ';
 
     this.el = document.createElementNS(XMLNS, 'path');
-    this.el.setAttributeNS(XMLNS, 'stroke', opts.colour);
-    this.el.setAttributeNS(XMLNS, 'stroke-width', opts.size);
+    this.el.setAttribute('stroke', opts.colour);
+    this.el.setAttribute('stroke-width', opts.size);
     SVG.insertBefore(this.el, null);
   }
 
@@ -103,7 +100,7 @@
       }).join(' ');
 
       var d = this.d + [ permanent, live ].join(' ');
-      this.el.setAttributeNS(XMLNS, 'd', d);
+      this.el.setAttribute('d', d);
     },
 
     // Catmull-Rom
