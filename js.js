@@ -60,15 +60,15 @@
   }
 
   function Path(origin, opts) {
-    this.points = { live: [], permanent: [], frozen: [] };
+    this.points = { live: [], permanent: [] };
     this.origin = origin.clone();
     this.endLive = this.origin;
     this.endPermanent = this.origin;
     this.d = 'M' + [ this.origin.x, this.origin.y ].join(',') + ' ';
 
     this.el = document.createElementNS(XMLNS, 'path');
-    this.el.setAttribute('stroke', opts.colour);
-    this.el.setAttribute('stroke-width', opts.size);
+    this.el.setAttributeNS(XMLNS, 'stroke', opts.colour);
+    this.el.setAttributeNS(XMLNS, 'stroke-width', opts.size);
     SVG.insertBefore(this.el, null);
   }
 
@@ -80,8 +80,10 @@
 
       this.motion(point, this.endPermanent);
 
-      var threshold = app.state.threshold * point.velocity;
-      if (!setPermanent && this.points.live.length < threshold) return;
+      var threshold = (1 + point.velocity * 10) * 3;
+      if (threshold < 10) threshold = 10;
+      var distance = point.distance(this.endPermanent);
+      if (!setPermanent && distance < threshold) return;
 
       this.endPermanent = point;
       this.points.permanent.push(point);
@@ -101,17 +103,24 @@
       }).join(' ');
 
       var d = this.d + [ permanent, live ].join(' ');
-      this.el.setAttribute('d', d);
+      this.el.setAttributeNS(XMLNS, 'd', d);
     },
 
     // Catmull-Rom
-    generateCurves: function () {
+    generateCurves: function generateCurves() {
       var points = this.points.permanent;
+      var origin = this.origin;
 
       points.every(function (point, i) {
-        var previousPoint = points[i-1];
-        var nextPoint = points[i+1];
-        var farPoint = points[i+2];
+        if (i === 0) {
+          var previousPoint = origin;
+          var nextPoint = points[i];
+          var farPoint = points[i+1];
+        } else {
+          var previousPoint = points[i-1];
+          var nextPoint = points[i+1];
+          var farPoint = points[i+2];
+        }
 
         previousPoint = previousPoint || point;
         farPoint = farPoint || nextPoint;
@@ -133,16 +142,18 @@
     },
 
     // Returns direction and velocity for `point`
-    motion: function (point, previousPoint) {
+    motion: function motion(point, previousPoint) {
       if (!previousPoint) return;
       var time = point.timestamp - previousPoint.timestamp;
       var distance = point.distance(previousPoint);
       var velocity = distance / time;
       var angle = Math.atan2(previousPoint.y - point.y, previousPoint.x - point.x);
-      point.velocity = 1 + velocity;
+      point.velocity = velocity;
       point.angle = angle;
     }
   }
+
+  var _velocity = 0;
 
   // Main loop
   // ---------
@@ -183,7 +194,6 @@
   app.paths = [];
 
   app.state = {
-    threshold: 1,
     mousedown: false,
     drawing: false,
     pointer: new Point(),
