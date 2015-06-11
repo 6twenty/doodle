@@ -17,12 +17,20 @@
   // -------
 
   function Point(x, y) {
-    this.x = x || 0;
-    this.y = y || 0;
-    this.timestamp = Date.now();
+    if (typeof x === 'number') this.init(x, y);
   }
 
   Point.prototype = {
+    init: function init(x, y) {
+      this.x = x || 0;
+      this.y = y || 0;
+      this.timestamp = Date.now();
+    },
+
+    release: function release() {
+      Point.pool.push(this);
+    },
+
     toArray: function toArray() {
       return [ this.x, this.y ];
     },
@@ -42,7 +50,7 @@
     },
 
     clone: function clone() {
-      return new Point(this.x, this.y);
+      return Point.get(this.x, this.y);
     },
 
     distance: function distance(point) {
@@ -53,6 +61,21 @@
 
     equalTo: function equals(point) {
       this.x === point.x && this.y === point.y;
+    }
+  }
+
+  Point.pool = [];
+  while (Point.pool.length < 1000) {
+    Point.pool.push(new Point());
+  }
+
+  Point.get = function (x, y) {
+    if (this.pool.length === 0) {
+      return new Point(x, y);
+    } else {
+      var point = this.pool.pop();
+      point.init(x, y);
+      return point;
     }
   }
 
@@ -126,13 +149,13 @@
 
         nextPoint.bezier = true;
 
-        nextPoint.cp1 = new Point();
-        nextPoint.cp1.x = Math.round((-previousPoint.x + 6 * point.x + nextPoint.x) / 6);
-        nextPoint.cp1.y = Math.round((-previousPoint.y + 6 * point.y + nextPoint.y) / 6);
+        var cp1x = Math.round((-previousPoint.x + 6 * point.x + nextPoint.x) / 6);
+        var cp1y = Math.round((-previousPoint.y + 6 * point.y + nextPoint.y) / 6);
+        nextPoint.cp1 = Point.get(cp1x, cp1y);
 
-        nextPoint.cp2 = new Point();
-        nextPoint.cp2.x = Math.round((point.x + 6 * nextPoint.x - farPoint.x) / 6);
-        nextPoint.cp2.y = Math.round((point.y + 6 * nextPoint.y - farPoint.y) / 6);
+        var cp2x = Math.round((point.x + 6 * nextPoint.x - farPoint.x) / 6);
+        var cp2y = Math.round((point.y + 6 * nextPoint.y - farPoint.y) / 6);
+        nextPoint.cp2 = Point.get(cp2x, cp2y);
 
         return true;
       });
