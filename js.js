@@ -111,7 +111,7 @@
       // Sets time, distance, velocity and angle
       point.motion(this.endPermanent);
 
-      var threshold = (1 + point.velocity * 10) * 3;
+      var threshold = (1 + point.velocity * 10) * 5;
       if (threshold < 5) threshold = 5;
       if (!setPermanent && point.distance < threshold) return;
 
@@ -191,10 +191,7 @@
     // If was previously drawing, cache the path
     } else if (app.state.drawing) {
 
-      app.path.update(app.state.pointer, true);
-      app.path.render();
-      app.paths.push(app.path);
-      app.path = null;
+      app.finishDraw();
       app.state.drawing = false;
 
     }
@@ -247,6 +244,13 @@
   app.handleDraw = function handleDraw() {
     app.path.update(app.state.pointer);
     app.path.render();
+  }
+
+  app.finishDraw = function finishDraw() {
+    app.path.update(app.state.pointer, true);
+    app.path.render();
+    app.paths.push(app.path);
+    app.path = null;
   }
 
 })({});
