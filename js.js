@@ -6,6 +6,7 @@
   // - Need to freeze permanent points whose curves won't change
   // - May need to try to detect sharp change in direction, and
   //   force an additional point (or points) around the apex
+  // - Make point.cp(num, x, y) function so that point instances get re-used
 
   // Constants
   // ---------
@@ -15,16 +16,6 @@
 
   // Classes
   // -------
-
-  // function Point(x, y) {
-  //   if (typeof x === 'number') this.init(x, y);
-  // }
-
-  // Point.prototype.init = function init(x, y) {
-  //   this.x = x || 0;
-  //   this.y = y || 0;
-  //   this.timestamp = Date.now();
-  // }
 
   Point.prototype.release = function release() {
     Point.pool.push(this);
@@ -44,22 +35,45 @@
     var cp1 = this.cp1.toArray().join(',');
     var cp2 = this.cp2.toArray().join(',');
     var point = this.toArray().join(',');
-    return 'C' + [ cp1, cp1, point ].join(' ');
+    if (app.state.debug) this.debugCurveTo();
+    return 'C' + [ cp1, cp2, point ].join(' ');
+  }
+
+  // TODO - ensure elements are properly reused
+  Point.prototype.debugCurveTo = function debugCurveTo() {
+    if (!this._el_cp1) {
+      this._el_cp1 = document.createElementNS(XMLNS, 'circle');
+      this._el_cp1.setAttribute('r', 5);
+      this._el_cp1.setAttribute('fill', 'green');
+      SVG.insertBefore(this._el_cp1, app.path.el);
+    }
+
+    if (!this.cp2_el) {
+      this._el_cp2 = document.createElementNS(XMLNS, 'circle');
+      this._el_cp2.setAttribute('r', 5);
+      this._el_cp2.setAttribute('fill', 'green');
+      SVG.insertBefore(this._el_cp2, app.path.el);
+    }
+
+    this._el_cp1.setAttribute('cx', this.cp1.x);
+    this._el_cp2.setAttribute('cx', this.cp2.x);
+    this._el_cp1.setAttribute('cy', this.cp1.y);
+    this._el_cp2.setAttribute('cy', this.cp2.y);
+
+    if (!this._el) {
+      this._el = document.createElementNS(XMLNS, 'path');
+      this._el.setAttribute('stroke', 'green');
+      this._el.setAttribute('stroke-width', '1');
+      SVG.insertBefore(this._el, app.path.el);
+    }
+
+    var d = 'M' + this.cp1.toArray().join(',') + ' L' + this.cp2.toArray().join(',');
+    this._el.setAttribute('d', d);
   }
 
   Point.prototype.copy = function copy() {
     return Point.get(this.x, this.y, this.timestamp);
   }
-
-  // Point.prototype.distance = function distance(point) {
-  //   var x = this.x - point.x;
-  //   var y = this.y - point.y;
-  //   return Math.sqrt((x*x) + (y*y));
-  // }
-
-  // Point.prototype.equals = function equals(point) {
-  //   this.x === point.x && this.y === point.y;
-  // }
 
   // Returns direction and velocity for `point`
   Point.prototype.motion = function motion(point) {
@@ -99,6 +113,7 @@
     this.el = document.createElementNS(XMLNS, 'path');
     this.el.setAttribute('stroke', opts.colour);
     this.el.setAttribute('stroke-width', opts.size);
+    this.el.setAttribute('opacity', opts.opacity);
     SVG.insertBefore(this.el, null);
   }
 
@@ -167,6 +182,31 @@
       nextPoint.cp2 = Point.get(cp2x, cp2y);
 
       return true;
+    },
+
+    simplify: function simplify() {
+      var points = [ this.origin ].concat(this.points.permanent);
+      this.path.setSegments(points);
+      this.path.simplify(10);
+      var segments = this.path.getSegments();
+
+      var previousSegment = segments[0];
+      for (var i=1, l=segments.length; i<l; i++) {
+        var segment = segments[i];
+        var x = segment.point.x;
+        var y = segment.point.y;
+        var x1 = previousSegment.point.x + previousSegment.handleOut.x;
+        var y1 = previousSegment.point.y + previousSegment.handleOut.y;
+        var x2 = segment.point.x + segment.handleIn.x;
+        var y2 = segment.point.y + segment.handleIn.y;
+
+        segment.point.cp1 = new Point(x1, y1);
+        segment.point.cp2 = new Point(x2, y2);
+        previousSegment = segment;
+      }
+
+      this.points.permanent = segments.map(function (segment) { return segment.point; });
+      this.points.permanent.shift();
     }
   }
 
@@ -208,12 +248,16 @@
   app.paths = [];
 
   app.state = {
+    debug: true,
     mousedown: false,
     drawing: false,
     pointer: new Point(),
     colour: '#000',
-    size: 10
+    size: 10,
+    opacity: 1
   }
+
+  if (app.state.debug) app.state.opacity *= 0.5;
 
   app.mouseup = function mouseup(e) {
     app.state.mousedown = false;
@@ -237,7 +281,8 @@
   app.setupDrawPath = function setupDrawPath() {
     app.path = new DrawPath(app.state.pointer, {
       colour: app.state.colour,
-      size: app.state.size
+      size: app.state.size,
+      opacity: app.state.opacity
     });
   }
 
@@ -248,6 +293,7 @@
 
   app.finishDraw = function finishDraw() {
     app.path.update(app.state.pointer, true);
+    // app.path.simplify();
     app.path.render();
     app.paths.push(app.path);
     app.path = null;
