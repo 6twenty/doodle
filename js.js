@@ -66,11 +66,31 @@
     },
 
     renderReverse: function renderReverse() {
+      var threshold = Math.floor(app.state.size / 2);
+      var offsets = Array.apply(null, { length: threshold }).map(Number.call, Number);
+      var previousOffset = 0;
+
       // Same curves, but in reverse, and closing the path
       var d = this.points.reverse().map(function map(point, i, points) {
         // Use control points (swapped) from `point` but destination from the *next* point
         var next = points[i+1];
-        if (!next) next = this.origin;
+
+        if (next) {
+          // Tweak the coordinates to vary the path width
+          // var offset = offsets[Math.floor(Math.random()*offsets.length)] + 1;
+          var diff = Math.random() > 0.5 ? 1 : -1;
+          var offset = previousOffset + diff;
+          if (offset > threshold) offset = previousOffset - 1;
+          point.cp1.x += offset;
+          point.cp1.y += offset;
+          point.cp2.x += offset;
+          point.cp2.y += offset;
+          next.x += offset;
+          next.y += offset;
+        } else {
+          next = this.origin;
+        }
+
 
         var cp1 = point.cp2.toArray().join(',');
         var cp2 = point.cp1.toArray().join(',');
