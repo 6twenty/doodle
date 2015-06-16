@@ -35,7 +35,6 @@
     this.points = [];
     this.origin = origin.clone();
     this.path.add(this.origin);
-    this.end = this.origin;
     this.d = 'M' + [ this.origin.x, this.origin.y ].join(',') + ' ';
 
     this.el = document.createElementNS(XMLNS, 'path');
@@ -46,8 +45,8 @@
   }
 
   DrawPath.prototype = {
-    update: function update(point, setPermanent) {
-      if (point.equals(this.end)) return;
+    update: function update(point) {
+      if (this.end && point.equals(this.end)) return;
       this.end = point = point.clone();
       this.points.push(point);
       this.path.add(point);
@@ -205,7 +204,7 @@
   }
 
   app.finishDraw = function finishDraw() {
-    app.path.update(app.state.pointer, true);
+    app.path.update(app.state.pointer);
     app.path.simplify();
     app.path.render(true);
     app.paths.push(app.path);
