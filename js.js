@@ -65,7 +65,8 @@
     },
 
     renderReverse: function renderReverse() {
-      var threshold = Math.floor(app.state.size / 2);
+      var threshold = Math.floor(app.state.size / 2) - 2;
+      if (threshold < 0) threshold = 0;
       var previousOffset = 0;
 
       // Same curves, but in reverse, and closing the path
