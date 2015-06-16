@@ -30,29 +30,10 @@
     return 'C' + [ cp1, cp2, point ].join(' ');
   }
 
-  Point.prototype.copy = function copy() {
-    return Point.get(this.x, this.y, this.timestamp);
-  }
-
-  // Returns direction and velocity for `point`
-  Point.prototype.motion = function motion(point) {
-    if (!point) return;
-    this.time = this.timestamp - point.timestamp;
-    this.distance = this.getDistance(point);
-    this.velocity = this.distance / this.time;
-    this.angle = Math.atan2(point.y - this.y, point.x - this.x);
-  }
-
-  Point.get = function get(x, y, timestamp) {
-    var point = new Point(x, y);
-    point.timestamp = timestamp;
-    return point;
-  }
-
   function DrawPath(origin, opts) {
     this.path = new Path();
     this.points = [];
-    this.origin = origin.copy();
+    this.origin = origin.clone();
     this.path.add(this.origin);
     this.end = this.origin;
     this.d = 'M' + [ this.origin.x, this.origin.y ].join(',') + ' ';
@@ -67,19 +48,37 @@
   DrawPath.prototype = {
     update: function update(point, setPermanent) {
       if (point.equals(this.end)) return;
-      this.end = point = point.copy();
+      this.end = point = point.clone();
       this.points.push(point);
       this.path.add(point);
-
-      // Sets time, distance, velocity and angle
-      point.motion(this.end);
     },
 
     render: function render() {
-      var d = this.d + this.points.map(function mapPermanent(point) {
+      var d = this.d + this.points.map(function map(point, i, points) {
         return this.simplified ? point.curveTo() : point.lineTo();
       }.bind(this)).join(' ');
+
+      if (this.simplified && this.points.length > 1) {
+        d += this.renderReverse();
+      }
+
       this.el.setAttribute('d', d);
+    },
+
+    renderReverse: function renderReverse() {
+      // Same curves, but in reverse, and closing the path
+      var d = this.points.reverse().map(function map(point, i, points) {
+        // Use control points (swapped) from `point` but destination from the *next* point
+        var next = points[i+1];
+        if (!next) next = this.origin;
+
+        var cp1 = point.cp2.toArray().join(',');
+        var cp2 = point.cp1.toArray().join(',');
+        var target = next.toArray().join(',');
+        return 'C' + [ cp1, cp2, target ].join(' ');
+      }.bind(this)).join(' ');
+
+      return ' ' + d + 'z';
     },
 
     simplify: function simplify() {
@@ -115,9 +114,6 @@
 
     // Is drawing if mousedown
     if (app.state.mousedown) {
-      // Point timestamp
-      app.state.pointer.timestamp = Date.now();
-
       // If not previously drawing, set up path
       if (!app.state.drawing) {
         app.setupDrawPath();
@@ -189,7 +185,7 @@
   app.finishDraw = function finishDraw() {
     app.path.update(app.state.pointer, true);
     app.path.simplify();
-    app.path.render();
+    app.path.render(true);
     app.paths.push(app.path);
     app.path = null;
   }
