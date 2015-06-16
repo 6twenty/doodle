@@ -294,6 +294,10 @@
       return segs;
     },
 
+    add: function(segment) {
+      return this._add([ segment ])[0];
+    },
+
     simplify: function(tolerance) {
       if (this._segments.length > 2) {
         var fitter = new PathFitter(this, tolerance || 2.5);
