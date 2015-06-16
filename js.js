@@ -78,7 +78,7 @@
           // Tweak the coordinates to vary the path width
           var diff = Math.random() >= 0.5 ? 1 : -1;
           var offset = previousOffset + diff;
-          if (offset > threshold) offset = previousOffset - 1;
+          if (Math.abs(offset) > threshold) offset = previousOffset - 1;
           point.cp1.x += offset;
           point.cp1.y += offset;
           point.cp2.x += offset;
