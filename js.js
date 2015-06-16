@@ -67,7 +67,6 @@
 
     renderReverse: function renderReverse() {
       var threshold = Math.floor(app.state.size / 2);
-      var offsets = Array.apply(null, { length: threshold }).map(Number.call, Number);
       var previousOffset = 0;
 
       // Same curves, but in reverse, and closing the path
@@ -77,8 +76,7 @@
 
         if (next) {
           // Tweak the coordinates to vary the path width
-          // var offset = offsets[Math.floor(Math.random()*offsets.length)] + 1;
-          var diff = Math.random() > 0.5 ? 1 : -1;
+          var diff = Math.random() >= 0.5 ? 1 : -1;
           var offset = previousOffset + diff;
           if (offset > threshold) offset = previousOffset - 1;
           point.cp1.x += offset;
