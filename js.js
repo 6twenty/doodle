@@ -9,10 +9,6 @@
   // Classes
   // -------
 
-  Point.prototype.release = function release() {
-    Point.pool.push(this);
-  }
-
   Point.prototype.toArray = function toArray() {
     return [ this.x, this.y ];
   }
@@ -30,26 +26,30 @@
     return 'C' + [ cp1, cp2, point ].join(' ');
   }
 
-  function DrawPath(origin, opts) {
+  function DrawPath(state) {
     this.path = new Path();
     this.points = [];
-    this.origin = origin.clone();
+    this.origin = state.pointer.clone();
     this.path.add(this.origin);
     this.d = 'M' + [ this.origin.x, this.origin.y ].join(',') + ' ';
 
+    this.colour = state.colour;
+    this.size = state.size;
+    this.opacity = state.opacity;
+
     this.el = document.createElementNS(XMLNS, 'path');
-    this.el.setAttribute('stroke', opts.colour);
-    this.el.setAttribute('stroke-width', opts.size);
-    this.el.setAttribute('opacity', opts.opacity);
+    this.el.setAttribute('stroke', this.colour);
+    this.el.setAttribute('stroke-width', this.size);
+    this.el.setAttribute('opacity', this.opacity);
     SVG.insertBefore(this.el, null);
   }
 
   DrawPath.prototype = {
-    update: function update(point) {
-      if (this.end && point.equals(this.end)) return;
-      this.end = point = point.clone();
-      this.points.push(point);
-      this.path.add(point);
+    update: function update(state) {
+      if (this.end && state.pointer.equals(this.end)) return;
+      this.end = state.pointer.clone();
+      this.points.push(this.end);
+      this.path.add(this.end);
     },
 
     render: function render() {
@@ -65,7 +65,7 @@
     },
 
     renderReverse: function renderReverse() {
-      var threshold = Math.floor(app.state.size / 2) - 2;
+      var threshold = Math.floor(this.size / 2) - 2;
       if (threshold < 0) threshold = 0;
       var previousOffset = 0;
 
@@ -192,22 +192,18 @@
   // -------
 
   app.setupDrawPath = function setupDrawPath() {
-    app.path = new DrawPath(app.state.pointer, {
-      colour: app.state.colour,
-      size: app.state.size,
-      opacity: app.state.opacity
-    });
+    app.path = new DrawPath(app.state);
   }
 
   app.handleDraw = function handleDraw() {
-    app.path.update(app.state.pointer);
+    app.path.update(app.state);
     app.path.render();
   }
 
   app.finishDraw = function finishDraw() {
-    app.path.update(app.state.pointer);
+    app.path.update(app.state);
     app.path.simplify();
-    app.path.render(true);
+    app.path.render();
     app.paths.push(app.path);
     app.path = null;
   }
