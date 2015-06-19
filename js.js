@@ -134,21 +134,37 @@
 
   requestAnimationFrame(function loop() {
 
-    // Is drawing if mousedown
-    if (app.state.mousedown) {
+    // Is drawing if mousedown (but not shiftdown)
+    if (app.state.mousedown && !app.state.shiftdown) {
+
       // If not previously drawing, set up path
       if (!app.state.drawing) {
-        app.setupDrawPath();
+        app.setupDraw();
         app.state.drawing = true;
       }
 
       app.handleDraw();
+
+    // Is moving if mousedown (with shiftdown)
+    } else if (app.state.mousedown && app.state.shiftdown) {
+
+      if (!app.state.moving) {
+        app.setupMove();
+        app.state.moving = true;
+      }
+
+      app.handleMove();
 
     // If was previously drawing, cache the path
     } else if (app.state.drawing) {
 
       app.finishDraw();
       app.state.drawing = false;
+
+    } else if (app.state.moving) {
+
+      app.finishMove();
+      app.state.moving = false;
 
     }
 
@@ -164,8 +180,10 @@
   app.paths = [];
 
   app.state = {
+    xy: [ 0, 0 ],
     offset: [ 0, 0 ],
     mousedown: false,
+    shiftdown: false,
     drawing: false,
     pointer: new Point(),
     colour: '#000',
@@ -175,15 +193,18 @@
 
   app.mouseup = function mouseup(e) {
     app.state.mousedown = false;
+    app.state.shiftdown = false;
   }
 
   window.addEventListener('mouseup', app.mouseup);
   window.addEventListener('mouseleave', app.mouseup);
 
   app.mousemove = function mousemove(e) {
+    app.state.shiftdown = e.shiftKey;
     app.state.mousedown = e.which === 1;
-    app.state.pointer.x = e.pageX;
-    app.state.pointer.y = e.pageY;
+    app.state.xy = [ e.pageX, e.pageY ];
+    app.state.pointer.x = e.pageX + app.state.offset[0];
+    app.state.pointer.y = e.pageY + app.state.offset[1];
   }
 
   window.addEventListener('mousemove', app.mousemove);
@@ -194,8 +215,6 @@
     SVG.viewBox.baseVal.x = x;
     SVG.viewBox.baseVal.y = y;
   }
-
-  app.setOffset(0, 0);
 
   app.resize = function resize() {
     SVG.viewBox.baseVal.width = window.innerWidth;
@@ -208,7 +227,7 @@
   // Drawing
   // -------
 
-  app.setupDrawPath = function setupDrawPath() {
+  app.setupDraw = function setupDrawPath() {
     app.path = new DrawPath(app.state);
   }
 
@@ -223,6 +242,27 @@
     app.path.render();
     app.paths.push(app.path);
     app.path = null;
+  }
+
+  // Moving
+  // ------
+
+  app.setupMove = function setupMove() {
+    if (!app.state.moveOrigin) {
+      var x = app.state.xy[0] + app.state.offset[0];
+      var y = app.state.xy[1] + app.state.offset[1];
+      app.state.moveOrigin = [ x, y ];
+    }
+  }
+
+  app.handleMove = function handleMove() {
+    var x = app.state.xy[0] - app.state.moveOrigin[0];
+    var y = app.state.xy[1] - app.state.moveOrigin[1];
+    app.setOffset(-x, -y);
+  }
+
+  app.finishMove = function finishMove() {
+    app.state.moveOrigin = null;
   }
 
 })({});
