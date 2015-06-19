@@ -135,7 +135,7 @@
   requestAnimationFrame(function loop() {
 
     // Is drawing if mousedown (but not shiftdown)
-    if (app.state.mousedown && !app.state.shiftdown) {
+    if (app.state.mousedown && !app.state.shiftdown && !app.state.moving) {
 
       // If not previously drawing, set up path
       if (!app.state.drawing) {
@@ -146,7 +146,7 @@
       app.handleDraw();
 
     // Is moving if mousedown (with shiftdown)
-    } else if (app.state.mousedown && app.state.shiftdown) {
+    } else if (app.state.mousedown && app.state.shiftdown && !app.state.drawing) {
 
       if (!app.state.moving) {
         app.setupMove();
@@ -223,6 +223,14 @@
 
   window.addEventListener('resize', app.resize);
   app.resize();
+
+  app.keyevent = function keyevent(e) {
+    app.state.shiftdown = e.shiftKey;
+    SVG.style.cursor = e.shiftKey ? 'move' : '';
+  }
+
+  window.addEventListener('keydown', app.keyevent);
+  window.addEventListener('keyup', app.keyevent);
 
   // Drawing
   // -------
