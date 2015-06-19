@@ -67,6 +67,8 @@
     renderReverse: function renderReverse() {
       var threshold = Math.floor(this.size / 2) - 2;
       if (threshold < 0) threshold = 0;
+      var step = this.size * 0.1;
+      if (step < 1) step = 1;
       var previousOffset = 0;
 
       // Same curves, but in reverse, and closing the path
@@ -76,10 +78,10 @@
 
         if (next) {
           // Tweak the coordinates to vary the path width
-          var diff = Math.random() >= 0.5 ? 1 : -1;
+          var diff = Math.random() >= 0.5 ? step : -step;
           var offset = previousOffset + diff;
           if (Math.abs(offset) > threshold) {
-            offset = previousOffset - (offset > 0 ? 1 : -1);
+            offset = previousOffset - (offset > 0 ? step : -step);
           }
 
           previousOffset = offset;
