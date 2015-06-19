@@ -164,6 +164,7 @@
   app.paths = [];
 
   app.state = {
+    offset: [ 0, 0 ],
     mousedown: false,
     drawing: false,
     pointer: new Point(),
@@ -187,6 +188,22 @@
 
   window.addEventListener('mousemove', app.mousemove);
   window.addEventListener('mousedown', app.mousemove);
+
+  app.setOffset = function setOffset(x, y) {
+    app.state.offset = [x, y];
+    SVG.viewBox.baseVal.x = x;
+    SVG.viewBox.baseVal.y = y;
+  }
+
+  app.setOffset(0, 0);
+
+  app.resize = function resize() {
+    SVG.viewBox.baseVal.width = window.innerWidth;
+    SVG.viewBox.baseVal.height = window.innerHeight;
+  }
+
+  window.addEventListener('resize', app.resize);
+  app.resize();
 
   // Drawing
   // -------
