@@ -178,6 +178,7 @@
 
   app.path = null;
   app.paths = [];
+  app.redos = [];
 
   app.state = {
     xy: [ 0, 0 ],
@@ -236,6 +237,7 @@
   // -------
 
   app.setupDraw = function setupDrawPath() {
+    app.redos = [];
     app.path = new DrawPath(app.state);
   }
 
@@ -273,4 +275,21 @@
     app.state.moveOrigin = null;
   }
 
-})({});
+  // API
+  // ---
+
+  app.undo = function undo() {
+    var path = app.paths.pop();
+    if (!path) return;
+    SVG.removeChild(path.el);
+    app.redos.push(path);
+  }
+
+  app.redo = function redo() {
+    var path = app.redos.pop();
+    if (!path) return;
+    SVG.insertBefore(path.el, null);
+    app.paths.push(path);
+  }
+
+})(window.app = {});
