@@ -1,4 +1,4 @@
-(function (app) {
+(function (qd, api) {
 
   // Constants
   // ---------
@@ -37,7 +37,7 @@
     this.size = state.size;
     this.opacity = state.opacity;
 
-    this.layer = app.layer;
+    this.layer = qd.layer;
     this.el = document.createElementNS(XMLNS, 'path');
     this.el.setAttribute('stroke', this.colour);
     this.el.setAttribute('stroke-width', this.size);
@@ -138,36 +138,36 @@
   requestAnimationFrame(function loop() {
 
     // Is drawing if mousedown (but not shiftdown)
-    if (app.state.mousedown && !app.state.shiftdown && !app.state.moving) {
+    if (qd.state.mousedown && !qd.state.shiftdown && !qd.state.moving) {
 
       // If not previously drawing, set up path
-      if (!app.state.drawing) {
-        app.setupDraw();
-        app.state.drawing = true;
+      if (!qd.state.drawing) {
+        qd.setupDraw();
+        qd.state.drawing = true;
       }
 
-      app.handleDraw();
+      qd.handleDraw();
 
     // Is moving if mousedown (with shiftdown)
-    } else if (app.state.mousedown && app.state.shiftdown && !app.state.drawing) {
+    } else if (qd.state.mousedown && qd.state.shiftdown && !qd.state.drawing) {
 
-      if (!app.state.moving) {
-        app.setupMove();
-        app.state.moving = true;
+      if (!qd.state.moving) {
+        qd.setupMove();
+        qd.state.moving = true;
       }
 
-      app.handleMove();
+      qd.handleMove();
 
     // If was previously drawing, cache the path
-    } else if (app.state.drawing) {
+    } else if (qd.state.drawing) {
 
-      app.finishDraw();
-      app.state.drawing = false;
+      qd.finishDraw();
+      qd.state.drawing = false;
 
-    } else if (app.state.moving) {
+    } else if (qd.state.moving) {
 
-      app.finishMove();
-      app.state.moving = false;
+      qd.finishMove();
+      qd.state.moving = false;
 
     }
 
@@ -179,12 +179,12 @@
   // State
   // -----
 
-  app.path = null;
-  app.paths = [];
-  app.redos = [];
-  app.layer = document.getElementById('layer-5');
+  qd.path = null;
+  qd.paths = [];
+  qd.redos = [];
+  qd.layer = document.getElementById('layer-5');
 
-  app.state = {
+  qd.state = {
     xy: [ 0, 0 ],
     offset: [ 0, 0 ],
     mousedown: false,
@@ -196,104 +196,128 @@
     opacity: 1
   }
 
-  app.mouseup = function mouseup(e) {
-    app.state.mousedown = false;
-    app.state.shiftdown = false;
+  qd.mouseup = function mouseup(e) {
+    qd.state.mousedown = false;
+    qd.state.shiftdown = false;
   }
 
-  window.addEventListener('mouseup', app.mouseup);
-  window.addEventListener('mouseleave', app.mouseup);
+  window.addEventListener('mouseup', qd.mouseup);
+  window.addEventListener('mouseleave', qd.mouseup);
 
-  app.mousemove = function mousemove(e) {
-    app.state.shiftdown = e.shiftKey;
-    app.state.mousedown = e.which === 1;
-    app.state.xy = [ e.pageX, e.pageY ];
-    app.state.pointer.x = e.pageX + app.state.offset[0];
-    app.state.pointer.y = e.pageY + app.state.offset[1];
+  qd.mousemove = function mousemove(e) {
+    qd.state.shiftdown = e.shiftKey;
+    qd.state.mousedown = e.which === 1;
+    qd.state.xy = [ e.pageX, e.pageY ];
+    qd.state.pointer.x = e.pageX + qd.state.offset[0];
+    qd.state.pointer.y = e.pageY + qd.state.offset[1];
   }
 
-  window.addEventListener('mousemove', app.mousemove);
-  window.addEventListener('mousedown', app.mousemove);
+  window.addEventListener('mousemove', qd.mousemove);
+  window.addEventListener('mousedown', qd.mousemove);
 
-  app.setOffset = function setOffset(x, y) {
-    app.state.offset = [x, y];
+  qd.setOffset = function setOffset(x, y) {
+    qd.state.offset = [x, y];
     SVG.viewBox.baseVal.x = x;
     SVG.viewBox.baseVal.y = y;
   }
 
-  app.resize = function resize() {
+  qd.resize = function resize() {
     SVG.viewBox.baseVal.width = window.innerWidth;
     SVG.viewBox.baseVal.height = window.innerHeight;
   }
 
-  window.addEventListener('resize', app.resize);
-  app.resize();
+  window.addEventListener('resize', qd.resize);
+  qd.resize();
 
-  app.keyevent = function keyevent(e) {
-    app.state.shiftdown = e.shiftKey;
+  qd.keyevent = function keyevent(e) {
+    qd.state.shiftdown = e.shiftKey;
     SVG.style.cursor = e.shiftKey ? 'move' : '';
   }
 
-  window.addEventListener('keydown', app.keyevent);
-  window.addEventListener('keyup', app.keyevent);
+  window.addEventListener('keydown', qd.keyevent);
+  window.addEventListener('keyup', qd.keyevent);
 
   // Drawing
   // -------
 
-  app.setupDraw = function setupDrawPath() {
-    app.redos = [];
-    app.path = new DrawPath(app.state);
+  qd.setupDraw = function setupDrawPath() {
+    qd.redos = [];
+    qd.path = new DrawPath(qd.state);
   }
 
-  app.handleDraw = function handleDraw() {
-    app.path.update(app.state);
-    app.path.render();
+  qd.handleDraw = function handleDraw() {
+    qd.path.update(qd.state);
+    qd.path.render();
   }
 
-  app.finishDraw = function finishDraw() {
-    app.path.update(app.state);
-    app.path.simplify();
-    app.path.render();
-    app.paths.push(app.path);
-    app.path = null;
+  qd.finishDraw = function finishDraw() {
+    qd.path.update(qd.state);
+    qd.path.simplify();
+    qd.path.render();
+    qd.paths.push(qd.path);
+    qd.path = null;
   }
 
   // Moving
   // ------
 
-  app.setupMove = function setupMove() {
-    if (!app.state.moveOrigin) {
-      var x = app.state.xy[0] + app.state.offset[0];
-      var y = app.state.xy[1] + app.state.offset[1];
-      app.state.moveOrigin = [ x, y ];
+  qd.setupMove = function setupMove() {
+    if (!qd.state.moveOrigin) {
+      var x = qd.state.xy[0] + qd.state.offset[0];
+      var y = qd.state.xy[1] + qd.state.offset[1];
+      qd.state.moveOrigin = [ x, y ];
     }
   }
 
-  app.handleMove = function handleMove() {
-    var x = app.state.xy[0] - app.state.moveOrigin[0];
-    var y = app.state.xy[1] - app.state.moveOrigin[1];
-    app.setOffset(-x, -y);
+  qd.handleMove = function handleMove() {
+    var x = qd.state.xy[0] - qd.state.moveOrigin[0];
+    var y = qd.state.xy[1] - qd.state.moveOrigin[1];
+    qd.setOffset(-x, -y);
   }
 
-  app.finishMove = function finishMove() {
-    app.state.moveOrigin = null;
+  qd.finishMove = function finishMove() {
+    qd.state.moveOrigin = null;
   }
 
   // API
   // ---
 
-  app.undo = function undo() {
-    var path = app.paths.pop();
+  api.undo = function () {
+    var path = qd.paths.pop();
     if (!path) return;
     path.layer.removeChild(path.el);
-    app.redos.push(path);
+    qd.redos.push(path);
   }
 
-  app.redo = function redo() {
-    var path = app.redos.pop();
+  api.redo = function () {
+    var path = qd.redos.pop();
     if (!path) return;
     path.layer.insertBefore(path.el, null);
-    app.paths.push(path);
+    qd.paths.push(path);
   }
 
-})(window.app = {});
+  Object.defineProperties(api, {
+
+    layer: {
+      get: function () { return +qd.layer.id.split('-')[1]; },
+      set: function (num) { qd.layer = document.getElementById('layer-' + num); }
+    },
+
+    color: {
+      get: function () { return qd.state.colour; },
+      set: function (colour) { qd.state.colour = colour; }
+    },
+
+    size: {
+      get: function () { return qd.state.size; },
+      set: function (size) { qd.state.size = size; }
+    },
+
+    opacity: {
+      get: function () { return qd.state.opacity; },
+      set: function (opacity) { qd.state.opacity = opacity; }
+    }
+
+  });
+
+})(Object.create(null), window.app = Object.create(null));
