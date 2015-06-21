@@ -37,11 +37,12 @@
     this.size = state.size;
     this.opacity = state.opacity;
 
+    this.layer = app.layer;
     this.el = document.createElementNS(XMLNS, 'path');
     this.el.setAttribute('stroke', this.colour);
     this.el.setAttribute('stroke-width', this.size);
     this.el.setAttribute('opacity', this.opacity);
-    SVG.insertBefore(this.el, null);
+    this.layer.insertBefore(this.el, null);
   }
 
   DrawPath.prototype = {
@@ -181,6 +182,7 @@
   app.path = null;
   app.paths = [];
   app.redos = [];
+  app.layer = document.getElementById('layer-5');
 
   app.state = {
     xy: [ 0, 0 ],
@@ -283,14 +285,14 @@
   app.undo = function undo() {
     var path = app.paths.pop();
     if (!path) return;
-    SVG.removeChild(path.el);
+    path.layer.removeChild(path.el);
     app.redos.push(path);
   }
 
   app.redo = function redo() {
     var path = app.redos.pop();
     if (!path) return;
-    SVG.insertBefore(path.el, null);
+    path.layer.insertBefore(path.el, null);
     app.paths.push(path);
   }
 
