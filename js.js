@@ -196,6 +196,9 @@
     opacity: 1
   }
 
+  // Handlers
+  // --------
+
   qd.mouseup = function mouseup(e) {
     qd.state.mousedown = false;
     qd.state.shiftdown = false;
