@@ -12,9 +12,9 @@
     event.type = 'mousewheel';
 
     // Old school scrollwheel delta
-    if ( 'detail'      in event ) { deltaY = event.detail * -1;      }
-    if ( 'wheelDelta'  in event ) { deltaY = event.wheelDelta;       }
-    if ( 'wheelDeltaY' in event ) { deltaY = event.wheelDeltaY;      }
+    if ( 'detail'      in event ) { deltaY = event.detail * -1; }
+    if ( 'wheelDelta'  in event ) { deltaY = event.wheelDelta;  }
+    if ( 'wheelDeltaY' in event ) { deltaY = event.wheelDeltaY; }
 
     // New school wheel delta (wheel event)
     if ( 'deltaY' in event ) { deltaY = event.deltaY * -1; }
