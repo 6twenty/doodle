@@ -6,32 +6,77 @@
   var XMLNS = 'http://www.w3.org/2000/svg';
   var SVG   = document.getElementById('svg');
 
-  // Classes
-  // -------
+  // Class: Point
+  // ------------
 
-  Point.prototype.toArray = function toArray() {
-    return [ this.x, this.y ];
+  function Point(x, y) {
+    this.x = x;
+    this.y = y;
   }
 
-  // L  x,y
-  Point.prototype.lineTo = function lineTo() {
-    return 'L' + this.toArray().join(',');
+  Point.prototype = {
+
+    clone: function clone() {
+      return new Point(this.x, this.y);
+    },
+
+    equals: function equals(point) {
+      return this === point || point && (this.x === point.x && this.y === point.y);
+    },
+
+    getLength: function getLength() {
+      return Math.sqrt(this.x * this.x + this.y * this.y);
+    },
+
+    getDistance: function getDistance(point) {
+      var x = point.x - this.x;
+      var y = point.y - this.y;
+      var d = x * x + y * y;
+      return Math.sqrt(d);
+    },
+
+    normalize: function normalize(length) {
+      if (length === undefined) length = 1;
+      var current = this.getLength();
+      var scale = current !== 0 ? length / current : 0;
+      var point = new Point(this.x * scale, this.y * scale);
+      return point;
+    },
+
+    negate: function negate() {
+      return new Point(-this.x, -this.y);
+    },
+
+    multiply: function multiply(n) {
+      return new Point(this.x * n, this.y * n);
+    },
+
+    divide: function divide(n) {
+      return new Point(this.x / n, this.y / n);
+    },
+
+    add: function add(point) {
+      return new Point(this.x + point.x, this.y + point.y);
+    },
+
+    subtract: function subtract(point) {
+      return new Point(this.x - point.x, this.y - point.y);
+    },
+
+    dot: function dot(point) {
+      return this.x * point.x + this.y * point.y;
+    }
+
   }
 
-  // C  c1x,c1y  c2x,c2y  x,y
-  Point.prototype.curveTo = function curveTo() {
-    var cp1 = this.cp1.toArray().join(',');
-    var cp2 = this.cp2.toArray().join(',');
-    var point = this.toArray().join(',');
-    return 'C' + [ cp1, cp2, point ].join(' ');
-  }
+  // Class: Path
+  // -----------
 
-  function DrawPath(state) {
-    this.path = new Path();
-    this.points = [];
-    this.origin = state.pointer.clone();
-    this.path.add(this.origin);
-    this.d = 'M' + [ this.origin.x, this.origin.y ].join(',') + ' ';
+  function Path(state) {
+    var point = state.pointer.clone();
+    this.points = [ point ];
+
+    this.error = 10; // Tolerance for smoothing
 
     this.colour = state.colour;
     this.size = state.size;
@@ -45,26 +90,39 @@
     this.layer.insertBefore(this.el, null);
   }
 
-  DrawPath.prototype = {
+  Path.prototype = {
     update: function update(state) {
       if (this.end && state.pointer.equals(this.end)) return;
       this.end = state.pointer.clone();
       this.points.push(this.end);
-      this.path.add(this.end);
     },
 
     render: function render() {
-      var d = this.d + this.points.map(function map(point, i, points) {
-        return this.simplified ? point.curveTo() : point.lineTo();
-      }.bind(this)).join(' ');
+      var d = '';
 
-      if (this.simplified && this.points.length > 1) {
-        d += this.renderReverse();
+      if (this.simplified) {
+
+        this.points.forEach(function map(point, i, points) {
+          if (i === 0) d += 'M';
+          if (point.handleIn) d += ([ point.handleIn.x, point.handleIn.y ].join(',') + ' ');
+          d += ([ point.x, point.y ].join(',') + ' ');
+          if (point.handleOut) d += ('C' + [ point.handleOut.x, point.handleOut.y ].join(',') + ' ');
+        });
+
+      } else {
+
+        this.points.forEach(function map(point, i, points) {
+          if (i === 0) d += 'M';
+          d += [ point.x, point.y ].join(',');
+          if (i < points.length-1) d += ' L';
+        });
+
       }
 
       this.el.setAttribute('d', d);
     },
 
+    // TODO
     renderReverse: function renderReverse() {
       var threshold = Math.floor(this.size / 2) - 2;
       if (threshold < 0) threshold = 0;
@@ -107,28 +165,193 @@
     },
 
     simplify: function simplify() {
-      this.simplified = true;
-      this.path.simplify(10);
-      var segments = this.path.getSegments();
+      var points = this.points;
+      var length = points.length;
+      this.segments = length > 0 ? [ points[0].clone() ] : [];
 
-      var previousSegment = segments[0];
-      for (var i=1, l=segments.length; i<l; i++) {
-        var segment = segments[i];
-        var x = segment.point.x;
-        var y = segment.point.y;
-        var x1 = previousSegment.point.x + previousSegment.handleOut.x;
-        var y1 = previousSegment.point.y + previousSegment.handleOut.y;
-        var x2 = segment.point.x + segment.handleIn.x;
-        var y2 = segment.point.y + segment.handleIn.y;
-
-        segment.point = new Point(segment.x, segment.y);
-        segment.point.cp1 = new Point(x1, y1);
-        segment.point.cp2 = new Point(x2, y2);
-        previousSegment = segment;
+      if (length > 1) {
+        var first = 0;
+        var last  = length - 1;
+        var tan1  = points[1].subtract(points[0]).normalize();
+        var tan2  = points[length - 2].subtract(points[length - 1]).normalize();
+        this.fitCubic(first, last, tan1, tan2);
       }
 
-      this.points = segments.map(function (segment) { return segment.point; });
-      this.points.shift(); // First segment is the origin
+      this.points = this.segments;
+      delete this.segments;
+      this.simplified = true;
+    },
+
+    fitCubic: function fitCubic(first, last, tan1, tan2) {
+      if (last - first == 1) {
+        var pt1 = this.points[first];
+        var pt2 = this.points[last];
+        var dist = pt1.getDistance(pt2) / 3;
+        this.addCurve([pt1, pt1.add(tan1.normalize(dist)), pt2.add(tan2.normalize(dist)), pt2]);
+        return;
+      }
+
+      var uPrime = this.chordLengthParameterize(first, last);
+      var maxError = Math.max(this.error, this.error * this.error);
+      var split;
+
+      for (var i = 0; i <= 4; i++) {
+        var curve = this.generateBezier(first, last, uPrime, tan1, tan2);
+        var max = this.findMaxError(first, last, curve, uPrime);
+        if (max.error < this.error) {
+          this.addCurve(curve);
+          return;
+        }
+        split = max.index;
+        if (max.error >= maxError) break;
+        this.reparameterize(first, last, uPrime, curve);
+        maxError = max.error;
+      }
+
+      var V1 = this.points[split - 1].subtract(this.points[split]);
+      var V2 = this.points[split].subtract(this.points[split + 1]);
+      var tanCenter = V1.add(V2).divide(2).normalize();
+
+      this.fitCubic(first, split, tan1, tanCenter);
+      this.fitCubic(split, last, tanCenter.negate(), tan2);
+    },
+
+    addCurve: function addCurve(curve) {
+      var prev = this.segments[this.segments.length - 1];
+      prev.handleOut = curve[1].clone();
+      var segment = new Point(curve[3].x, curve[3].y);
+      segment.handleIn = curve[2].clone();
+      this.segments.push(segment);
+    },
+
+    chordLengthParameterize: function chordLengthParameterize(first, last) {
+      var u = [0];
+
+      for (var i = first + 1; i <= last; i++) {
+        u[i - first] = u[i - first - 1] + this.points[i].getDistance(this.points[i - 1]);
+      }
+
+      for (var i = 1, m = last - first; i <= m; i++) {
+        u[i] /= u[m];
+      }
+
+      return u;
+    },
+
+    generateBezier: function generateBezier(first, last, uPrime, tan1, tan2) {
+      var epsilon = 10e-12;
+      var pt1 = this.points[first];
+      var pt2 = this.points[last];
+      var C = [[0, 0], [0, 0]];
+      var X = [0, 0];
+
+      for (var i = 0, l = last - first + 1; i < l; i++) {
+        var u = uPrime[i];
+        var t = 1 - u;
+        var b = 3 * u * t;
+        var b0 = t * t * t;
+        var b1 = b * t;
+        var b2 = b * u;
+        var b3 = u * u * u;
+        var a1 = tan1.normalize(b1);
+        var a2 = tan2.normalize(b2);
+        var tmp = this.points[first + i].subtract(pt1.multiply(b0 + b1)).subtract(pt2.multiply(b2 + b3));
+
+        C[0][0] += a1.dot(a1);
+        C[0][1] += a1.dot(a2);
+        C[1][0] = C[0][1];
+        C[1][1] += a2.dot(a2);
+        X[0] += a1.dot(tmp);
+        X[1] += a2.dot(tmp);
+      }
+
+      var detC0C1 = C[0][0] * C[1][1] - C[1][0] * C[0][1];
+      var alpha1, alpha2;
+
+      if (Math.abs(detC0C1) > epsilon) {
+        var detC0X  = C[0][0] * X[1]    - C[1][0] * X[0];
+        var detXC1  = X[0]    * C[1][1] - X[1]    * C[0][1];
+        alpha1 = detXC1 / detC0C1;
+        alpha2 = detC0X / detC0C1;
+      } else {
+        var c0 = C[0][0] + C[0][1];
+        var c1 = C[1][0] + C[1][1];
+        if (Math.abs(c0) > epsilon) {
+          alpha1 = alpha2 = X[0] / c0;
+        } else if (Math.abs(c1) > epsilon) {
+          alpha1 = alpha2 = X[1] / c1;
+        } else {
+          alpha1 = alpha2 = 0;
+        }
+      }
+
+      var segLength = pt2.getDistance(pt1);
+      epsilon *= segLength;
+      if (alpha1 < epsilon || alpha2 < epsilon) {
+        alpha1 = alpha2 = segLength / 3;
+      }
+
+      return [pt1, pt1.add(tan1.normalize(alpha1)), pt2.add(tan2.normalize(alpha2)), pt2];
+    },
+
+    findMaxError: function findMaxError(first, last, curve, u) {
+      var index = Math.floor((last - first + 1) / 2);
+      var maxDist = 0;
+
+      for (var i = first + 1; i < last; i++) {
+        var P = this.evaluate(3, curve, u[i - first]);
+        var v = P.subtract(this.points[i]);
+        var dist = v.x * v.x + v.y * v.y;
+        if (dist >= maxDist) {
+          maxDist = dist;
+          index = i;
+        }
+      }
+
+      return {
+        error: maxDist,
+        index: index
+      };
+    },
+
+    evaluate: function evaluate(degree, curve, t) {
+      var tmp = curve.slice();
+
+      for (var i = 1; i <= degree; i++) {
+        for (var j = 0; j <= degree - i; j++) {
+          tmp[j] = tmp[j].multiply(1 - t).add(tmp[j + 1].multiply(t));
+        }
+      }
+
+      return tmp[0];
+    },
+
+    reparameterize: function reparameterize(first, last, u, curve) {
+      for (var i = first; i <= last; i++) {
+        u[i - first] = this.findRoot(curve, this.points[i], u[i - first]);
+      }
+    },
+
+    findRoot: function findRoot(curve, point, u) {
+      var curve1 = [];
+      var curve2 = [];
+
+      for (var i = 0; i <= 2; i++) {
+        curve1[i] = curve[i + 1].subtract(curve[i]).multiply(3);
+      }
+
+      for (var i = 0; i <= 1; i++) {
+        curve2[i] = curve1[i + 1].subtract(curve1[i]).multiply(2);
+      }
+
+      var pt   = this.evaluate(3, curve, u);
+      var pt1  = this.evaluate(2, curve1, u);
+      var pt2  = this.evaluate(1, curve2, u);
+      var diff = pt.subtract(point);
+      var df   = pt1.dot(pt1) + diff.dot(pt2);
+
+      if (Math.abs(df) < 10e-6) return u;
+      return u - diff.dot(pt1) / df;
     }
   }
 
@@ -243,9 +466,9 @@
   // Drawing
   // -------
 
-  qd.setupDraw = function setupDrawPath() {
+  qd.setupDraw = function setupDraw() {
     qd.redos = [];
-    qd.path = new DrawPath(qd.state);
+    qd.path = new Path(qd.state);
   }
 
   qd.handleDraw = function handleDraw() {
