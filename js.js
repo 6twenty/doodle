@@ -6,6 +6,15 @@
   var XMLNS = 'http://www.w3.org/2000/svg';
   var SVG   = document.getElementById('svg');
 
+  // Class: Segment
+  // --------------
+
+  function Segment(point, handleIn, handleOut) {
+    this.point = point;
+    if (handleIn) this.handleIn = handleIn;
+    if (handleOut) this.handleOut = handleOut;
+  }
+
   // Class: Point
   // ------------
 
@@ -15,6 +24,10 @@
   }
 
   Point.prototype = {
+
+    toString: function toString() {
+      return [ this.x, this.y ].join(',');
+    },
 
     clone: function clone() {
       return new Point(this.x, this.y);
@@ -91,6 +104,7 @@
   }
 
   Path.prototype = {
+
     update: function update(state) {
       if (this.end && state.pointer.equals(this.end)) return;
       this.end = state.pointer.clone();
@@ -98,76 +112,58 @@
     },
 
     render: function render() {
-      var d = '';
+      var d  = '';
+      var d_ = '';
 
       if (this.simplified) {
 
-        this.points.forEach(function map(point, i, points) {
+        // Variable width setup
+        var threshold = Math.floor(this.size / 2);
+        var step = Math.max(1, this.size * 0.1);
+        var offset = 0;
+
+        this.segments.forEach(function map(segment, i, segments) {
           if (i === 0) d += 'M';
-          if (point.handleIn) d += ([ point.handleIn.x, point.handleIn.y ].join(',') + ' ');
-          d += ([ point.x, point.y ].join(',') + ' ');
-          if (point.handleOut) d += ('C' + [ point.handleOut.x, point.handleOut.y ].join(',') + ' ');
+          if (segment.handleIn) d += (segment.handleIn + ' ');
+          d += (segment.point + ' ');
+          if (segment.handleOut) d += ('C' + segment.handleOut + ' ');
+
+          // Variable width offset
+          // TODO: get the offset back to 0 for the final segment
+          var diff = Math.random() >= 0.5 ? step : -step;
+          if (Math.abs(offset + diff) > threshold) diff *= -1;
+          offset += diff;
+
+          // Variable width handles
+          var add = { x: offset, y: offset };
+          segment.point_ = segment.point.add(add);
+          if (segment.handleIn) segment.handleIn_ = segment.handleIn.add(add);
+          if (segment.handleOut) segment.handleOut_ = segment.handleOut.add(add);
+
+          if (i === 0) d_ += 'M';
+          if (segment.handleIn_) d_ += (segment.handleIn_ + ' ');
+          d_ += (segment.point_ + ' ');
+          if (segment.handleOut_) d_ += ('C' + segment.handleOut_ + ' ');
         });
 
       } else {
 
         this.points.forEach(function map(point, i, points) {
           if (i === 0) d += 'M';
-          d += [ point.x, point.y ].join(',');
+          d += point;
           if (i < points.length-1) d += ' L';
         });
 
       }
 
+      if (d_) d += (' ' + d_);
       this.el.setAttribute('d', d);
-    },
-
-    // TODO
-    renderReverse: function renderReverse() {
-      var threshold = Math.floor(this.size / 2) - 2;
-      if (threshold < 0) threshold = 0;
-      var step = this.size * 0.1;
-      if (step < 1) step = 1;
-      var previousOffset = 0;
-
-      // Same curves, but in reverse, and closing the path
-      var d = this.points.reverse().map(function map(point, i, points) {
-        // Use control points (swapped) from `point` but destination from the *next* point
-        var next = points[i+1];
-
-        if (next) {
-          // Tweak the coordinates to vary the path width
-          var diff = Math.random() >= 0.5 ? step : -step;
-          var offset = previousOffset + diff;
-          if (Math.abs(offset) > threshold) {
-            offset = previousOffset - (offset > 0 ? step : -step);
-          }
-
-          previousOffset = offset;
-          point.cp1.x += offset;
-          point.cp1.y += offset;
-          point.cp2.x += offset;
-          point.cp2.y += offset;
-          next.x += offset;
-          next.y += offset;
-        } else {
-          next = this.origin;
-        }
-
-
-        var cp1 = point.cp2.toArray().join(',');
-        var cp2 = point.cp1.toArray().join(',');
-        var target = next.toArray().join(',');
-        return 'C' + [ cp1, cp2, target ].join(' ');
-      }.bind(this)).join(' ');
-
-      return ' ' + d + 'z';
     },
 
     simplify: function simplify() {
       var points = this.points;
       var length = points.length;
-      this.segments = length > 0 ? [ points[0].clone() ] : [];
+      this.segments = length > 0 ? [ new Segment(points[0].clone()) ] : [];
 
       if (length > 1) {
         var first = 0;
@@ -177,8 +173,7 @@
         this.fitCubic(first, last, tan1, tan2);
       }
 
-      this.points = this.segments;
-      delete this.segments;
+      delete this.points;
       this.simplified = true;
     },
 
@@ -219,7 +214,7 @@
     addCurve: function addCurve(curve) {
       var prev = this.segments[this.segments.length - 1];
       prev.handleOut = curve[1].clone();
-      var segment = new Point(curve[3].x, curve[3].y);
+      var segment = new Segment(curve[3].clone());
       segment.handleIn = curve[2].clone();
       this.segments.push(segment);
     },
@@ -353,6 +348,7 @@
       if (Math.abs(df) < 10e-6) return u;
       return u - diff.dot(pt1) / df;
     }
+
   }
 
   // Main loop
