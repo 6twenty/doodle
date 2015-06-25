@@ -88,10 +88,6 @@ body {
   background: rgba(255,255,255,.33);
 }
 
-#modal > div > label.inverse:hover::after {
-  background: rgba(0,0,0,.1);
-}
-
 #modal > div > label[data-label]::before {
   content: attr(data-label);
   line-height: 50px;
@@ -121,6 +117,32 @@ body {
   border-color: black;
 }
 
+#modal > div > label.inverse:hover::after {
+  background: rgba(0,0,0,.1);
+}
+
+#modal > div > label.alt:hover {
+  border-color: #8bbbff;
+}
+
+#modal > div > label.alt:hover::before {
+  color: #8bbbff;
+}
+
+#modal > div > input:checked + label.alt,
+#modal > div > input:checked + label.alt.inverse::before {
+  border-color: #89ad48;
+}
+
+#modal > div > label.alt:hover::after,
+#modal > div > input:checked + label.alt::before {
+  display: none;
+}
+
+#modal > div > input:checked + label.alt.inverse::before {
+  display: block;
+}
+
 #modal-color + div {
   max-width: 490px;
 }
@@ -129,19 +151,6 @@ body {
   max-width: 400px;
 }
 
-#modal-size + div > label:hover {
-  border-color: rgb(206,225,210);
-}
-
-#modal-size + div > input:checked + label {
-  border-color: rgb(76,175,80);
-}
-
-#modal-size + div > label:hover::after,
-#modal-size + div > input:checked + label::before {
-  display: none;
-}
-
-#modal-layer + div > label {
-  background: white;
+#modal-layer + div {
+  max-width: 240px;
 }
