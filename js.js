@@ -508,7 +508,8 @@
     114: 'redo',
     99:  'color',
     111: 'opacity',
-    115: 'size'
+    115: 'size',
+    108: 'layer'
   }
 
   qd.keypress = function keypress(e) {
@@ -629,7 +630,8 @@
 
     color:   function () { qd.modal('color');   },
     opacity: function () { qd.modal('opacity'); },
-    size:    function () { qd.modal('size');    }
+    size:    function () { qd.modal('size');    },
+    layer:   function () { qd.modal('layer');   }
 
   }
 
