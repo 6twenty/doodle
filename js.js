@@ -121,6 +121,8 @@
         var threshold = Math.floor(this.size / 2);
         var step = Math.max(1, this.size * 0.1);
         var offset = 0;
+        var reducing = false;
+        var last = this.segments.length - 1;
 
         this.segments.forEach(function map(segment, i, segments) {
           if (i === 0) d += 'M';
@@ -129,12 +131,20 @@
           if (segment.handleOut) d += ('C' + segment.handleOut + ' ');
 
           // Variable width offset
-          // TODO: get the offset back to 0 for the final segment
-          var diff = Math.random() >= 0.5 ? step : -step;
-          if (Math.abs(offset + diff) > threshold) diff *= -1;
-          offset += diff;
+          if (i === 0 || i === last) {
+            offset = 0;
+          } else if (typeof reducing === 'number') {
+            offset += reducing;
+          } else if ((Math.abs(offset) / step) >= (last - i)) {
+            reducing = reducing || (offset > 0 ? -step : step);
+            offset += reducing;
+          } else {
+            var diff = Math.random() >= 0.5 ? step : -step;
+            if (Math.abs(offset + diff) > threshold) diff *= -1;
+            offset += diff;
+          }
 
-          // Variable width handles
+          // Variable width points
           var add = { x: offset, y: offset };
           segment.point_ = segment.point.add(add);
           if (segment.handleIn) segment.handleIn_ = segment.handleIn.add(add);
