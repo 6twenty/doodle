@@ -36,5 +36,84 @@ body {
   right: 0;
   bottom: 0;
   left: 0;
-  background: rgba(255,255,255,.5);
+  background: rgba(255,255,255,.9);
+  cursor: default;
+  text-align: center;
+  display: none;
+}
+
+#modal > input {
+  display: none;
+}
+
+#modal > div {
+  position: relative;
+  top: 50vh;
+  transform: translateY(-50%);
+  display: none;
+}
+
+#modal > input:checked + div {
+  display: inline-block;
+}
+
+#modal > div > input {
+  display: none;
+}
+
+#modal > div > label {
+  position: relative;
+  display: inline-block;
+  border-radius: 50%;
+  background: currentColor;
+  margin: 10px 8px;
+  border: solid 5px white;
+  cursor: pointer;
+  box-shadow: 0 0 3px rgba(0,0,0,.33);
+  font-size: 60px;
+  height: 1em;
+  width: 1em;
+  transform: rotate(45deg);
+}
+
+#modal > div > label:hover::after {
+  content: '';
+  display: block;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 50%;
+  background: rgba(255,255,255,.33);
+}
+
+#modal > div > label.inverse:hover::after {
+  background: rgba(0,0,0,.1);
+}
+
+#modal > div > input:checked + label::before {
+  content: '';
+  display: block;
+  position: absolute;
+  border: solid .07em white;
+  border-radius: 5px;
+  border-top: none;
+  border-left: none;
+  height: .6em;
+  width: .3em;
+  bottom: .15em;
+  right: .3em;
+}
+
+#modal > div > input:checked + label.inverse::before {
+  border-color: black;
+}
+
+#modal-color + div {
+  max-width: 490px;
+}
+
+#modal-opacity + div {
+  max-width: 400px;
 }

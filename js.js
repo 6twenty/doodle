@@ -5,6 +5,16 @@
 
   var XMLNS = 'http://www.w3.org/2000/svg';
   var SVG   = document.getElementById('svg');
+  var MODAL = document.getElementById('modal');
+
+  // Helpers
+  // -------
+
+  qd.forEach = function forEach(array, callback, scope) {
+    for (var i = 0; i < array.length; i++) {
+      callback.call(scope, array[i], i, array);
+    }
+  }
 
   // Class: Segment
   // --------------
@@ -87,7 +97,7 @@
     var point = state.pointer.clone();
     this.points = [ point ];
 
-    this.colour = state.colour;
+    this.color = state.color;
     this.size = state.size;
     this.opacity = state.opacity;
 
@@ -95,7 +105,7 @@
 
     this.layer = qd.layer;
     this.el = document.createElementNS(XMLNS, 'path');
-    this.el.setAttribute('stroke', this.colour);
+    this.el.setAttribute('stroke', this.color);
     this.el.setAttribute('stroke-width', this.size);
     this.el.setAttribute('opacity', this.opacity);
     this.el.setAttribute('class', 'path');
@@ -419,7 +429,7 @@
     shiftdown: false,
     drawing: false,
     pointer: new Point(),
-    colour: '#000',
+    color: '#000',
     size: 10,
     opacity: 1
   }
@@ -463,16 +473,40 @@
   qd.keyevent = function keyevent(e) {
     qd.state.shiftdown = e.shiftKey;
     SVG.style.cursor = e.shiftKey ? 'move' : '';
+    if (e.which === 27) qd.modal(false); // Escape key
   }
 
   window.addEventListener('keydown', qd.keyevent);
   window.addEventListener('keyup', qd.keyevent);
 
+  function stopEventPropagation(e) { e.stopPropagation(); }
+  MODAL.addEventListener('mouseup', stopEventPropagation);
+  MODAL.addEventListener('mouseleave', stopEventPropagation);
+  MODAL.addEventListener('mousemove', stopEventPropagation);
+  MODAL.addEventListener('mousedown', stopEventPropagation);
+  MODAL.addEventListener('keydown', stopEventPropagation);
+  MODAL.addEventListener('keyup', stopEventPropagation);
+  qd.forEach(MODAL.querySelectorAll('label, input'), function (el) {
+    el.addEventListener('click', stopEventPropagation);
+  });
+
+  qd.change = function change(e) {
+    api[e.target.name] = e.target.value;
+  }
+
+  MODAL.addEventListener('change', qd.change);
+
+  qd.click = function click(e) {
+    if (e.target.tagName !== 'LABEL') qd.modal(false);
+  }
+
+  MODAL.addEventListener('click', qd.click);
+
   // Keyboard commands
   qd.keys = {
     117: 'undo',
     114: 'redo',
-    99:  'colour',
+    99:  'color',
     111: 'opacity',
     115: 'size'
   }
@@ -526,6 +560,24 @@
     qd.state.moveOrigin = null;
   }
 
+  // Modal
+  // -----
+
+  qd.modal = function modal(arg) {
+    if (arg === false) {
+      // Close modal
+      MODAL.style.display = 'none';
+      qd.forEach(MODAL.querySelectorAll('input[type="checkbox"]'), function (el) {
+        el.checked = false;
+      });
+    } else {
+      // Open modal
+      qd.modal(false); // First close any open modals
+      MODAL.style.display = 'block';
+      document.getElementById('modal-' + arg).checked = true;
+    }
+  }
+
   // API
   // ---
 
@@ -551,8 +603,8 @@
     },
 
     color: {
-      get: function () { return qd.state.colour; },
-      set: function (colour) { qd.state.colour = colour; }
+      get: function () { return qd.state.color; },
+      set: function (color) { qd.state.color = color; }
     },
 
     size: {
@@ -573,7 +625,10 @@
   qd.commands = {
 
     undo: api.undo,
-    redo: api.redo
+    redo: api.redo,
+
+    color: function () { qd.modal('color'); },
+    opacity: function () { qd.modal('opacity'); }
 
   }
 
