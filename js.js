@@ -469,6 +469,22 @@
   window.addEventListener('keydown', qd.keyevent);
   window.addEventListener('keyup', qd.keyevent);
 
+  // Keyboard commands
+  qd.keys = {
+    117: 'undo',
+    114: 'redo',
+    99:  'colour',
+    111: 'opacity',
+    115: 'size'
+  }
+
+  qd.keypress = function keypress(e) {
+    var command = qd.keys[e.which];
+    if (command) qd.commands[command]();
+  }
+
+  window.addEventListener('keypress', qd.keypress);
+
   // Drawing
   // -------
 
@@ -551,5 +567,15 @@
     }
 
   });
+
+  // Commands
+  // --------
+
+  qd.commands = {
+
+    undo: api.undo,
+    redo: api.redo
+
+  }
 
 })(Object.create(null), window.app = Object.create(null));
