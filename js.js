@@ -9,10 +9,8 @@
   // Class: Segment
   // --------------
 
-  function Segment(point, handleIn, handleOut) {
+  function Segment(point) {
     this.point = point;
-    if (handleIn) this.handleIn = handleIn;
-    if (handleOut) this.handleOut = handleOut;
   }
 
   // Class: Point
@@ -89,17 +87,18 @@
     var point = state.pointer.clone();
     this.points = [ point ];
 
-    this.error = 10; // Tolerance for smoothing
-
     this.colour = state.colour;
     this.size = state.size;
     this.opacity = state.opacity;
+
+    this.error = this.size * 2.5; // Tolerance for smoothing
 
     this.layer = qd.layer;
     this.el = document.createElementNS(XMLNS, 'path');
     this.el.setAttribute('stroke', this.colour);
     this.el.setAttribute('stroke-width', this.size);
     this.el.setAttribute('opacity', this.opacity);
+    this.el.setAttribute('class', 'path');
     this.layer.insertBefore(this.el, null);
   }
 
