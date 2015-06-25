@@ -627,8 +627,9 @@
     undo: api.undo,
     redo: api.redo,
 
-    color: function () { qd.modal('color'); },
-    opacity: function () { qd.modal('opacity'); }
+    color:   function () { qd.modal('color');   },
+    opacity: function () { qd.modal('opacity'); },
+    size:    function () { qd.modal('size');    }
 
   }
 

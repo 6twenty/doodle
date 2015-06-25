@@ -62,6 +62,7 @@ body {
 }
 
 #modal > div > label {
+  color: black;
   position: relative;
   display: inline-block;
   border-radius: 50%;
@@ -116,4 +117,17 @@ body {
 
 #modal-opacity + div {
   max-width: 400px;
+}
+
+#modal-size + div > label:hover {
+  border-color: rgb(206,225,210);
+}
+
+#modal-size + div > input:checked + label {
+  border-color: rgb(76,175,80);
+}
+
+#modal-size + div > label:hover::after,
+#modal-size + div > input:checked + label::before {
+  display: none;
 }
