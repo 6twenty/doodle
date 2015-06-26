@@ -5,6 +5,7 @@
 
   var XMLNS = 'http://www.w3.org/2000/svg';
   var SVG   = document.getElementById('svg');
+  var PEN   = document.getElementById('pen');
   var MODAL = document.getElementById('modal');
 
   // Helpers
@@ -428,11 +429,51 @@
     mousedown: false,
     shiftdown: false,
     drawing: false,
-    pointer: new Point(),
-    color: '#000',
-    size: 10,
-    opacity: 1
+    pointer: new Point()
   }
+
+    // color: '#000',
+    // size: 10,
+    // opacity: 1
+
+  Object.defineProperties(qd.state, {
+
+    _color: { value: '#000', writable: true },
+    color: {
+      get: function () { return this._color; },
+      set: function (color) {
+        this._color = color;
+        var current = window.getComputedStyle(PEN)['background-color'];
+        var split = current.replace(/[^\d,\.]/g, '').split(',');
+        var currentOpacity = +split[3] || 1;
+        PEN.style.backgroundColor = color;
+        this.opacity = currentOpacity;
+      }
+    },
+
+    _size: { value: 10, writable: true },
+    size: {
+      get: function () { return this._size; },
+      set: function (size) {
+        this._size = size;
+        var width = (60 - (50 * ((size * 2) / 100))) / 2;
+        PEN.style.borderWidth = width + 'px';
+      }
+    },
+
+    _opacity: { value: 1, writable: true },
+    opacity: {
+      get: function () { return this._opacity; },
+      set: function (opacity) {
+        this._opacity = opacity;
+        var current = window.getComputedStyle(PEN)['background-color'];
+        var split = current.replace(/[^\d,]/g, '').split(',');
+        split[3] = opacity;
+        PEN.style.backgroundColor = 'rgba(' + split.join(',') + ')';
+      }
+    }
+
+  });
 
   // Handlers
   // --------
@@ -447,7 +488,7 @@
 
   qd.mousemove = function mousemove(e) {
     qd.state.shiftdown = e.shiftKey;
-    qd.state.mousedown = e.which === 1;
+    qd.state.mousedown = e.buttons === 1;
     qd.state.xy = [ e.pageX, e.pageY ];
     qd.state.pointer.x = e.pageX + qd.state.offset[0];
     qd.state.pointer.y = e.pageY + qd.state.offset[1];
@@ -634,5 +675,7 @@
     layer:   function () { qd.modal('layer');   }
 
   }
+
+  window.qd = qd;
 
 })(Object.create(null), window.app = Object.create(null));

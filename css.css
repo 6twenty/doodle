@@ -30,6 +30,19 @@ body {
   stroke-linejoin: round;
 }
 
+#pen {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  border-radius: 50%;
+  background: rgba(0,0,0,1);
+  border: solid 5px white;
+  cursor: pointer;
+  box-shadow: 0 0 3px rgba(0,0,0,.33);
+  height: 60px;
+  width: 60px;
+}
+
 #modal {
   position: absolute;
   top: 0;
