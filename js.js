@@ -432,10 +432,6 @@
     pointer: new Point()
   }
 
-    // color: '#000',
-    // size: 10,
-    // opacity: 1
-
   Object.defineProperties(qd.state, {
 
     _color: { value: '#000', writable: true },
@@ -527,8 +523,12 @@
   MODAL.addEventListener('mousedown', stopEventPropagation);
   MODAL.addEventListener('keydown', stopEventPropagation);
   MODAL.addEventListener('keyup', stopEventPropagation);
-  qd.forEach(MODAL.querySelectorAll('label, input'), function (el) {
+  qd.forEach(document.querySelectorAll('#modal label, #modal input, #pen'), function (el) {
     el.addEventListener('click', stopEventPropagation);
+    el.addEventListener('mousedown', stopEventPropagation);
+    el.addEventListener('mousemove', stopEventPropagation);
+    el.addEventListener('mouseup', stopEventPropagation);
+    el.addEventListener('mouseleave', stopEventPropagation);
   });
 
   qd.change = function change(e) {
@@ -537,11 +537,20 @@
 
   MODAL.addEventListener('change', qd.change);
 
-  qd.click = function click(e) {
+  qd.modalclick = function click(e) {
     if (e.target.tagName !== 'LABEL') qd.modal(false);
   }
 
-  MODAL.addEventListener('click', qd.click);
+  MODAL.addEventListener('click', qd.modalclick);
+
+  qd.penclick = function click(e) {
+    qd.modal('all');
+  }
+
+  PEN.addEventListener('click', qd.penclick);
+  qd.forEach(document.querySelectorAll('#modal-all + div > label'), function (el) {
+    el.addEventListener('click', function (e) { qd.modal(el.dataset.modal); });
+  });
 
   // Keyboard commands
   qd.keys = {

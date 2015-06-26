@@ -30,6 +30,10 @@ body {
   stroke-linejoin: round;
 }
 
+#modal { z-index: 3; }
+#pen   { z-index: 2; }
+#svg   { z-index: 1; }
+
 #pen {
   position: absolute;
   top: 20px;
@@ -104,12 +108,16 @@ body {
 #modal > div > label[data-label]::before {
   content: attr(data-label);
   line-height: 50px;
-  color: #ccc;
+  color: #fff;
 }
 
 #modal > div > input:checked + label {
   font-size: 60px;
   transform: rotate(45deg);
+}
+
+#modal > div > input:checked + label.alt {
+  background: white !important;
 }
 
 #modal > div > input:checked + label::before {
@@ -136,10 +144,6 @@ body {
 
 #modal > div > label.alt:hover {
   border-color: #8bbbff;
-}
-
-#modal > div > label.alt:hover::before {
-  color: #8bbbff;
 }
 
 #modal > div > input:checked + label.alt,
