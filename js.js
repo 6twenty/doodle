@@ -376,6 +376,9 @@
 
   requestAnimationFrame(function loop() {
 
+    // Set zoom
+    qd.setZoom();
+
     // Is drawing if mousedown (but not shiftdown)
     if (qd.state.mousedown && !qd.state.shiftdown && !qd.state.moving) {
 
@@ -429,10 +432,20 @@
     mousedown: false,
     shiftdown: false,
     drawing: false,
-    pointer: new Point()
+    pointer: new Point(),
+    previousZoom: 1
   }
 
   Object.defineProperties(qd.state, {
+
+    _zoom: { value: 1, writable: true },
+    zoom: {
+      get: function () { return this._zoom; },
+      set: function (zoom) {
+        if (zoom <= 0.1 || zoom >= 10) return;
+        this._zoom = zoom;
+      }
+    },
 
     _color: { value: '#000', writable: true },
     color: {
@@ -474,6 +487,23 @@
   // Handlers
   // --------
 
+  qd.setOffset = function setOffset(x, y) {
+    qd.state.offset = [x, y];
+    SVG.viewBox.baseVal.x = qd.state.offset[0] * qd.state.zoom;
+    SVG.viewBox.baseVal.y = qd.state.offset[1] * qd.state.zoom;
+  }
+
+  qd.setZoom = function setZoom() {
+    if (qd.state.previousZoom !== qd.state.zoom) {
+      var w = window.innerWidth, h = window.innerHeight;
+      qd.state.previousZoom = qd.state.zoom;
+      SVG.viewBox.baseVal.width = w * qd.state.zoom;
+      SVG.viewBox.baseVal.height = h * qd.state.zoom;
+      SVG.viewBox.baseVal.x = qd.state.offset[0] - ((w / 2) * (qd.state.zoom - 1));
+      SVG.viewBox.baseVal.y = qd.state.offset[1] - ((h / 2) * (qd.state.zoom - 1));
+    }
+  }
+
   qd.mouseup = function mouseup(e) {
     qd.state.mousedown = false;
     qd.state.shiftdown = false;
@@ -493,11 +523,11 @@
   window.addEventListener('mousemove', qd.mousemove);
   window.addEventListener('mousedown', qd.mousemove);
 
-  qd.setOffset = function setOffset(x, y) {
-    qd.state.offset = [x, y];
-    SVG.viewBox.baseVal.x = x;
-    SVG.viewBox.baseVal.y = y;
+  qd.mousewheel = function mousewheel(e) {
+    qd.state.zoom += (e.detail / 100);
   }
+
+  window.addEventListener('mousewheel', qd.mousewheel);
 
   qd.resize = function resize() {
     SVG.viewBox.baseVal.width = window.innerWidth;
