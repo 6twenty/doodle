@@ -484,13 +484,13 @@
 
   });
 
-  // Handlers
-  // --------
+  // Translate & scale
+  // -----------------
 
   qd.setOffset = function setOffset(x, y) {
     qd.state.offset = [x, y];
-    SVG.viewBox.baseVal.x = qd.state.offset[0] * qd.state.zoom;
-    SVG.viewBox.baseVal.y = qd.state.offset[1] * qd.state.zoom;
+    SVG.viewBox.baseVal.x = x * qd.state.zoom;
+    SVG.viewBox.baseVal.y = y * qd.state.zoom;
   }
 
   qd.setZoom = function setZoom() {
@@ -503,6 +503,9 @@
       SVG.viewBox.baseVal.y = qd.state.offset[1] - ((h / 2) * (qd.state.zoom - 1));
     }
   }
+
+  // Handlers
+  // --------
 
   qd.mouseup = function mouseup(e) {
     qd.state.mousedown = false;
