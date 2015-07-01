@@ -427,8 +427,10 @@
   qd.layer = document.getElementById('layer-5');
 
   qd.state = {
-    xy: [ 0, 0 ],
-    offset: [ 0, 0 ],
+    x: 0, y: 0,
+    height: window.innerHeight,
+    width: window.innerWidth,
+    offset: { x: 0, y: 0 },
     mousedown: false,
     shiftdown: false,
     drawing: false,
@@ -488,20 +490,17 @@
   // -----------------
 
   qd.setOffset = function setOffset(x, y) {
-    qd.state.offset = [x, y];
+    qd.state.offset.x = x;
+    qd.state.offset.y = y;
     SVG.viewBox.baseVal.x = x * qd.state.zoom;
     SVG.viewBox.baseVal.y = y * qd.state.zoom;
   }
 
   qd.setZoom = function setZoom() {
-    if (qd.state.previousZoom !== qd.state.zoom) {
-      var w = window.innerWidth, h = window.innerHeight;
-      qd.state.previousZoom = qd.state.zoom;
-      SVG.viewBox.baseVal.width = w * qd.state.zoom;
-      SVG.viewBox.baseVal.height = h * qd.state.zoom;
-      SVG.viewBox.baseVal.x = qd.state.offset[0] - ((w / 2) * (qd.state.zoom - 1));
-      SVG.viewBox.baseVal.y = qd.state.offset[1] - ((h / 2) * (qd.state.zoom - 1));
-    }
+    SVG.viewBox.baseVal.width = qd.state.width * qd.state.zoom;
+    SVG.viewBox.baseVal.height = qd.state.height * qd.state.zoom;
+    // SVG.viewBox.baseVal.x = qd.state.offset.x - (qd.state.x * (qd.state.zoom - 1));
+    // SVG.viewBox.baseVal.y = qd.state.offset.y - (qd.state.y * (qd.state.zoom - 1));
   }
 
   // Handlers
@@ -518,23 +517,26 @@
   qd.mousemove = function mousemove(e) {
     qd.state.shiftdown = e.shiftKey;
     qd.state.mousedown = e.buttons === 1;
-    qd.state.xy = [ e.pageX, e.pageY ];
-    qd.state.pointer.x = e.pageX + qd.state.offset[0];
-    qd.state.pointer.y = e.pageY + qd.state.offset[1];
+    qd.state.x = e.pageX;
+    qd.state.y = e.pageY;
+    qd.state.pointer.x = e.pageX + qd.state.offset.x;
+    qd.state.pointer.y = e.pageY + qd.state.offset.y;
   }
 
   window.addEventListener('mousemove', qd.mousemove);
   window.addEventListener('mousedown', qd.mousemove);
 
   qd.mousewheel = function mousewheel(e) {
-    qd.state.zoom += (e.detail / 100);
+    qd.state.zoom *= Math.pow(1.1, (e.detail / 100));
   }
 
   window.addEventListener('mousewheel', qd.mousewheel);
 
   qd.resize = function resize() {
-    SVG.viewBox.baseVal.width = window.innerWidth;
-    SVG.viewBox.baseVal.height = window.innerHeight;
+    qd.state.width = window.innerWidth;
+    qd.state.height = window.innerHeight;
+    SVG.viewBox.baseVal.width = qd.state.width;
+    SVG.viewBox.baseVal.height = qd.state.height;
   }
 
   window.addEventListener('resize', qd.resize);
@@ -628,15 +630,15 @@
 
   qd.setupMove = function setupMove() {
     if (!qd.state.moveOrigin) {
-      var x = qd.state.xy[0] + qd.state.offset[0];
-      var y = qd.state.xy[1] + qd.state.offset[1];
+      var x = qd.state.x + qd.state.offset.x;
+      var y = qd.state.y + qd.state.offset.y;
       qd.state.moveOrigin = [ x, y ];
     }
   }
 
   qd.handleMove = function handleMove() {
-    var x = qd.state.xy[0] - qd.state.moveOrigin[0];
-    var y = qd.state.xy[1] - qd.state.moveOrigin[1];
+    var x = qd.state.x - qd.state.moveOrigin[0];
+    var y = qd.state.y - qd.state.moveOrigin[1];
     qd.setOffset(-x, -y);
   }
 
