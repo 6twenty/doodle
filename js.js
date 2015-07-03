@@ -116,8 +116,9 @@
   Path.prototype = {
 
     update: function update(state) {
-      if (this.end && state.pointer.equals(this.end)) return;
-      this.end = state.pointer.clone();
+      var point = state.pointer;
+      if (this.end && point.equals(this.end)) return;
+      this.end = point.clone();
       this.points.push(this.end);
     },
 
@@ -377,7 +378,7 @@
   requestAnimationFrame(function loop() {
 
     // Set zoom
-    // qd.setZoom();
+    if (qd.state.zooming) qd.scale();
 
     // Is drawing if mousedown (but not shiftdown)
     if (qd.state.mousedown && !qd.state.shiftdown && !qd.state.moving) {
@@ -441,15 +442,27 @@
 
   Object.defineProperties(qd.state, {
 
-    _offset: { value: new Point() },
-    offset: {
+    _topLeft: { value: new Point() },
+    topLeft: {
       get: function () {
         qd.point.x = 0;
         qd.point.y = 0;
         var pt = qd.point.matrixTransform(qd.matrix.inverse());
-        this._offset.x = pt.x;
-        this._offset.y = pt.y;
-        return this._offset;
+        this._topLeft.x = pt.x;
+        this._topLeft.y = pt.y;
+        return this._topLeft;
+      }
+    },
+
+    _bottomRight: { value: new Point() },
+    bottomRight: {
+      get: function () {
+        qd.point.x = qd.state.width;
+        qd.point.y = qd.state.height;
+        var pt = qd.point.matrixTransform(qd.matrix.inverse());
+        this._bottomRight.x = pt.x;
+        this._bottomRight.y = pt.y;
+        return this._bottomRight;
       }
     },
 
@@ -516,13 +529,20 @@
 
   qd.translate = function (dx, dy) {
     qd.matrix = qd.matrix.translate(dx, dy);
-    var point = qd.state.offset;
+    var point = qd.state.topLeft;
     SVG.viewBox.baseVal.x = point.x;
     SVG.viewBox.baseVal.y = point.y;
+    return point;
   }
 
-  qd.scale = function (s) {
-
+  qd.scale = function () {
+    var point = qd.state.pointer;
+    qd.translate(point.x, point.y);
+    qd.matrix = qd.matrix.scale(qd.state.zoom);
+    var topLeft = qd.translate(-point.x, -point.y);
+    var bottomRight = qd.state.bottomRight;
+    SVG.viewBox.baseVal.width = bottomRight.x - topLeft.x;
+    SVG.viewBox.baseVal.height = bottomRight.y - topLeft.y;
   }
 
   // qd.setOffset = function setOffset(x, y) {
@@ -561,7 +581,11 @@
   window.addEventListener('mousedown', qd.mousemove);
 
   qd.mousewheel = function mousewheel(e) {
-    // qd.state.zoom *= Math.pow(1.1, (e.detail / 100));
+    if (qd.state.zooming) clearTimeout(qd.state.zooming);
+    qd.state.zoom = Math.pow(1.1, (e.detail / 100));
+    qd.state.zooming = setTimeout(function () {
+      qd.state.zooming = false;
+    }, 200);
   }
 
   window.addEventListener('mousewheel', qd.mousewheel);
