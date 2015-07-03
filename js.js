@@ -377,7 +377,7 @@
   requestAnimationFrame(function loop() {
 
     // Set zoom
-    qd.setZoom();
+    // qd.setZoom();
 
     // Is drawing if mousedown (but not shiftdown)
     if (qd.state.mousedown && !qd.state.shiftdown && !qd.state.moving) {
@@ -421,24 +421,49 @@
   // State
   // -----
 
-  qd.path = null;
+  qd.path  = null;
   qd.paths = [];
   qd.redos = [];
   qd.layer = document.getElementById('layer-5');
+
+  qd.matrix = SVG.createSVGMatrix();
+  qd.point  = SVG.createSVGPoint();
 
   qd.state = {
     x: 0, y: 0,
     height: window.innerHeight,
     width: window.innerWidth,
-    offset: { x: 0, y: 0 },
     mousedown: false,
     shiftdown: false,
     drawing: false,
-    pointer: new Point(),
     previousZoom: 1
   }
 
   Object.defineProperties(qd.state, {
+
+    _offset: { value: new Point() },
+    offset: {
+      get: function () {
+        qd.point.x = 0;
+        qd.point.y = 0;
+        var pt = qd.point.matrixTransform(qd.matrix.inverse());
+        this._offset.x = pt.x;
+        this._offset.y = pt.y;
+        return this._offset;
+      }
+    },
+
+    _pointer: { value: new Point() },
+    pointer: {
+      get: function () {
+        qd.point.x = qd.state.x;
+        qd.point.y = qd.state.y;
+        var pt = qd.point.matrixTransform(qd.matrix.inverse());
+        this._pointer.x = pt.x;
+        this._pointer.y = pt.y;
+        return this._pointer;
+      }
+    },
 
     _zoom: { value: 1, writable: true },
     zoom: {
@@ -489,19 +514,30 @@
   // Translate & scale
   // -----------------
 
-  qd.setOffset = function setOffset(x, y) {
-    qd.state.offset.x = x;
-    qd.state.offset.y = y;
-    SVG.viewBox.baseVal.x = x * qd.state.zoom;
-    SVG.viewBox.baseVal.y = y * qd.state.zoom;
+  qd.translate = function (dx, dy) {
+    qd.matrix = qd.matrix.translate(dx, dy);
+    var point = qd.state.offset;
+    SVG.viewBox.baseVal.x = point.x;
+    SVG.viewBox.baseVal.y = point.y;
   }
 
-  qd.setZoom = function setZoom() {
-    SVG.viewBox.baseVal.width = qd.state.width * qd.state.zoom;
-    SVG.viewBox.baseVal.height = qd.state.height * qd.state.zoom;
-    // SVG.viewBox.baseVal.x = qd.state.offset.x - (qd.state.x * (qd.state.zoom - 1));
-    // SVG.viewBox.baseVal.y = qd.state.offset.y - (qd.state.y * (qd.state.zoom - 1));
+  qd.scale = function (s) {
+
   }
+
+  // qd.setOffset = function setOffset(x, y) {
+  //   qd.state.offset.x = x;
+  //   qd.state.offset.y = y;
+  //   SVG.viewBox.baseVal.x = x * qd.state.zoom;
+  //   SVG.viewBox.baseVal.y = y * qd.state.zoom;
+  // }
+
+  // qd.setZoom = function setZoom() {
+  //   SVG.viewBox.baseVal.width = qd.state.width * qd.state.zoom;
+  //   SVG.viewBox.baseVal.height = qd.state.height * qd.state.zoom;
+  //   // SVG.viewBox.baseVal.x = qd.state.offset.x - (qd.state.x * (qd.state.zoom - 1));
+  //   // SVG.viewBox.baseVal.y = qd.state.offset.y - (qd.state.y * (qd.state.zoom - 1));
+  // }
 
   // Handlers
   // --------
@@ -519,15 +555,13 @@
     qd.state.mousedown = e.buttons === 1;
     qd.state.x = e.pageX;
     qd.state.y = e.pageY;
-    qd.state.pointer.x = e.pageX + qd.state.offset.x;
-    qd.state.pointer.y = e.pageY + qd.state.offset.y;
   }
 
   window.addEventListener('mousemove', qd.mousemove);
   window.addEventListener('mousedown', qd.mousemove);
 
   qd.mousewheel = function mousewheel(e) {
-    qd.state.zoom *= Math.pow(1.1, (e.detail / 100));
+    // qd.state.zoom *= Math.pow(1.1, (e.detail / 100));
   }
 
   window.addEventListener('mousewheel', qd.mousewheel);
@@ -630,16 +664,14 @@
 
   qd.setupMove = function setupMove() {
     if (!qd.state.moveOrigin) {
-      var x = qd.state.x + qd.state.offset.x;
-      var y = qd.state.y + qd.state.offset.y;
-      qd.state.moveOrigin = [ x, y ];
+      qd.state.moveOrigin = qd.state.pointer.clone();
     }
   }
 
   qd.handleMove = function handleMove() {
-    var x = qd.state.x - qd.state.moveOrigin[0];
-    var y = qd.state.y - qd.state.moveOrigin[1];
-    qd.setOffset(-x, -y);
+    var point = qd.state.pointer;
+    var origin = qd.state.moveOrigin;
+    qd.translate(point.x - origin.x, point.y - origin.y);
   }
 
   qd.finishMove = function finishMove() {
