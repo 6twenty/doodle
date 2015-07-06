@@ -17,6 +17,10 @@
     }
   }
 
+  qd.easeOutQuad = function easeOutQuad(t) {
+    return t * (2 - t);
+  }
+
   // Class: Segment
   // --------------
 
@@ -453,44 +457,35 @@
     mousedown: false,
     shiftdown: false,
     drawing: false,
-    previousZoom: 1
+    momentum: false
   }
 
   Object.defineProperties(qd.state, {
 
-    _topLeft: { value: new Point() },
     topLeft: {
       get: function () {
         qd.point.x = 0;
         qd.point.y = 0;
         var pt = qd.point.matrixTransform(qd.matrix.inverse());
-        this._topLeft.x = pt.x;
-        this._topLeft.y = pt.y;
-        return this._topLeft;
+        return new Point(pt.x, pt.y);
       }
     },
 
-    _bottomRight: { value: new Point() },
     bottomRight: {
       get: function () {
         qd.point.x = qd.state.width;
         qd.point.y = qd.state.height;
         var pt = qd.point.matrixTransform(qd.matrix.inverse());
-        this._bottomRight.x = pt.x;
-        this._bottomRight.y = pt.y;
-        return this._bottomRight;
+        return new Point(pt.x, pt.y);
       }
     },
 
-    _pointer: { value: new Point() },
     pointer: {
       get: function () {
         qd.point.x = qd.state.x;
         qd.point.y = qd.state.y;
         var pt = qd.point.matrixTransform(qd.matrix.inverse());
-        this._pointer.x = pt.x;
-        this._pointer.y = pt.y;
-        return this._pointer;
+        return new Point(pt.x, pt.y);
       }
     },
 
@@ -669,6 +664,8 @@
   // -------
 
   qd.setupDraw = function setupDraw() {
+    if (qd.state.momentum) qd.state.momentum = false;
+
     qd.redos = [];
     qd.path = new Path(qd.state);
   }
@@ -690,19 +687,19 @@
   // ------
 
   qd.setupMove = function setupMove() {
-    if (!qd.state.moveOrigin) {
-      qd.state.moveOrigin = qd.state.pointer.clone();
-    }
+    if (qd.state.momentum) qd.state.momentum = false;
+    qd.state.moveOrigin = qd.state.pointer.clone();
+    qd.state.moveOrigin.timestamp = Date.now();
   }
 
   qd.handleMove = function handleMove() {
-    var point = qd.state.pointer;
-    var origin = qd.state.moveOrigin;
-    qd.translate(point.x - origin.x, point.y - origin.y);
+    var point = qd.state.pointer.subtract(qd.state.moveOrigin);
+    qd.translate(point.x, point.y);
   }
 
   qd.finishMove = function finishMove() {
-    qd.state.moveOrigin = null;
+    qd.state.moveEnd = qd.state.pointer.clone();
+    qd.state.moveEnd.timestamp = Date.now();
   }
 
   // Modal
