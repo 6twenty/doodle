@@ -115,6 +115,22 @@
 
   Path.prototype = {
 
+    play: function play() {
+      window.requestAnimationFrame(function loop() {
+        this._dashoffset -= 20;
+        if (this._dashoffset < 0) this._dashoffset = 0;
+        this.el.setAttribute('stroke-dashoffset', this._dashoffset);
+        if (this._dashoffset === 0) {
+          this.el.setAttribute('stroke-dasharray', '');
+          this.el.setAttribute('stroke-dashoffset', '');
+          var next = qd.paths[this.index + 1];
+          if (next) next.play();
+        } else {
+          window.requestAnimationFrame(loop.bind(this));
+        }
+      }.bind(this));
+    },
+
     update: function update(state) {
       var point = state.pointer;
       if (this.end && point.equals(this.end)) return;
@@ -545,20 +561,6 @@
     SVG.viewBox.baseVal.height = bottomRight.y - topLeft.y;
   }
 
-  // qd.setOffset = function setOffset(x, y) {
-  //   qd.state.offset.x = x;
-  //   qd.state.offset.y = y;
-  //   SVG.viewBox.baseVal.x = x * qd.state.zoom;
-  //   SVG.viewBox.baseVal.y = y * qd.state.zoom;
-  // }
-
-  // qd.setZoom = function setZoom() {
-  //   SVG.viewBox.baseVal.width = qd.state.width * qd.state.zoom;
-  //   SVG.viewBox.baseVal.height = qd.state.height * qd.state.zoom;
-  //   // SVG.viewBox.baseVal.x = qd.state.offset.x - (qd.state.x * (qd.state.zoom - 1));
-  //   // SVG.viewBox.baseVal.y = qd.state.offset.y - (qd.state.y * (qd.state.zoom - 1));
-  // }
-
   // Handlers
   // --------
 
@@ -652,7 +654,8 @@
     99:  'color',
     111: 'opacity',
     115: 'size',
-    108: 'layer'
+    108: 'layer',
+    112: 'play'
   }
 
   qd.keypress = function keypress(e) {
@@ -772,7 +775,21 @@
     color:   function () { qd.modal('color');   },
     opacity: function () { qd.modal('opacity'); },
     size:    function () { qd.modal('size');    },
-    layer:   function () { qd.modal('layer');   }
+    layer:   function () { qd.modal('layer');   },
+
+    play: function () {
+      // Hide all
+      qd.paths.forEach(function (path, i) {
+        path.index = i;
+        if (!path.length) path.length = Math.ceil(path.el.getTotalLength());
+        path.el.setAttribute('stroke-dasharray', path.length);
+        path.el.setAttribute('stroke-dashoffset', path.length);
+        path._dashoffset = path.length;
+      });
+
+      // Animate in sequence
+      qd.paths[0].play();
+    }
 
   }
 
