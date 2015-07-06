@@ -119,10 +119,10 @@
       window.requestAnimationFrame(function loop() {
         this._dashoffset -= 20;
         if (this._dashoffset < 0) this._dashoffset = 0;
-        this.el.setAttribute('stroke-dashoffset', this._dashoffset);
+        this.el.style.strokeDashoffset = this._dashoffset;
         if (this._dashoffset === 0) {
-          this.el.setAttribute('stroke-dasharray', '');
-          this.el.setAttribute('stroke-dashoffset', '');
+          this.el.style.strokeDasharray = '';
+          this.el.style.strokeDashoffset = '';
           var next = qd.paths[this.index + 1];
           if (next) next.play();
         } else {
@@ -782,8 +782,8 @@
       qd.paths.forEach(function (path, i) {
         path.index = i;
         if (!path.length) path.length = Math.ceil(path.el.getTotalLength());
-        path.el.setAttribute('stroke-dasharray', path.length);
-        path.el.setAttribute('stroke-dashoffset', path.length);
+        path.el.style.strokeDasharray = path.length;
+        path.el.style.strokeDashoffset = path.length;
         path._dashoffset = path.length;
       });
 
