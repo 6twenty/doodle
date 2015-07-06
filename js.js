@@ -17,8 +17,9 @@
     }
   }
 
-  qd.easeOutQuad = function easeOutQuad(t) {
-    return t * (2 - t);
+  // https://gist.github.com/gre/1650294
+  qd.easeOutQuint = function easeOutQuad(t) {
+    return 1+(--t)*t*t*t*t;
   }
 
   // Class: Segment
@@ -123,10 +124,10 @@
       window.requestAnimationFrame(function loop() {
         this._dashoffset -= 20;
         if (this._dashoffset < 0) this._dashoffset = 0;
-        this.el.style.strokeDashoffset = this._dashoffset;
+        this.el.setAttribute('stroke-dashoffset', this._dashoffset + 'px');
         if (this._dashoffset === 0) {
-          this.el.style.strokeDasharray = '';
-          this.el.style.strokeDashoffset = '';
+        this.el.setAttribute('stroke-dasharray', '');
+        this.el.setAttribute('stroke-dashoffset', '');
           var next = qd.paths[this.index + 1];
           if (next) next.play();
         } else {
@@ -680,6 +681,10 @@
     qd.path.simplify();
     qd.path.render();
     qd.paths.push(qd.path);
+    qd.cleanupDraw();
+  }
+
+  qd.cleanupDraw = function cleanupDraw() {
     qd.path = null;
   }
 
@@ -689,17 +694,52 @@
   qd.setupMove = function setupMove() {
     if (qd.state.momentum) qd.state.momentum = false;
     qd.state.moveOrigin = qd.state.pointer.clone();
-    qd.state.moveOrigin.timestamp = Date.now();
+    qd.state.movePosition = new Point(qd.state.x, qd.state.y);
   }
 
   qd.handleMove = function handleMove() {
     var point = qd.state.pointer.subtract(qd.state.moveOrigin);
     qd.translate(point.x, point.y);
+
+    qd.state._temp = qd.state._temp || 0;
+    qd.state._temp++;
+    if (qd.state._temp === 10) {
+      qd.state.movePosition = new Point(qd.state.x, qd.state.y);
+      qd.state._temp = 0;
+    }
   }
 
   qd.finishMove = function finishMove() {
-    qd.state.moveEnd = qd.state.pointer.clone();
-    qd.state.moveEnd.timestamp = Date.now();
+    qd.state.momentum = true;
+    qd.state.moveEnd = new Point(qd.state.x, qd.state.y);
+
+    var first    = qd.state.movePosition;
+    var last     = qd.state.moveEnd;
+    var distance = last.subtract(first);
+    var start    = Date.now();
+    var duration = 500;
+
+    window.requestAnimationFrame(function loop() {
+      var time = Date.now() - start;
+      if (!qd.state.momentum || time > duration) return qd.cleanupMove();
+
+      var factor = qd.easeOutQuint(time / duration);
+      qd.state.x = last.x + (distance.x * factor);
+      qd.state.y = last.y + (distance.y * factor);
+      qd.handleMove();
+      qd.state.x = qd.state.moveEnd.x;
+      qd.state.y = qd.state.moveEnd.y;
+
+      window.requestAnimationFrame(loop);
+    });
+  }
+
+  qd.cleanupMove = function cleanupMove() {
+    qd.state.momentum = false;
+    qd.state._temp = null;
+    qd.state.moveOrigin = null;
+    qd.state.movePosition = null;
+    qd.state.moveEnd = null;
   }
 
   // Modal
@@ -779,8 +819,8 @@
       qd.paths.forEach(function (path, i) {
         path.index = i;
         if (!path.length) path.length = Math.ceil(path.el.getTotalLength());
-        path.el.style.strokeDasharray = path.length;
-        path.el.style.strokeDashoffset = path.length;
+        path.el.setAttribute('stroke-dasharray', path.length + 'px');
+        path.el.setAttribute('stroke-dashoffset', path.length + 'px');
         path._dashoffset = path.length;
       });
 
