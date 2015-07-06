@@ -1,24 +1,29 @@
-(function (qd, api) {
+(function () {
 
   // Constants
   // ---------
 
-  var XMLNS = 'http://www.w3.org/2000/svg';
-  var SVG   = document.getElementById('svg');
-  var PEN   = document.getElementById('pen');
-  var MODAL = document.getElementById('modal');
+  var XMLNS    = 'http://www.w3.org/2000/svg';
+  var SVG      = document.getElementById('svg');
+  var PEN      = document.getElementById('pen');
+  var MODAL    = document.getElementById('modal');
+  var MATRIX   = SVG.createSVGMatrix();
+  var POINT    = SVG.createSVGPoint();
+  var HANDLERS = {};
+  var COMMANDS = {};
+  var API      = {};
 
   // Helpers
   // -------
 
-  qd.forEach = function forEach(array, callback, scope) {
+  var forEach = function forEach(array, callback, scope) {
     for (var i = 0; i < array.length; i++) {
       callback.call(scope, array[i], i, array);
     }
   }
 
   // https://gist.github.com/gre/1650294
-  qd.easeOutQuint = function easeOutQuad(t) {
+  var easeOutQuint = function easeOutQuad(t) {
     return 1+(--t)*t*t*t*t;
   }
 
@@ -109,7 +114,7 @@
 
     this.error = this.size * 2.5; // Tolerance for smoothing
 
-    this.layer = qd.layer;
+    this.layer = state.layer;
     this.el = document.createElementNS(XMLNS, 'path');
     this.el.setAttribute('stroke', this.color);
     this.el.setAttribute('stroke-width', this.size);
@@ -128,7 +133,7 @@
         if (this._dashoffset === 0) {
         this.el.setAttribute('stroke-dasharray', '');
         this.el.setAttribute('stroke-dashoffset', '');
-          var next = qd.paths[this.index + 1];
+          var next = state.paths[this.index + 1];
           if (next) next.play();
         } else {
           window.requestAnimationFrame(loop.bind(this));
@@ -399,39 +404,39 @@
   requestAnimationFrame(function loop() {
 
     // Set zoom
-    if (qd.state.zooming) qd.scale();
+    if (state.zooming) scale();
 
     // Is drawing if mousedown (but not shiftdown)
-    if (qd.state.mousedown && !qd.state.shiftdown && !qd.state.moving) {
+    if (state.mousedown && !state.shiftdown && !state.moving) {
 
       // If not previously drawing, set up path
-      if (!qd.state.drawing) {
-        qd.setupDraw();
-        qd.state.drawing = true;
+      if (!state.drawing) {
+        setupDraw();
+        state.drawing = true;
       }
 
-      qd.handleDraw();
+      handleDraw();
 
     // Is moving if mousedown (with shiftdown)
-    } else if (qd.state.mousedown && qd.state.shiftdown && !qd.state.drawing) {
+    } else if (state.mousedown && state.shiftdown && !state.drawing) {
 
-      if (!qd.state.moving) {
-        qd.setupMove();
-        qd.state.moving = true;
+      if (!state.moving) {
+        setupMove();
+        state.moving = true;
       }
 
-      qd.handleMove();
+      handleMove();
 
     // If was previously drawing, cache the path
-    } else if (qd.state.drawing) {
+    } else if (state.drawing) {
 
-      qd.finishDraw();
-      qd.state.drawing = false;
+      finishDraw();
+      state.drawing = false;
 
-    } else if (qd.state.moving) {
+    } else if (state.moving) {
 
-      qd.finishMove();
-      qd.state.moving = false;
+      finishMove();
+      state.moving = false;
 
     }
 
@@ -443,49 +448,46 @@
   // State
   // -----
 
-  qd.path  = null;
-  qd.paths = [];
-  qd.redos = [];
-  qd.layer = document.getElementById('layer-5');
-
-  qd.matrix = SVG.createSVGMatrix();
-  qd.point  = SVG.createSVGPoint();
-
-  qd.state = {
-    x: 0, y: 0,
-    height: window.innerHeight,
-    width: window.innerWidth,
+  var state = {
+    x:         0,
+    y:         0,
+    path:      null,
+    height:    window.innerHeight,
+    width:     window.innerWidth,
     mousedown: false,
     shiftdown: false,
-    drawing: false,
-    momentum: false
+    drawing:   false,
+    momentum:  false,
+    paths:     [],
+    redos:     [],
+    layer:     document.getElementById('layer-5')
   }
 
-  Object.defineProperties(qd.state, {
+  Object.defineProperties(state, {
 
     topLeft: {
       get: function () {
-        qd.point.x = 0;
-        qd.point.y = 0;
-        var pt = qd.point.matrixTransform(qd.matrix.inverse());
+        POINT.x = 0;
+        POINT.y = 0;
+        var pt = POINT.matrixTransform(MATRIX.inverse());
         return new Point(pt.x, pt.y);
       }
     },
 
     bottomRight: {
       get: function () {
-        qd.point.x = qd.state.width;
-        qd.point.y = qd.state.height;
-        var pt = qd.point.matrixTransform(qd.matrix.inverse());
+        POINT.x = state.width;
+        POINT.y = state.height;
+        var pt = POINT.matrixTransform(MATRIX.inverse());
         return new Point(pt.x, pt.y);
       }
     },
 
     pointer: {
       get: function () {
-        qd.point.x = qd.state.x;
-        qd.point.y = qd.state.y;
-        var pt = qd.point.matrixTransform(qd.matrix.inverse());
+        POINT.x = state.x;
+        POINT.y = state.y;
+        var pt = POINT.matrixTransform(MATRIX.inverse());
         return new Point(pt.x, pt.y);
       }
     },
@@ -539,20 +541,20 @@
   // Translate & scale
   // -----------------
 
-  qd.translate = function (dx, dy) {
-    qd.matrix = qd.matrix.translate(dx, dy);
-    var point = qd.state.topLeft;
+  function translate(dx, dy) {
+    MATRIX = MATRIX.translate(dx, dy);
+    var point = state.topLeft;
     SVG.viewBox.baseVal.x = point.x;
     SVG.viewBox.baseVal.y = point.y;
     return point;
   }
 
-  qd.scale = function () {
-    var point = qd.state.pointer;
-    qd.translate(point.x, point.y);
-    qd.matrix = qd.matrix.scale(qd.state.zoom);
-    var topLeft = qd.translate(-point.x, -point.y);
-    var bottomRight = qd.state.bottomRight;
+  function scale() {
+    var point = state.pointer;
+    translate(point.x, point.y);
+    MATRIX = MATRIX.scale(state.zoom);
+    var topLeft = translate(-point.x, -point.y);
+    var bottomRight = state.bottomRight;
     SVG.viewBox.baseVal.width = bottomRight.x - topLeft.x;
     SVG.viewBox.baseVal.height = bottomRight.y - topLeft.y;
   }
@@ -560,52 +562,52 @@
   // Handlers
   // --------
 
-  qd.mouseup = function mouseup(e) {
-    qd.state.mousedown = false;
-    qd.state.shiftdown = false;
+  HANDLERS.mouseup = function mouseup(e) {
+    state.mousedown = false;
+    state.shiftdown = false;
   }
 
-  window.addEventListener('mouseup', qd.mouseup);
-  window.addEventListener('mouseleave', qd.mouseup);
+  window.addEventListener('mouseup', HANDLERS.mouseup);
+  window.addEventListener('mouseleave', HANDLERS.mouseup);
 
-  qd.mousemove = function mousemove(e) {
-    qd.state.shiftdown = e.shiftKey;
-    qd.state.mousedown = e.buttons === 1;
-    qd.state.x = e.pageX;
-    qd.state.y = e.pageY;
+  HANDLERS.mousemove = function mousemove(e) {
+    state.shiftdown = e.shiftKey;
+    state.mousedown = e.buttons === 1;
+    state.x = e.pageX;
+    state.y = e.pageY;
   }
 
-  window.addEventListener('mousemove', qd.mousemove);
-  window.addEventListener('mousedown', qd.mousemove);
+  window.addEventListener('mousemove', HANDLERS.mousemove);
+  window.addEventListener('mousedown', HANDLERS.mousemove);
 
-  qd.mousewheel = function mousewheel(e) {
-    if (qd.state.zooming) clearTimeout(qd.state.zooming);
-    qd.state.zoom = Math.pow(1.1, (e.detail / 100));
-    qd.state.zooming = setTimeout(function () {
-      qd.state.zooming = false;
+  HANDLERS.mousewheel = function mousewheel(e) {
+    if (state.zooming) clearTimeout(state.zooming);
+    state.zoom = Math.pow(1.1, (e.detail / 100));
+    state.zooming = setTimeout(function () {
+      state.zooming = false;
     }, 200);
   }
 
-  window.addEventListener('mousewheel', qd.mousewheel);
+  window.addEventListener('mousewheel', HANDLERS.mousewheel);
 
-  qd.resize = function resize() {
-    qd.state.width = window.innerWidth;
-    qd.state.height = window.innerHeight;
-    SVG.viewBox.baseVal.width = qd.state.width;
-    SVG.viewBox.baseVal.height = qd.state.height;
+  HANDLERS.resize = function resize() {
+    state.width = window.innerWidth;
+    state.height = window.innerHeight;
+    SVG.viewBox.baseVal.width = state.width;
+    SVG.viewBox.baseVal.height = state.height;
   }
 
-  window.addEventListener('resize', qd.resize);
-  qd.resize();
+  window.addEventListener('resize', HANDLERS.resize);
+  HANDLERS.resize();
 
-  qd.keyevent = function keyevent(e) {
-    qd.state.shiftdown = e.shiftKey;
+  HANDLERS.keyevent = function keyevent(e) {
+    state.shiftdown = e.shiftKey;
     SVG.style.cursor = e.shiftKey ? 'move' : '';
-    if (e.which === 27) qd.modal(false); // Escape key
+    if (e.which === 27) modal(false); // Escape key
   }
 
-  window.addEventListener('keydown', qd.keyevent);
-  window.addEventListener('keyup', qd.keyevent);
+  window.addEventListener('keydown', HANDLERS.keyevent);
+  window.addEventListener('keyup', HANDLERS.keyevent);
 
   function stopEventPropagation(e) { e.stopPropagation(); }
   MODAL.addEventListener('mouseup', stopEventPropagation);
@@ -614,7 +616,7 @@
   MODAL.addEventListener('mousedown', stopEventPropagation);
   MODAL.addEventListener('keydown', stopEventPropagation);
   MODAL.addEventListener('keyup', stopEventPropagation);
-  qd.forEach(document.querySelectorAll('#modal label, #modal input, #pen'), function (el) {
+  forEach(document.querySelectorAll('#modal label, #modal input, #pen'), function (el) {
     el.addEventListener('click', stopEventPropagation);
     el.addEventListener('mousedown', stopEventPropagation);
     el.addEventListener('mousemove', stopEventPropagation);
@@ -622,29 +624,29 @@
     el.addEventListener('mouseleave', stopEventPropagation);
   });
 
-  qd.change = function change(e) {
-    api[e.target.name] = e.target.value;
+  HANDLERS.change = function change(e) {
+    API[e.target.name] = e.target.value;
   }
 
-  MODAL.addEventListener('change', qd.change);
+  MODAL.addEventListener('change', HANDLERS.change);
 
-  qd.modalclick = function click(e) {
-    if (e.target.tagName !== 'LABEL') qd.modal(false);
+  HANDLERS.modalclick = function click(e) {
+    if (e.target.tagName !== 'LABEL') HANDLERS.modal(false);
   }
 
-  MODAL.addEventListener('click', qd.modalclick);
+  MODAL.addEventListener('click', HANDLERS.modalclick);
 
-  qd.penclick = function click(e) {
-    qd.modal('all');
+  HANDLERS.penclick = function click(e) {
+    HANDLERS.modal('all');
   }
 
-  PEN.addEventListener('click', qd.penclick);
-  qd.forEach(document.querySelectorAll('#modal-all + div > label'), function (el) {
-    el.addEventListener('click', function (e) { qd.modal(el.dataset.modal); });
+  PEN.addEventListener('click', HANDLERS.penclick);
+  forEach(document.querySelectorAll('#modal-all + div > label'), function (el) {
+    el.addEventListener('click', function (e) { HANDLERS.modal(el.dataset.modal); });
   });
 
   // Keyboard commands
-  qd.keys = {
+  HANDLERS.keys = {
     117: 'undo',
     114: 'redo',
     99:  'color',
@@ -654,107 +656,108 @@
     112: 'play'
   }
 
-  qd.keypress = function keypress(e) {
-    var command = qd.keys[e.which];
-    if (command) qd.commands[command]();
+  HANDLERS.keypress = function keypress(e) {
+    var command = HANDLERS.keys[e.which];
+    if (command) COMMANDS[command]();
   }
 
-  window.addEventListener('keypress', qd.keypress);
+  window.addEventListener('keypress', HANDLERS.keypress);
 
   // Drawing
   // -------
 
-  qd.setupDraw = function setupDraw() {
-    if (qd.state.momentum) qd.state.momentum = false;
+  function setupDraw() {
+    if (state.momentum) state.momentum = false;
 
-    qd.redos = [];
-    qd.path = new Path(qd.state);
+    state.redos = [];
+    state.path = new Path(state);
   }
 
-  qd.handleDraw = function handleDraw() {
-    qd.path.update(qd.state);
-    qd.path.render();
+  function handleDraw() {
+    state.path.update(state);
+    state.path.render();
   }
 
-  qd.finishDraw = function finishDraw() {
-    qd.path.update(qd.state);
-    qd.path.simplify();
-    qd.path.render();
-    qd.paths.push(qd.path);
-    qd.cleanupDraw();
+  function finishDraw() {
+    state.path.update(state);
+    state.path.simplify();
+    state.path.render();
+    state.paths.push(state.path);
+    cleanupDraw();
   }
 
-  qd.cleanupDraw = function cleanupDraw() {
-    qd.path = null;
+  function cleanupDraw() {
+    state.path = null;
   }
 
   // Moving
   // ------
 
-  qd.setupMove = function setupMove() {
-    if (qd.state.momentum) qd.state.momentum = false;
-    qd.state.moveOrigin = qd.state.pointer.clone();
-    qd.state.movePosition = new Point(qd.state.x, qd.state.y);
+  function setupMove() {
+    console.log('setupMove');
+    if (state.momentum) state.momentum = false;
+    state.moveOrigin = state.pointer.clone();
+    state.movePosition = new Point(state.x, state.y);
   }
 
-  qd.handleMove = function handleMove() {
-    var point = qd.state.pointer.subtract(qd.state.moveOrigin);
-    qd.translate(point.x, point.y);
+  function handleMove() {
+    console.log('handleMove');
+    var point = state.pointer.subtract(state.moveOrigin);
+    translate(point.x, point.y);
 
-    qd.state._temp = qd.state._temp || 0;
-    qd.state._temp++;
-    if (qd.state._temp === 10) {
-      qd.state.movePosition = new Point(qd.state.x, qd.state.y);
-      qd.state._temp = 0;
+    state._temp = state._temp || 0;
+    state._temp++;
+    if (state._temp === 10) {
+      state.movePosition = new Point(state.x, state.y);
+      state._temp = 0;
     }
   }
 
-  qd.finishMove = function finishMove() {
-    qd.state.momentum = true;
-    qd.state.moveEnd = new Point(qd.state.x, qd.state.y);
+  function finishMove() {
+    console.log('cleanupMove');
+    state.momentum = true;
+    state.moveEnd = new Point(state.x, state.y);
 
-    var first    = qd.state.movePosition;
-    var last     = qd.state.moveEnd;
+    var first    = state.movePosition;
+    var last     = state.moveEnd;
     var distance = last.subtract(first);
     var start    = Date.now();
     var duration = 500;
 
     window.requestAnimationFrame(function loop() {
       var time = Date.now() - start;
-      if (!qd.state.momentum || time > duration) return qd.cleanupMove();
+      if (!state.momentum || time > duration) return cleanupMove();
 
-      var factor = qd.easeOutQuint(time / duration);
-      qd.state.x = last.x + (distance.x * factor);
-      qd.state.y = last.y + (distance.y * factor);
-      qd.handleMove();
-      qd.state.x = qd.state.moveEnd.x;
-      qd.state.y = qd.state.moveEnd.y;
+      var factor = easeOutQuint(time / duration);
+      state.x = last.x + (distance.x * factor);
+      state.y = last.y + (distance.y * factor);
+      handleMove();
+      state.x = state.moveEnd.x;
+      state.y = state.moveEnd.y;
 
       window.requestAnimationFrame(loop);
     });
   }
 
-  qd.cleanupMove = function cleanupMove() {
-    qd.state.momentum = false;
-    qd.state._temp = null;
-    qd.state.moveOrigin = null;
-    qd.state.movePosition = null;
-    qd.state.moveEnd = null;
+  function cleanupMove() {
+    console.log('cleanupMove');
+    state.momentum = false;
+    state._temp = null;
   }
 
   // Modal
   // -----
 
-  qd.modal = function modal(arg) {
+  function modal(arg) {
     if (arg === false) {
       // Close modal
       MODAL.style.display = 'none';
-      qd.forEach(MODAL.querySelectorAll('input[type="checkbox"]'), function (el) {
+      forEach(MODAL.querySelectorAll('input[type="checkbox"]'), function (el) {
         el.checked = false;
       });
     } else {
       // Open modal
-      qd.modal(false); // First close any open modals
+      modal(false); // First close any open modals
       MODAL.style.display = 'block';
       document.getElementById('modal-' + arg).checked = true;
     }
@@ -763,40 +766,40 @@
   // API
   // ---
 
-  api.undo = function () {
-    var path = qd.paths.pop();
+  API.undo = function() {
+    var path = state.paths.pop();
     if (!path) return;
     path.layer.removeChild(path.el);
-    qd.redos.push(path);
+    state.redos.push(path);
   }
 
-  api.redo = function () {
-    var path = qd.redos.pop();
+  API.redo = function() {
+    var path = state.redos.pop();
     if (!path) return;
     path.layer.insertBefore(path.el, null);
-    qd.paths.push(path);
+    state.paths.push(path);
   }
 
-  Object.defineProperties(api, {
+  Object.defineProperties(API, {
 
     layer: {
-      get: function () { return +qd.layer.id.split('-')[1]; },
-      set: function (num) { qd.layer = document.getElementById('layer-' + num); }
+      get: function () { return +state.layer.id.split('-')[1]; },
+      set: function (num) { state.layer = document.getElementById('layer-' + num); }
     },
 
     color: {
-      get: function () { return qd.state.color; },
-      set: function (color) { qd.state.color = color; }
+      get: function () { return state.color; },
+      set: function (color) { state.color = color; }
     },
 
     size: {
-      get: function () { return qd.state.size; },
-      set: function (size) { qd.state.size = size; }
+      get: function () { return state.size; },
+      set: function (size) { state.size = size; }
     },
 
     opacity: {
-      get: function () { return qd.state.opacity; },
-      set: function (opacity) { qd.state.opacity = opacity; }
+      get: function () { return state.opacity; },
+      set: function (opacity) { state.opacity = opacity; }
     }
 
   });
@@ -804,19 +807,19 @@
   // Commands
   // --------
 
-  qd.commands = {
+  COMMANDS = {
 
-    undo: api.undo,
-    redo: api.redo,
+    undo: API.undo,
+    redo: API.redo,
 
-    color:   function () { qd.modal('color');   },
-    opacity: function () { qd.modal('opacity'); },
-    size:    function () { qd.modal('size');    },
-    layer:   function () { qd.modal('layer');   },
+    color:   function () { modal('color');   },
+    opacity: function () { modal('opacity'); },
+    size:    function () { modal('size');    },
+    layer:   function () { modal('layer');   },
 
     play: function () {
       // Hide all
-      qd.paths.forEach(function (path, i) {
+      state.paths.forEach(function (path, i) {
         path.index = i;
         if (!path.length) path.length = Math.ceil(path.el.getTotalLength());
         path.el.setAttribute('stroke-dasharray', path.length + 'px');
@@ -825,11 +828,9 @@
       });
 
       // Animate in sequence
-      qd.paths[0].play();
+      state.paths[0].play();
     }
 
   }
 
-  window.qd = qd;
-
-})(Object.create(null), window.app = Object.create(null));
+})();
