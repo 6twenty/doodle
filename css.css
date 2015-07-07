@@ -7,8 +7,8 @@ html {
 }
 
 html *,
-html *:before,
-html *:after {
+html *::before,
+html *::after {
   box-sizing: inherit;
 }
 
