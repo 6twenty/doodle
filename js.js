@@ -727,14 +727,12 @@
   // ------
 
   function setupMove() {
-    console.log('setupMove');
     if (state.momentum) state.momentum = false;
     state.moveOrigin = state.pointer.clone();
     state.movePosition = new Point(state.x, state.y);
   }
 
   function handleMove() {
-    console.log('handleMove');
     var point = state.pointer.subtract(state.moveOrigin);
     translate(point.x, point.y);
 
@@ -747,7 +745,6 @@
   }
 
   function finishMove() {
-    console.log('cleanupMove');
     state.momentum = true;
     state.moveEnd = new Point(state.x, state.y);
 
@@ -773,7 +770,6 @@
   }
 
   function cleanupMove() {
-    console.log('cleanupMove');
     state.momentum = false;
     state._temp = null;
   }
