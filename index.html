@@ -3,109 +3,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Quickdraw</title>
 <link rel="stylesheet" href="/css.css">
-
-<div id="modal">
-  <input type="checkbox" id="modal-all">
-  <div>
-    <label data-modal="layer" style="color:#f49f14;" class="inverse alt" data-label="L"></label>
-    <label data-modal="color" style="color:#d7503c;" class="inverse alt" data-label="C"></label>
-    <label data-modal="opacity" style="color:#89ad48;" class="inverse alt" data-label="O"></label>
-    <label data-modal="size" style="color:#ca76bf;" class="inverse alt" data-label="S"></label>
-  </div>
-
-  <input type="checkbox" id="modal-color">
-  <div>
-    <input  id="modal-color-46648e" value="#46648e" type="radio" name="color">
-    <label for="modal-color-46648e" style="color:#46648e;"></label>
-    <input  id="modal-color-8bbbff" value="#8bbbff" type="radio" name="color">
-    <label for="modal-color-8bbbff" style="color:#8bbbff;"></label>
-    <input  id="modal-color-89ad48" value="#89ad48" type="radio" name="color">
-    <label for="modal-color-89ad48" style="color:#89ad48;"></label>
-    <input  id="modal-color-d1d642" value="#d1d642" type="radio" name="color">
-    <label for="modal-color-d1d642" style="color:#d1d642;"></label>
-    <input  id="modal-color-8c5ba7" value="#8c5ba7" type="radio" name="color">
-    <label for="modal-color-8c5ba7" style="color:#8c5ba7;"></label>
-    <input  id="modal-color-ca76bf" value="#ca76bf" type="radio" name="color">
-    <label for="modal-color-ca76bf" style="color:#ca76bf;"></label>
-    <input  id="modal-color-d7503c" value="#d7503c" type="radio" name="color">
-    <label for="modal-color-d7503c" style="color:#d7503c;"></label>
-    <input  id="modal-color-d17060" value="#d17060" type="radio" name="color">
-    <label for="modal-color-d17060" style="color:#d17060;"></label>
-    <input  id="modal-color-f49f14" value="#f49f14" type="radio" name="color">
-    <label for="modal-color-f49f14" style="color:#f49f14;"></label>
-    <input  id="modal-color-fae014" value="#fae014" type="radio" name="color">
-    <label for="modal-color-fae014" style="color:#fae014;"></label>
-    <input  id="modal-color-000000" value="#000000" type="radio" name="color" checked>
-    <label for="modal-color-000000" style="color:#000000;"></label>
-    <input  id="modal-color-ffffff" value="#ffffff" type="radio" name="color">
-    <label for="modal-color-ffffff" style="color:#ffffff;" class="inverse"></label>
-  </div>
-
-  <input type="checkbox" id="modal-opacity">
-  <div>
-    <input  id="modal-opacity-1" value="0.1" type="radio" name="opacity">
-    <label for="modal-opacity-1" style="background:rgba(0,0,0,.1);"></label>
-    <input  id="modal-opacity-2" value="0.2" type="radio" name="opacity">
-    <label for="modal-opacity-2" style="background:rgba(0,0,0,.2);"></label>
-    <input  id="modal-opacity-3" value="0.3" type="radio" name="opacity">
-    <label for="modal-opacity-3" style="background:rgba(0,0,0,.3);"></label>
-    <input  id="modal-opacity-4" value="0.4" type="radio" name="opacity">
-    <label for="modal-opacity-4" style="background:rgba(0,0,0,.4);"></label>
-    <input  id="modal-opacity-5" value="0.5" type="radio" name="opacity">
-    <label for="modal-opacity-5" style="background:rgba(0,0,0,.5);"></label>
-    <input  id="modal-opacity-6" value="0.6" type="radio" name="opacity">
-    <label for="modal-opacity-6" style="background:rgba(0,0,0,.6);"></label>
-    <input  id="modal-opacity-7" value="0.7" type="radio" name="opacity">
-    <label for="modal-opacity-7" style="background:rgba(0,0,0,.7);"></label>
-    <input  id="modal-opacity-8" value="0.8" type="radio" name="opacity">
-    <label for="modal-opacity-8" style="background:rgba(0,0,0,.8);"></label>
-    <input  id="modal-opacity-9" value="0.9" type="radio" name="opacity">
-    <label for="modal-opacity-9" style="background:rgba(0,0,0,.9);"></label>
-    <input  id="modal-opacity-10" value="1" type="radio" name="opacity" checked>
-    <label for="modal-opacity-10" style="background:rgba(0,0,0,1);"></label>
-  </div>
-
-  <input type="checkbox" id="modal-size">
-  <div>
-    <input  id="modal-size-5" value="5" type="radio" name="size">
-    <label for="modal-size-5" style="border-width:27.5px;background:black!important;" class="alt"></label>
-    <input  id="modal-size-14" value="14" type="radio" name="size">
-    <label for="modal-size-14" style="border-width:23px;background:black!important;" class="alt"></label>
-    <input  id="modal-size-23" value="23" type="radio" name="size" checked>
-    <label for="modal-size-23" style="border-width:18.5px;background:black!important;" class="alt"></label>
-    <input  id="modal-size-32" value="32" type="radio" name="size">
-    <label for="modal-size-32" style="border-width:14px;background:black!important;" class="alt"></label>
-    <input  id="modal-size-41" value="41" type="radio" name="size">
-    <label for="modal-size-41" style="border-width:9.5px;background:black!important;" class="alt"></label>
-    <input  id="modal-size-50" value="50" type="radio" name="size">
-    <label for="modal-size-50" style="border-width:5px;background:black!important;" class="alt"></label>
-  </div>
-
-  <input type="checkbox" id="modal-layer">
-  <div>
-    <input  id="modal-layer-1" value="1" type="radio" name="layer">
-    <label for="modal-layer-1" style="background:#eee;" class="inverse alt" data-label="1"></label>
-    <input  id="modal-layer-2" value="2" type="radio" name="layer">
-    <label for="modal-layer-2" style="background:#eee;" class="inverse alt" data-label="2"></label>
-    <input  id="modal-layer-3" value="3" type="radio" name="layer">
-    <label for="modal-layer-3" style="background:#eee;" class="inverse alt" data-label="3"></label>
-    <input  id="modal-layer-4" value="4" type="radio" name="layer">
-    <label for="modal-layer-4" style="background:#eee;" class="inverse alt" data-label="4"></label>
-    <input  id="modal-layer-5" value="5" type="radio" name="layer" checked>
-    <label for="modal-layer-5" style="background:#eee;" class="inverse alt" data-label="5"></label>
-    <input  id="modal-layer-6" value="6" type="radio" name="layer">
-    <label for="modal-layer-6" style="background:#eee;" class="inverse alt" data-label="6"></label>
-    <input  id="modal-layer-7" value="7" type="radio" name="layer">
-    <label for="modal-layer-7" style="background:#eee;" class="inverse alt" data-label="7"></label>
-    <input  id="modal-layer-8" value="8" type="radio" name="layer">
-    <label for="modal-layer-8" style="background:#eee;" class="inverse alt" data-label="8"></label>
-    <input  id="modal-layer-9" value="9" type="radio" name="layer">
-    <label for="modal-layer-9" style="background:#eee;" class="inverse alt" data-label="9"></label>
-  </div>
-</div>
-
 <div id="pen"></div>
-
 <svg id="svg" viewBox="0 0 0 0" preserveAspectRatio="xMidYMid meet">
   <defs>
     <g id="layer-1"></g>
@@ -118,7 +16,6 @@
     <g id="layer-8"></g>
     <g id="layer-9"></g>
   </defs>
-
   <use xlink:href="#layer-1" />
   <use xlink:href="#layer-2" />
   <use xlink:href="#layer-3" />
@@ -129,6 +26,5 @@
   <use xlink:href="#layer-8" />
   <use xlink:href="#layer-9" />
 </svg>
-
 <script src="/wheel.js"></script>
 <script src="/js.js"></script>

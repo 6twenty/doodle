@@ -27,13 +27,6 @@
     return 1+(--t)*t*t*t*t;
   }
 
-  function tap(func, context) {
-    return function () {
-      (context || window).addEventListener('touchend', func);
-      setTimeout(function () { (context || window).removeEventListener('touchend', func); }, 200);
-    }
-  }
-
   // Class: Segment
   // --------------
 
@@ -414,7 +407,7 @@
     if (state.zooming) scale();
 
     // Is drawing if mousedown (but not shiftdown)
-    if (state.mousedown && !state.shiftdown && !state.moving) {
+    if (state.active && !state.shift && !state.moving) {
 
       // If not previously drawing, set up path
       if (!state.drawing) {
@@ -425,7 +418,7 @@
       handleDraw();
 
     // Is moving if mousedown (with shiftdown)
-    } else if (state.mousedown && state.shiftdown && !state.drawing) {
+    } else if (state.active && state.shift && !state.drawing) {
 
       if (!state.moving) {
         setupMove();
@@ -461,13 +454,15 @@
     path:      null,
     height:    window.innerHeight,
     width:     window.innerWidth,
-    mousedown: false,
-    shiftdown: false,
+    active:    false,
+    shift:     false,
     drawing:   false,
     momentum:  false,
     paths:     [],
     redos:     [],
-    layer:     document.getElementById('layer-5')
+    touches:   [],
+    layer:     document.getElementById('layer-5'),
+    scale:     1
   }
 
   Object.defineProperties(state, {
@@ -569,29 +564,98 @@
   // Handlers
   // --------
 
-  HANDLERS.mouseup = function mouseup(e) {
-    state.mousedown = false;
-    state.shiftdown = false;
-  }
-
-  window.addEventListener('mouseup', HANDLERS.mouseup);
-  window.addEventListener('mouseleave', HANDLERS.mouseup);
-  window.addEventListener('touchend', HANDLERS.mouseup);
-  window.addEventListener('touchleave', HANDLERS.mouseup);
-  window.addEventListener('touchcancel', HANDLERS.mouseup);
-
   HANDLERS.mousemove = function mousemove(e) {
     e.preventDefault();
-    state.shiftdown = e.shiftKey;
-    state.mousedown = e.buttons === 1 || (/^touch/).test(e.type);
+
+    state.shift = e.shiftKey;
+    state.active = e.which === 1;
     state.x = e.pageX;
     state.y = e.pageY;
   }
 
   window.addEventListener('mousemove', HANDLERS.mousemove);
   window.addEventListener('mousedown', HANDLERS.mousemove);
-  window.addEventListener('touchmove', HANDLERS.mousemove);
-  window.addEventListener('touchstart', HANDLERS.mousemove);
+
+  HANDLERS.mouseend = function mouseup(e) {
+    e.preventDefault();
+
+    state.active = false;
+    state.shift = false;
+  }
+
+  window.addEventListener('mouseup', HANDLERS.mouseend);
+  window.addEventListener('mouseleave', HANDLERS.mouseend);
+
+  HANDLERS.touchstart = function touchstart(e) {
+    e.preventDefault();
+
+    // If this is the first touch, wait a moment to see if
+    // other touches are registered and then start drawing.
+    // If multiple touches are registered then start panning/zooming.
+    if (state.touches.length === 0) { // First touch(es)
+
+      if (e.touches.length === 1) {
+
+        var timer = setTimeout(function () {
+          // Start drawing
+          state.active = true;
+          timer = null;
+        }, 100);
+
+      } else {
+
+        state.active = true;
+        state.shift = true;
+
+      }
+
+    } else if (timer) { // Subsequent touch(es)
+
+      // Start panning/zooming
+      clearTimeout(timer);
+      timer = null;
+      state.active = true;
+      state.shift = true; // Panning
+
+    }
+
+    state.touches = e.touches;
+    state.x = e.pageX;
+    state.y = e.pageY;
+  }
+
+  window.addEventListener('touchstart', HANDLERS.touchstart);
+
+  HANDLERS.touchmove = function touchmove(e) {
+    e.preventDefault();
+
+    state.x = e.pageX;
+    state.y = e.pageY;
+
+    // if (state.zooming) clearTimeout(state.zooming);
+    // state.zoom = Math.pow(1.2, (e.scale - state.scale));
+    // state.scale = e.scale;
+    // state.zooming = setTimeout(function () {
+    //   state.zooming = false;
+    // }, 200);
+  }
+
+  window.addEventListener('touchmove', HANDLERS.touchmove);
+
+  HANDLERS.touchend = function touchend(e) {
+    e.preventDefault();
+
+    if (e.touches.length === 0) {
+      state.touches = [];
+      state.active = false;
+      state.shift = false;
+      state.scale = 0;
+    }
+  }
+
+  window.addEventListener('touchend', HANDLERS.touchend);
+  window.addEventListener('touchleave', HANDLERS.touchend);
+  window.addEventListener('touchcancel', HANDLERS.touchend);
 
   HANDLERS.mousewheel = function mousewheel(e) {
     if (state.zooming) clearTimeout(state.zooming);
@@ -606,86 +670,29 @@
   HANDLERS.resize = function resize() {
     state.width = window.innerWidth;
     state.height = window.innerHeight;
-    SVG.viewBox.baseVal.width = state.width;
-    SVG.viewBox.baseVal.height = state.height;
+    state.zoom = 1;
+    scale();
   }
 
   window.addEventListener('resize', HANDLERS.resize);
   HANDLERS.resize();
 
   HANDLERS.keyevent = function keyevent(e) {
-    state.shiftdown = e.shiftKey;
+    state.shift = e.shiftKey;
     SVG.style.cursor = e.shiftKey ? 'move' : '';
-    if (e.which === 27) modal(false); // Escape key
   }
 
   window.addEventListener('keydown', HANDLERS.keyevent);
   window.addEventListener('keyup', HANDLERS.keyevent);
 
-  function stopEventPropagation(e) { e.stopPropagation(); }
-  MODAL.addEventListener('mouseup', stopEventPropagation);
-  MODAL.addEventListener('mouseleave', stopEventPropagation);
-  MODAL.addEventListener('mousemove', stopEventPropagation);
-  MODAL.addEventListener('mousedown', stopEventPropagation);
-  MODAL.addEventListener('touchstart', stopEventPropagation);
-  MODAL.addEventListener('touchmove', stopEventPropagation);
-  MODAL.addEventListener('touchcancel', stopEventPropagation);
-  MODAL.addEventListener('touchleave', stopEventPropagation);
-  MODAL.addEventListener('touchend', stopEventPropagation);
-  MODAL.addEventListener('keydown', stopEventPropagation);
-  MODAL.addEventListener('keyup', stopEventPropagation);
-  forEach(document.querySelectorAll('#modal label, #modal input, #pen'), function (el) {
-    el.addEventListener('click', stopEventPropagation);
-    el.addEventListener('mousedown', stopEventPropagation);
-    el.addEventListener('mousemove', stopEventPropagation);
-    el.addEventListener('mouseup', stopEventPropagation);
-    el.addEventListener('mouseleave', stopEventPropagation);
-    el.addEventListener('touchstart', stopEventPropagation);
-    el.addEventListener('touchmove', stopEventPropagation);
-    el.addEventListener('touchcancel', stopEventPropagation);
-    el.addEventListener('touchleave', stopEventPropagation);
-    el.addEventListener('touchend', stopEventPropagation);
-  });
-
-  HANDLERS.change = function change(e) {
-    API[e.target.name] = e.target.value;
-  }
-
-  MODAL.addEventListener('change', HANDLERS.change);
-
-  HANDLERS.modalclick = function click(e) {
-    if (e.target.tagName !== 'LABEL') modal(false);
-  }
-
-  MODAL.addEventListener('click', HANDLERS.modalclick);
-
-  HANDLERS.penclick = function click(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    modal('all');
-  }
-
-  PEN.addEventListener('click', HANDLERS.penclick);
-  PEN.addEventListener('touchstart', tap(HANDLERS.penclick, PEN));
-  forEach(document.querySelectorAll('#modal-all + div > label'), function (el) {
-    function modalclick(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      modal(el.dataset.modal);
-    }
-
-    el.addEventListener('click', modalclick);
-    el.addEventListener('touchstart', tap(modalclick, el));
-  });
-
   // Keyboard commands
   HANDLERS.keys = {
     117: 'undo',
     114: 'redo',
-    99:  'color',
-    111: 'opacity',
-    115: 'size',
-    108: 'layer',
+    // 99:  'color',
+    // 111: 'opacity',
+    // 115: 'size',
+    // 108: 'layer',
     112: 'play'
   }
 
