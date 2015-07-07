@@ -632,12 +632,12 @@
     state.x = e.pageX;
     state.y = e.pageY;
 
-    // if (state.zooming) clearTimeout(state.zooming);
-    // state.zoom = Math.pow(1.2, (e.scale - state.scale));
-    // state.scale = e.scale;
-    // state.zooming = setTimeout(function () {
-    //   state.zooming = false;
-    // }, 200);
+    if (state.zooming) clearTimeout(state.zooming);
+    state.zoom = Math.pow(1.5, (e.scale - state.scale));
+    state.scale = e.scale;
+    state.zooming = setTimeout(function () {
+      state.zooming = false;
+    }, 200);
   }
 
   window.addEventListener('touchmove', HANDLERS.touchmove);
@@ -649,7 +649,7 @@
       state.touches = [];
       state.active = false;
       state.shift = false;
-      state.scale = 0;
+      state.scale = 1;
     }
   }
 
@@ -752,6 +752,8 @@
   }
 
   function finishMove() {
+    if (state.zooming) return cleanupMove();
+
     state.momentum = true;
     state.moveEnd = new Point(state.x, state.y);
 
