@@ -16,15 +16,22 @@
   // Helpers
   // -------
 
-  var forEach = function forEach(array, callback, scope) {
+  function forEach(array, callback, scope) {
     for (var i = 0; i < array.length; i++) {
       callback.call(scope, array[i], i, array);
     }
   }
 
   // https://gist.github.com/gre/1650294
-  var easeOutQuint = function easeOutQuad(t) {
+  function easeOutQuint(t) {
     return 1+(--t)*t*t*t*t;
+  }
+
+  function tap(func, context) {
+    return function () {
+      (context || window).addEventListener('touchend', func);
+      setTimeout(function () { (context || window).removeEventListener('touchend', func); }, 200);
+    }
   }
 
   // Class: Segment
@@ -569,16 +576,22 @@
 
   window.addEventListener('mouseup', HANDLERS.mouseup);
   window.addEventListener('mouseleave', HANDLERS.mouseup);
+  window.addEventListener('touchend', HANDLERS.mouseup);
+  window.addEventListener('touchleave', HANDLERS.mouseup);
+  window.addEventListener('touchcancel', HANDLERS.mouseup);
 
   HANDLERS.mousemove = function mousemove(e) {
+    e.preventDefault();
     state.shiftdown = e.shiftKey;
-    state.mousedown = e.buttons === 1;
+    state.mousedown = e.buttons === 1 || (/^touch/).test(e.type);
     state.x = e.pageX;
     state.y = e.pageY;
   }
 
   window.addEventListener('mousemove', HANDLERS.mousemove);
   window.addEventListener('mousedown', HANDLERS.mousemove);
+  window.addEventListener('touchmove', HANDLERS.mousemove);
+  window.addEventListener('touchstart', HANDLERS.mousemove);
 
   HANDLERS.mousewheel = function mousewheel(e) {
     if (state.zooming) clearTimeout(state.zooming);
@@ -614,6 +627,11 @@
   MODAL.addEventListener('mouseleave', stopEventPropagation);
   MODAL.addEventListener('mousemove', stopEventPropagation);
   MODAL.addEventListener('mousedown', stopEventPropagation);
+  MODAL.addEventListener('touchstart', stopEventPropagation);
+  MODAL.addEventListener('touchmove', stopEventPropagation);
+  MODAL.addEventListener('touchcancel', stopEventPropagation);
+  MODAL.addEventListener('touchleave', stopEventPropagation);
+  MODAL.addEventListener('touchend', stopEventPropagation);
   MODAL.addEventListener('keydown', stopEventPropagation);
   MODAL.addEventListener('keyup', stopEventPropagation);
   forEach(document.querySelectorAll('#modal label, #modal input, #pen'), function (el) {
@@ -622,6 +640,11 @@
     el.addEventListener('mousemove', stopEventPropagation);
     el.addEventListener('mouseup', stopEventPropagation);
     el.addEventListener('mouseleave', stopEventPropagation);
+    el.addEventListener('touchstart', stopEventPropagation);
+    el.addEventListener('touchmove', stopEventPropagation);
+    el.addEventListener('touchcancel', stopEventPropagation);
+    el.addEventListener('touchleave', stopEventPropagation);
+    el.addEventListener('touchend', stopEventPropagation);
   });
 
   HANDLERS.change = function change(e) {
@@ -631,18 +654,28 @@
   MODAL.addEventListener('change', HANDLERS.change);
 
   HANDLERS.modalclick = function click(e) {
-    if (e.target.tagName !== 'LABEL') HANDLERS.modal(false);
+    if (e.target.tagName !== 'LABEL') modal(false);
   }
 
   MODAL.addEventListener('click', HANDLERS.modalclick);
 
   HANDLERS.penclick = function click(e) {
-    HANDLERS.modal('all');
+    e.preventDefault();
+    e.stopPropagation();
+    modal('all');
   }
 
   PEN.addEventListener('click', HANDLERS.penclick);
+  PEN.addEventListener('touchstart', tap(HANDLERS.penclick, PEN));
   forEach(document.querySelectorAll('#modal-all + div > label'), function (el) {
-    el.addEventListener('click', function (e) { HANDLERS.modal(el.dataset.modal); });
+    function modalclick(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      modal(el.dataset.modal);
+    }
+
+    el.addEventListener('click', modalclick);
+    el.addEventListener('touchstart', tap(modalclick, el));
   });
 
   // Keyboard commands
