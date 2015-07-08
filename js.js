@@ -6,12 +6,12 @@
   var XMLNS    = 'http://www.w3.org/2000/svg';
   var SVG      = document.getElementById('svg');
   var PEN      = document.getElementById('pen');
-  var MODAL    = document.getElementById('modal');
   var MATRIX   = SVG.createSVGMatrix();
   var POINT    = SVG.createSVGPoint();
   var HANDLERS = {};
   var COMMANDS = {};
   var API      = {};
+  var STATE;
 
   // Helpers
   // -------
@@ -104,36 +104,51 @@
   // Class: Path
   // -----------
 
-  function Path(state) {
-    var point = state.pointer.clone();
-    this.points = [ point ];
+  function Path(attrs) {
+    var point = STATE.pointer;
+    if (point) this.points = [ point.clone() ];
 
-    this.color = state.color;
-    this.size = state.size;
-    this.opacity = state.opacity;
+    attrs = attrs || STATE;
+    this.color   = attrs.color;
+    this.size    = attrs.size;
+    this.opacity = attrs.opacity;
+    this.layer   = attrs.layer;
+    this.d       = attrs.d;
 
+    this.index = STATE.paths.length;
     this.error = this.size * 2.5; // Tolerance for smoothing
 
-    this.layer = state.layer;
     this.el = document.createElementNS(XMLNS, 'path');
     this.el.setAttribute('stroke', this.color);
     this.el.setAttribute('stroke-width', this.size);
     this.el.setAttribute('opacity', this.opacity);
     this.el.setAttribute('class', 'path');
+    if (this.d) this.el.setAttribute('d', this.d);
     this.layer.insertBefore(this.el, null);
   }
 
   Path.prototype = {
 
+    toString: function toString() {
+      return JSON.stringify({
+        d:       this.d,
+        color:   this.color,
+        size:    this.size,
+        opacity: this.opacity,
+        layer:   this.layer.id
+      });
+    },
+
     play: function play() {
       window.requestAnimationFrame(function loop() {
+        this.el.setAttribute('visibility', '');
         this._dashoffset -= 20;
         if (this._dashoffset < 0) this._dashoffset = 0;
         this.el.setAttribute('stroke-dashoffset', this._dashoffset + 'px');
         if (this._dashoffset === 0) {
         this.el.setAttribute('stroke-dasharray', '');
         this.el.setAttribute('stroke-dashoffset', '');
-          var next = state.paths[this.index + 1];
+          var next = STATE.paths[this.index + 1];
           if (next) next.play();
         } else {
           window.requestAnimationFrame(loop.bind(this));
@@ -141,8 +156,8 @@
       }.bind(this));
     },
 
-    update: function update(state) {
-      var point = state.pointer;
+    update: function update() {
+      var point = STATE.pointer;
       if (this.end && point.equals(this.end)) return;
       this.end = point.clone();
       this.points.push(this.end);
@@ -204,6 +219,7 @@
       }
 
       if (d_) d += (' ' + d_);
+      this.d = d;
       this.el.setAttribute('d', d);
     },
 
@@ -404,39 +420,39 @@
   requestAnimationFrame(function loop() {
 
     // Set zoom
-    if (state.zooming) scale();
+    if (STATE.zooming) scale();
 
     // Is drawing if mousedown (but not shiftdown)
-    if (state.active && !state.shift && !state.moving) {
+    if (STATE.active && !STATE.shift && !STATE.moving) {
 
       // If not previously drawing, set up path
-      if (!state.drawing) {
+      if (!STATE.drawing) {
         setupDraw();
-        state.drawing = true;
+        STATE.drawing = true;
       }
 
       handleDraw();
 
     // Is moving if mousedown (with shiftdown)
-    } else if (state.active && state.shift && !state.drawing) {
+    } else if (STATE.active && STATE.shift && !STATE.drawing) {
 
-      if (!state.moving) {
+      if (!STATE.moving) {
         setupMove();
-        state.moving = true;
+        STATE.moving = true;
       }
 
       handleMove();
 
     // If was previously drawing, cache the path
-    } else if (state.drawing) {
+    } else if (STATE.drawing) {
 
       finishDraw();
-      state.drawing = false;
+      STATE.drawing = false;
 
-    } else if (state.moving) {
+    } else if (STATE.moving) {
 
       finishMove();
-      state.moving = false;
+      STATE.moving = false;
 
     }
 
@@ -448,7 +464,7 @@
   // State
   // -----
 
-  var state = {
+  STATE = {
     x:         0,
     y:         0,
     path:      null,
@@ -465,7 +481,7 @@
     scale:     1
   }
 
-  Object.defineProperties(state, {
+  Object.defineProperties(STATE, {
 
     topLeft: {
       get: function () {
@@ -478,8 +494,8 @@
 
     bottomRight: {
       get: function () {
-        POINT.x = state.width;
-        POINT.y = state.height;
+        POINT.x = STATE.width;
+        POINT.y = STATE.height;
         var pt = POINT.matrixTransform(MATRIX.inverse());
         return new Point(pt.x, pt.y);
       }
@@ -487,8 +503,8 @@
 
     pointer: {
       get: function () {
-        POINT.x = state.x;
-        POINT.y = state.y;
+        POINT.x = STATE.x;
+        POINT.y = STATE.y;
         var pt = POINT.matrixTransform(MATRIX.inverse());
         return new Point(pt.x, pt.y);
       }
@@ -545,18 +561,18 @@
 
   function translate(dx, dy) {
     MATRIX = MATRIX.translate(dx, dy);
-    var point = state.topLeft;
+    var point = STATE.topLeft;
     SVG.viewBox.baseVal.x = point.x;
     SVG.viewBox.baseVal.y = point.y;
     return point;
   }
 
   function scale() {
-    var point = state.pointer;
+    var point = STATE.pointer;
     translate(point.x, point.y);
-    MATRIX = MATRIX.scale(state.zoom);
+    MATRIX = MATRIX.scale(STATE.zoom);
     var topLeft = translate(-point.x, -point.y);
-    var bottomRight = state.bottomRight;
+    var bottomRight = STATE.bottomRight;
     SVG.viewBox.baseVal.width = bottomRight.x - topLeft.x;
     SVG.viewBox.baseVal.height = bottomRight.y - topLeft.y;
   }
@@ -567,10 +583,10 @@
   HANDLERS.mousemove = function mousemove(e) {
     e.preventDefault();
 
-    state.shift = e.shiftKey;
-    state.active = e.which === 1;
-    state.x = e.pageX;
-    state.y = e.pageY;
+    STATE.shift = e.shiftKey;
+    STATE.active = e.which === 1;
+    STATE.x = e.pageX;
+    STATE.y = e.pageY;
   }
 
   window.addEventListener('mousemove', HANDLERS.mousemove);
@@ -579,8 +595,8 @@
   HANDLERS.mouseend = function mouseup(e) {
     e.preventDefault();
 
-    state.active = false;
-    state.shift = false;
+    STATE.active = false;
+    STATE.shift = false;
   }
 
   window.addEventListener('mouseup', HANDLERS.mouseend);
@@ -592,20 +608,20 @@
     // If this is the first touch, wait a moment to see if
     // other touches are registered and then start drawing.
     // If multiple touches are registered then start panning/zooming.
-    if (state.touches.length === 0) { // First touch(es)
+    if (STATE.touches.length === 0) { // First touch(es)
 
       if (e.touches.length === 1) {
 
         var timer = setTimeout(function () {
           // Start drawing
-          state.active = true;
+          STATE.active = true;
           timer = null;
         }, 100);
 
       } else {
 
-        state.active = true;
-        state.shift = true;
+        STATE.active = true;
+        STATE.shift = true;
 
       }
 
@@ -614,14 +630,14 @@
       // Start panning/zooming
       clearTimeout(timer);
       timer = null;
-      state.active = true;
-      state.shift = true; // Panning
+      STATE.active = true;
+      STATE.shift = true; // Panning
 
     }
 
-    state.touches = e.touches;
-    state.x = e.pageX;
-    state.y = e.pageY;
+    STATE.touches = e.touches;
+    STATE.x = e.pageX;
+    STATE.y = e.pageY;
   }
 
   window.addEventListener('touchstart', HANDLERS.touchstart);
@@ -629,14 +645,14 @@
   HANDLERS.touchmove = function touchmove(e) {
     e.preventDefault();
 
-    state.x = e.pageX;
-    state.y = e.pageY;
+    STATE.x = e.pageX;
+    STATE.y = e.pageY;
 
-    if (state.zooming) clearTimeout(state.zooming);
-    state.zoom = Math.pow(1.5, (e.scale - state.scale));
-    state.scale = e.scale;
-    state.zooming = setTimeout(function () {
-      state.zooming = false;
+    if (STATE.zooming) clearTimeout(STATE.zooming);
+    STATE.zoom = Math.pow(1.5, (e.scale - STATE.scale));
+    STATE.scale = e.scale;
+    STATE.zooming = setTimeout(function () {
+      STATE.zooming = false;
     }, 200);
   }
 
@@ -646,10 +662,10 @@
     e.preventDefault();
 
     if (e.touches.length === 0) {
-      state.touches = [];
-      state.active = false;
-      state.shift = false;
-      state.scale = 1;
+      STATE.touches = [];
+      STATE.active = false;
+      STATE.shift = false;
+      STATE.scale = 1;
     }
   }
 
@@ -658,19 +674,19 @@
   window.addEventListener('touchcancel', HANDLERS.touchend);
 
   HANDLERS.mousewheel = function mousewheel(e) {
-    if (state.zooming) clearTimeout(state.zooming);
-    state.zoom = Math.pow(1.1, (e.detail / 100));
-    state.zooming = setTimeout(function () {
-      state.zooming = false;
+    if (STATE.zooming) clearTimeout(STATE.zooming);
+    STATE.zoom = Math.pow(1.1, (e.detail / 100));
+    STATE.zooming = setTimeout(function () {
+      STATE.zooming = false;
     }, 200);
   }
 
   window.addEventListener('mousewheel', HANDLERS.mousewheel);
 
   HANDLERS.resize = function resize() {
-    state.width = window.innerWidth;
-    state.height = window.innerHeight;
-    state.zoom = 1;
+    STATE.width = window.innerWidth;
+    STATE.height = window.innerHeight;
+    STATE.zoom = 1;
     scale();
   }
 
@@ -678,7 +694,7 @@
   HANDLERS.resize();
 
   HANDLERS.keyevent = function keyevent(e) {
-    state.shift = e.shiftKey;
+    STATE.shift = e.shiftKey;
     SVG.style.cursor = e.shiftKey ? 'move' : '';
   }
 
@@ -707,137 +723,122 @@
   // -------
 
   function setupDraw() {
-    if (state.momentum) state.momentum = false;
+    if (STATE.momentum) STATE.momentum = false;
 
-    state.redos = [];
-    state.path = new Path(state);
+    STATE.redos = [];
+    STATE.path = new Path();
   }
 
   function handleDraw() {
-    state.path.update(state);
-    state.path.render();
+    STATE.path.update();
+    STATE.path.render();
   }
 
   function finishDraw() {
-    state.path.update(state);
-    state.path.simplify();
-    state.path.render();
-    state.paths.push(state.path);
+    STATE.path.update();
+    STATE.path.simplify();
+    STATE.path.render();
+    STATE.paths.push(STATE.path);
+    sessionStorage.setItem('path_' + STATE.path.index, STATE.path);
     cleanupDraw();
   }
 
   function cleanupDraw() {
-    state.path = null;
+    STATE.path = null;
   }
 
   // Moving
   // ------
 
   function setupMove() {
-    if (state.momentum) state.momentum = false;
-    state.moveOrigin = state.pointer.clone();
-    state.movePosition = new Point(state.x, state.y);
+    if (STATE.momentum) STATE.momentum = false;
+    STATE.moveOrigin = STATE.pointer.clone();
+    STATE.movePosition = new Point(STATE.x, STATE.y);
   }
 
   function handleMove() {
-    var point = state.pointer.subtract(state.moveOrigin);
+    var point = STATE.pointer.subtract(STATE.moveOrigin);
     translate(point.x, point.y);
 
-    state._temp = state._temp || 0;
-    state._temp++;
-    if (state._temp === 10) {
-      state.movePosition = new Point(state.x, state.y);
-      state._temp = 0;
+    STATE._temp = STATE._temp || 0;
+    STATE._temp++;
+    if (STATE._temp === 10) {
+      STATE.movePosition = new Point(STATE.x, STATE.y);
+      STATE._temp = 0;
     }
   }
 
   function finishMove() {
-    if (state.zooming) return cleanupMove();
+    if (STATE.zooming) return cleanupMove();
 
-    state.momentum = true;
-    state.moveEnd = new Point(state.x, state.y);
+    STATE.momentum = true;
+    STATE.moveEnd = new Point(STATE.x, STATE.y);
 
-    var first    = state.movePosition;
-    var last     = state.moveEnd;
+    var first    = STATE.movePosition;
+    var last     = STATE.moveEnd;
     var distance = last.subtract(first);
     var start    = Date.now();
     var duration = 500;
 
     window.requestAnimationFrame(function loop() {
       var time = Date.now() - start;
-      if (!state.momentum || time > duration) return cleanupMove();
+      if (!STATE.momentum || time > duration) return cleanupMove();
 
       var factor = easeOutQuint(time / duration);
-      state.x = last.x + (distance.x * factor);
-      state.y = last.y + (distance.y * factor);
+      STATE.x = last.x + (distance.x * factor);
+      STATE.y = last.y + (distance.y * factor);
       handleMove();
-      state.x = state.moveEnd.x;
-      state.y = state.moveEnd.y;
+      STATE.x = STATE.moveEnd.x;
+      STATE.y = STATE.moveEnd.y;
 
       window.requestAnimationFrame(loop);
     });
   }
 
   function cleanupMove() {
-    state.momentum = false;
-    state._temp = null;
-  }
-
-  // Modal
-  // -----
-
-  function modal(arg) {
-    if (arg === false) {
-      // Close modal
-      MODAL.style.display = 'none';
-      forEach(MODAL.querySelectorAll('input[type="checkbox"]'), function (el) {
-        el.checked = false;
-      });
-    } else {
-      // Open modal
-      modal(false); // First close any open modals
-      MODAL.style.display = 'block';
-      document.getElementById('modal-' + arg).checked = true;
-    }
+    STATE.momentum = false;
+    STATE._temp = null;
   }
 
   // API
   // ---
 
   API.undo = function() {
-    var path = state.paths.pop();
+    var path = STATE.paths.pop();
     if (!path) return;
     path.layer.removeChild(path.el);
-    state.redos.push(path);
+    STATE.redos.push(path);
+    sessionStorage.removeItem('path_' + path.index);
   }
 
   API.redo = function() {
-    var path = state.redos.pop();
+    var path = STATE.redos.pop();
     if (!path) return;
     path.layer.insertBefore(path.el, null);
-    state.paths.push(path);
+    STATE.paths.push(path);
+    sessionStorage.setItem('path_' + path.index, path);
   }
 
   Object.defineProperties(API, {
 
     layer: {
-      get: function () { return +state.layer.id.split('-')[1]; },
-      set: function (num) { state.layer = document.getElementById('layer-' + num); }
+      get: function () { return +STATE.layer.id.split('-')[1]; },
+      set: function (num) { STATE.layer = document.getElementById('layer-' + num); }
     },
 
     color: {
-      get: function () { return state.color; },
-      set: function (color) { state.color = color; }
+      get: function () { return STATE.color; },
+      set: function (color) { STATE.color = color; }
     },
 
     size: {
-      get: function () { return state.size; },
-      set: function (size) { state.size = size; }
+      get: function () { return STATE.size; },
+      set: function (size) { STATE.size = size; }
     },
 
     opacity: {
-      get: function () { return state.opacity; },
-      set: function (opacity) { state.opacity = opacity; }
+      get: function () { return STATE.opacity; },
+      set: function (opacity) { STATE.opacity = opacity; }
     }
 
   });
@@ -850,23 +851,23 @@
     undo: API.undo,
     redo: API.redo,
 
-    color:   function () { modal('color');   },
-    opacity: function () { modal('opacity'); },
-    size:    function () { modal('size');    },
-    layer:   function () { modal('layer');   },
+    // color:   function () { modal('color');   },
+    // opacity: function () { modal('opacity'); },
+    // size:    function () { modal('size');    },
+    // layer:   function () { modal('layer');   },
 
     play: function () {
       // Hide all
-      state.paths.forEach(function (path, i) {
-        path.index = i;
-        if (!path.length) path.length = Math.ceil(path.el.getTotalLength());
+      STATE.paths.forEach(function (path) {
+        if (!(length in path)) path.length = Math.ceil(path.el.getTotalLength());
+        if (path.length === 0) path.el.setAttribute('visibility', 'hidden');
         path.el.setAttribute('stroke-dasharray', path.length + 'px');
         path.el.setAttribute('stroke-dashoffset', path.length + 'px');
         path._dashoffset = path.length;
       });
 
       // Animate in sequence
-      state.paths[0].play();
+      STATE.paths[0].play();
     }
 
   }
