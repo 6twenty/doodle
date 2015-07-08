@@ -11,6 +11,14 @@
   var HANDLERS = {};
   var COMMANDS = {};
   var API      = {};
+
+  var ATTRIBUTES = {
+    color: [ '#46648e', '#8bbbff', '#89ad48', '#d1d642', '#8c5ba7', '#ca76bf', '#d7503c', '#d17060', '#f49f14', '#fae014', '#000000', '#ffffff' ],
+    opacity: [ 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1 ],
+    size: [ 5, 14, 23, 32, 41, 50 ],
+    layer: [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ]
+  }
+
   var STATE;
 
   // Helpers
@@ -705,16 +713,32 @@
   HANDLERS.keys = {
     117: 'undo',
     114: 'redo',
-    // 99:  'color',
-    // 111: 'opacity',
-    // 115: 'size',
-    // 108: 'layer',
-    112: 'play'
+    99:  'color',
+    111: 'opacity',
+    115: 'size',
+    108: 'layer',
+    112: 'play',
+
+    // Number keys 0-9
+    48: 0,
+    49: 2,
+    50: 4,
+    51: 6,
+    52: 8,
+    53: 10,
+    54: 12,
+    55: 14,
+    56: 16,
+    57: 18
   }
 
   HANDLERS.keypress = function keypress(e) {
-    var command = HANDLERS.keys[e.which];
-    if (command) COMMANDS[command]();
+    var value = HANDLERS.keys[e.which];
+    if (typeof value === 'number') {
+      COMMANDS.select(value, e.ctrlKey);
+    } else if (value) {
+      COMMANDS[value]();
+    }
   }
 
   window.addEventListener('keypress', HANDLERS.keypress);
@@ -848,13 +872,30 @@
 
   COMMANDS = {
 
+    await: function (attribute) {
+      STATE.awaiting = attribute;
+      if (STATE._timer) clearTimeout(STATE._timer);
+      STATE._timer = setTimeout(function () {
+        STATE.awaiting = null;
+      }, 3000);
+    },
+
+    select: function (value, shift) {
+      if (STATE.awaiting) {
+        COMMANDS.await(STATE.awaiting); // Reset timer
+        if (shift) value++;
+        var attr = ATTRIBUTES[STATE.awaiting][value];
+        if (attr) API[STATE.awaiting] = attr;
+      }
+    },
+
     undo: API.undo,
     redo: API.redo,
 
-    // color:   function () { modal('color');   },
-    // opacity: function () { modal('opacity'); },
-    // size:    function () { modal('size');    },
-    // layer:   function () { modal('layer');   },
+    color:   function () { COMMANDS.await('color');   },
+    opacity: function () { COMMANDS.await('opacity'); },
+    size:    function () { COMMANDS.await('size');    },
+    layer:   function () { COMMANDS.await('layer');   },
 
     play: function () {
       // Hide all
