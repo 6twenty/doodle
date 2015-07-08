@@ -872,4 +872,16 @@
 
   }
 
+  // Loading
+  // -------
+
+  var i = 0, path = sessionStorage.getItem('path_' + i);
+  while (path) {
+    path = JSON.parse(path);
+    path.layer = document.getElementById(path.layer);
+    path = new Path(path);
+    STATE.paths.push(path);
+    path = sessionStorage.getItem('path_' + ++i);
+  }
+
 })();
