@@ -179,7 +179,7 @@
 
         // Variable width setup
         var threshold = Math.floor(this.size / 2);
-        var step = Math.max(1, this.size * 0.1);
+        var step = Math.min(1, easeOutQuint(this.size / 100)) * 8;
         var offset = 0;
         var reducing = false;
         var last = this.segments.length - 1;
