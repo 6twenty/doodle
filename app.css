@@ -205,10 +205,6 @@ body {
   content: '';
   position: absolute;
   display: block;
-  height: 4px;
-  width: 4px;
-  background: white;
-  border-radius: 50%;
 }
 
 #pen-colour > div:nth-child(1) {
@@ -218,6 +214,14 @@ body {
   top: 9px;
   left: 11px;
   border-bottom-right-radius: 3px;
+}
+
+#pen-colour > div:nth-child(1)::before,
+#pen-colour > div:nth-child(1)::after {
+  height: 4px;
+  width: 4px;
+  background: white;
+  border-radius: 50%;
 }
 
 #pen-colour > div:nth-child(2) {
@@ -237,15 +241,7 @@ body {
 #pen-colour > div:nth-child(1)::after {
   top: -6px;
   left: -4px;
-}
-
-#pen-colour > div:nth-child(2)::before {
-  top: -4px;
-  left: -6px;
-}
-
-#pen-colour > div:nth-child(2)::after {
-  display: none;
+  box-shadow: -4px 5px 0 white;
 }
 
 #pen-opacity {
