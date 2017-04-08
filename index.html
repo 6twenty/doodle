@@ -2,29 +2,22 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Quickdraw</title>
-<link rel="stylesheet" href="/css.css">
-<div id="pen"></div>
-<svg id="svg" viewBox="0 0 0 0" preserveAspectRatio="xMidYMid meet">
-  <defs>
-    <g id="layer-1"></g>
-    <g id="layer-2"></g>
-    <g id="layer-3"></g>
-    <g id="layer-4"></g>
-    <g id="layer-5"></g>
-    <g id="layer-6"></g>
-    <g id="layer-7"></g>
-    <g id="layer-8"></g>
-    <g id="layer-9"></g>
-  </defs>
-  <use xlink:href="#layer-1" />
-  <use xlink:href="#layer-2" />
-  <use xlink:href="#layer-3" />
-  <use xlink:href="#layer-4" />
-  <use xlink:href="#layer-5" />
-  <use xlink:href="#layer-6" />
-  <use xlink:href="#layer-7" />
-  <use xlink:href="#layer-8" />
-  <use xlink:href="#layer-9" />
-</svg>
-<script src="/wheel.js"></script>
-<script src="/js.js"></script>
+<link rel="stylesheet" href="/app.css">
+<script src="/app/wheel.js"></script>
+<script src="/app/eventable.js"></script>
+<script src="/app/app.js"></script>
+<script src="/app/panel.js"></script>
+<script src="/app/pen.js"></script>
+<script src="/app/pen-mode.js"></script>
+<script src="/app/pen-mode-panel.js"></script>
+<script src="/app/pen-size.js"></script>
+<script src="/app/pen-size-panel.js"></script>
+<script src="/app/pen-colour.js"></script>
+<script src="/app/pen-colour-panel.js"></script>
+<script src="/app/pen-opacity.js"></script>
+<script src="/app/pen-opacity-panel.js"></script>
+<script>
+  window.onload = () => {
+    window.app = new App()
+  }
+</script>
