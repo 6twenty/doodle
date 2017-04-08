@@ -18,6 +18,12 @@ class Pen extends Eventable {
     document.body.appendChild(this.el)
   }
 
+  set mode(val) {
+    this._mode = val
+
+    this.trigger('pen:mode', { mode: this._mode })
+  }
+
   set size(val) {
     this._size = val
 
@@ -28,6 +34,8 @@ class Pen extends Eventable {
     }
 
     this.el.style.borderWidth = width + 'px'
+
+    this.trigger('pen:size', { mode: this._size })
   }
 
   set colour(val) {
@@ -35,6 +43,8 @@ class Pen extends Eventable {
 
     this.el.style.backgroundColor = this._colour
     this.opacity = this._opacity
+
+    this.trigger('pen:colour', { mode: this._colour })
   }
 
   set opacity(val) {
@@ -46,6 +56,8 @@ class Pen extends Eventable {
     split[3] = this._opacity
 
     this.el.style.backgroundColor = 'rgba(' + split.join(',') + ')'
+
+    this.trigger('pen:opacity', { mode: this._opacity })
   }
 
 }

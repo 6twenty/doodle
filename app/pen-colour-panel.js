@@ -1,7 +1,9 @@
 class PenColourPanel extends Panel {
 
-  constructor() {
+  constructor(app) {
     super()
+
+    this.app = app
 
     this.render('pen-colour-panel')
   }

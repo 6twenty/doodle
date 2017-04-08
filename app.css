@@ -29,6 +29,7 @@ body {
   top: 20px;
   border-radius: 50%;
   cursor: pointer;
+  background: white;
   box-shadow: 0 0 1px rgba(0,0,0,.33);
   height: 30px;
   width: 30px;
@@ -107,7 +108,7 @@ body {
   transform: rotate(-45deg);
 }
 
-#pen-mode::before {
+#pen-mode.draw-mode::before {
   top: 11px;
   left: 5px;
   width: 0;
@@ -117,7 +118,7 @@ body {
   border-left: none;
 }
 
-#pen-mode::after {
+#pen-mode.draw-mode::after {
   top: 11px;
   left: 10px;
   height: 8px;
@@ -126,6 +127,26 @@ body {
   border-right: solid 4px black;
   border-top-right-radius: 4px;
   border-bottom-right-radius: 4px;
+}
+
+#pen-mode.erase-mode::before {
+  top: 10px;
+  left: 6px;
+  height: 10px;
+  width: 5px;
+  border: solid 1px black;
+  border-top-left-radius: 2px;
+  border-bottom-left-radius: 2px;
+}
+
+#pen-mode.erase-mode::after {
+  top: 10px;
+  right: 6px;
+  height: 10px;
+  width: 11px;
+  background: black;
+  border-top-right-radius: 2px;
+  border-bottom-right-radius: 2px;
 }
 
 #pen-size {
@@ -185,4 +206,80 @@ body {
   background: black;
   border-top-right-radius: 11px;
   border-bottom-right-radius: 11px;
+}
+
+.pen-mode-panel .draw-mode,
+.pen-mode-panel .erase-mode {
+  position: absolute;
+  top: calc(50% - 30px);
+  height: 60px;
+  width: 60px;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 1px rgba(0,0,0,.66);
+}
+
+.pen-mode-panel .draw-mode:hover,
+.pen-mode-panel .erase-mode:hover {
+  box-shadow: 0 0 5px rgba(0,0,127,1);
+}
+
+.pen-mode-panel .draw-mode::before,
+.pen-mode-panel .draw-mode::after,
+.pen-mode-panel .erase-mode::before,
+.pen-mode-panel .erase-mode::after {
+  content: '';
+  position: absolute;
+  display: block;
+}
+
+.pen-mode-panel .draw-mode {
+  left: calc(50% - 80px);
+  transform: rotate(-45deg);
+}
+
+.pen-mode-panel .draw-mode::before {
+  top: 22px;
+  left: 10px;
+  width: 0;
+  height: 0;
+  border: solid 8px transparent;
+  border-right: solid 6px black;
+  border-left: none;
+}
+
+.pen-mode-panel .draw-mode::after {
+  top: 22px;
+  left: 20px;
+  height: 16px;
+  width: 26px;
+  border-left: solid 16px black;
+  border-right: solid 8px black;
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.pen-mode-panel .erase-mode {
+  left: calc(50% + 20px);
+  transform: rotate(-45deg);
+}
+
+.pen-mode-panel .erase-mode::before {
+  top: 20px;
+  left: 13px;
+  height: 20px;
+  width: 10px;
+  border: solid 2px black;
+  border-top-left-radius: 3px;
+  border-bottom-left-radius: 3px;
+}
+
+.pen-mode-panel .erase-mode::after {
+  top: 20px;
+  right: 13px;
+  height: 20px;
+  width: 22px;
+  background: black;
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
 }

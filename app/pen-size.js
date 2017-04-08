@@ -1,11 +1,13 @@
 class PenSize extends Eventable {
 
-  constructor() {
+  constructor(app) {
     super()
+
+    this.app = app
 
     this.render()
 
-    this.panel = new PenSizePanel()
+    this.panel = new PenSizePanel(this.app)
 
     this.el.onclick = this.click.bind(this)
   }

@@ -11,6 +11,7 @@ class Panel extends Eventable {
 
     this.el.id = name
     this.el.classList.add('panel')
+    this.el.classList.add(name)
     this.el.style.display = 'none'
 
     const close = document.createElement('div')
@@ -21,7 +22,13 @@ class Panel extends Eventable {
 
     close.onclick = this.close.bind(this)
 
+    this.renderPanel()
+
     document.body.appendChild(this.el)
+  }
+
+  renderPanel() {
+
   }
 
   open() {

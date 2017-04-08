@@ -3,12 +3,12 @@ class App extends Eventable {
   constructor() {
     super()
 
-    new PenMode()
-    new PenSize()
-    new PenColour()
-    new PenOpacity()
+    new PenMode(this)
+    new PenSize(this)
+    new PenColour(this)
+    new PenOpacity(this)
 
-    this.pen = new Pen()
+    this.pen = new Pen(this)
   }
 
 }
