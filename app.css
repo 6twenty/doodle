@@ -275,6 +275,32 @@ body {
   border-bottom-right-radius: 11px;
 }
 
+#draw-layer {
+  left: 180px;
+}
+
+#draw-layer::before {
+  height: 18px;
+  width: 18px;
+  left: 6px;
+  top: 9px;
+  background: black;
+  border-radius: 3px;
+  transform: scale(1,.33) rotate(-45deg);
+}
+
+#draw-layer::after {
+  height: 18px;
+  width: 18px;
+  left: 6px;
+  top: 4px;
+  background: white;
+  border: solid 3px black;
+  border-radius: 3px;
+  transform: scale(1,.33) rotate(-45deg);
+  box-shadow: -4px 4px 0 white;
+}
+
 .pen-mode-panel .draw-mode,
 .pen-mode-panel .erase-mode {
   position: absolute;
