@@ -173,12 +173,79 @@ body {
 
 #pen-colour {
   left: 100px;
-  padding: 3px;
+  background: black;
+  border: solid 4px white;
 }
 
-#pen-colour svg {
-  height: 24px;
-  width: 24px;
+#pen-colour::before {
+  top: 9px;
+  left: 11px;
+  width: 12px;
+  height: 14px;
+  background: white;
+  border-bottom-right-radius: 12px 14px;
+}
+
+#pen-colour::after {
+  top: 17px;
+  left: 8px;
+  background: black;
+  height: 5px;
+  width: 5px;
+  border-radius: 50%;
+}
+
+#pen-colour > div {
+  position: absolute;
+  z-index: 1;
+}
+
+#pen-colour > div::before,
+#pen-colour > div::after {
+  content: '';
+  position: absolute;
+  display: block;
+  height: 4px;
+  width: 4px;
+  background: white;
+  border-radius: 50%;
+}
+
+#pen-colour > div:nth-child(1) {
+  height: 3px;
+  width: 11px;
+  background: black;
+  top: 9px;
+  left: 11px;
+  border-bottom-right-radius: 3px;
+}
+
+#pen-colour > div:nth-child(2) {
+  height: 5px;
+  width: 5px;
+  border-radius: 50%;
+  background: white;
+  top: 12px;
+  left: 9px;
+}
+
+#pen-colour > div:nth-child(1)::before {
+  top: -4px;
+  left: 2px;
+}
+
+#pen-colour > div:nth-child(1)::after {
+  top: -6px;
+  left: -4px;
+}
+
+#pen-colour > div:nth-child(2)::before {
+  top: -4px;
+  left: -6px;
+}
+
+#pen-colour > div:nth-child(2)::after {
+  display: none;
 }
 
 #pen-opacity {
