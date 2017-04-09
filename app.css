@@ -59,6 +59,7 @@ body {
   right: 0;
   width: auto;
   background: rgba(255,255,255,.9);
+  cursor: default;
 }
 
 .panel-close {
