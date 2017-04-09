@@ -6,30 +6,22 @@ class PenColourPanel extends Panel {
     this.button = button
     this.app = this.button.app
 
-    this.colours = [
-      '#46648e',
-      '#8bbbff',
-      '#89ad48',
-      '#d1d642',
-      '#8c5ba7',
-      '#ca76bf',
-      '#d7503c',
-      '#f49f14',
-      '#fae014',
-      '#000000',
-      '#ffffff'
-    ]
+    this.buttons = {}
 
     this.render('pen-colour-panel')
+
+    this.on('pen:colour', this.update)
   }
 
   renderPanel() {
-    this.colours.forEach(hex => {
-      const el = document.createElement('span')
+    Pen.colours.forEach(hex => {
+      const el = document.createElement('div')
 
       el.classList.add('pen-colour')
       el.style.backgroundColor = hex
       el.onclick = this.penColourClick.bind(this, hex)
+
+      this.buttons[hex] = el
 
       this.el.appendChild(el)
     })
@@ -39,6 +31,16 @@ class PenColourPanel extends Panel {
     this.app.pen.colour = hex
 
     this.close()
+  }
+
+  update(change) {
+    const active = this.el.querySelector('.pen-colour.active')
+
+    if (active) {
+      active.classList.remove('active')
+    }
+
+    this.buttons[change.colour].classList.add('active')
   }
 
 }

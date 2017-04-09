@@ -12,7 +12,7 @@ class Panel extends Eventable {
     this.el.classList.add(name)
     this.el.style.display = 'none'
 
-    const close = document.createElement('div')
+    const close = document.createElement('button')
 
     close.classList.add('panel-close')
 
