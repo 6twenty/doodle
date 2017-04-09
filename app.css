@@ -306,6 +306,11 @@ body {
   box-shadow: 0 0 0 1px rgba(0,0,0,.1);
 }
 
+.pen-mode-panel .draw-mode.active,
+.pen-mode-panel .erase-mode.active {
+  box-shadow: 0 0 0 3px rgba(0,127,0,.5);
+}
+
 .pen-mode-panel .draw-mode:hover,
 .pen-mode-panel .erase-mode:hover {
   box-shadow: 0 0 0 3px rgba(0,0,127,.5);
