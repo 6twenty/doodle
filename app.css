@@ -23,6 +23,10 @@ body {
   margin: 0;
 }
 
+main {
+  height: 100%;
+}
+
 .button {
   position: absolute;
   z-index: 3;

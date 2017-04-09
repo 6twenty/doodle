@@ -24,8 +24,10 @@ class Pen extends Eventable {
     return [ 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1 ]
   }
 
-  constructor() {
+  constructor(app) {
     super()
+
+    this.app = app
 
     this.render()
 
@@ -47,7 +49,7 @@ class Pen extends Eventable {
 
     this.el.id = 'pen'
 
-    document.body.appendChild(this.el)
+    this.app.el.appendChild(this.el)
   }
 
   get mode() {

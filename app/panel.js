@@ -22,7 +22,7 @@ class Panel extends Eventable {
 
     this.renderPanel()
 
-    document.body.appendChild(this.el)
+    this.app.el.appendChild(this.el)
   }
 
   renderPanel() {

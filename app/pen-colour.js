@@ -19,7 +19,7 @@ class PenColour extends Eventable {
     this.el.classList.add('button')
     this.el.appendChild(document.createElement('div'))
 
-    document.body.appendChild(this.el)
+    this.app.el.appendChild(this.el)
   }
 
   click() {

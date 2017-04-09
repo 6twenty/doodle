@@ -18,7 +18,7 @@ class PenOpacity extends Eventable {
     this.el.id = 'pen-opacity'
     this.el.classList.add('button')
 
-    document.body.appendChild(this.el)
+    this.app.el.appendChild(this.el)
   }
 
   click() {

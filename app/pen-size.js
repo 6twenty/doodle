@@ -18,7 +18,7 @@ class PenSize extends Eventable {
     this.el.id = 'pen-size'
     this.el.classList.add('button')
 
-    document.body.appendChild(this.el)
+    this.app.el.appendChild(this.el)
   }
 
   click() {

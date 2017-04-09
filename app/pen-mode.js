@@ -21,7 +21,7 @@ class PenMode extends Eventable {
     this.el.classList.add('draw-mode')
     this.el.classList.add('button')
 
-    document.body.appendChild(this.el)
+    this.app.el.appendChild(this.el)
   }
 
   click() {
