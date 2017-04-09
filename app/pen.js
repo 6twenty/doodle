@@ -16,19 +16,30 @@ class Pen extends Eventable {
     ]
   }
 
+  static get sizes() {
+    return [ 5, 14, 23, 32, 41, 50 ]
+  }
+
+  static get opacities() {
+    return [ 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1 ]
+  }
+
   constructor() {
     super()
-
-    // this.on('pen:size', data => { this.size = data.size })
-    // this.on('pen:colour', data => { this.colour = data.colour })
-    // this.on('pen:opacity', data => { this.opacity = data.opacity })
 
     this.render()
 
     this.mode = 'draw'
-    this.size = 10
-    this.colour = Pen.colours[0]
+    this.size = 14
+    this.colour = '#000000'
     this.opacity = 1
+
+    this.trigger('pen:ready', {
+      mode: this.mode,
+      size: this.size,
+      colour: this.colour,
+      opacity: this.opacity
+    })
   }
 
   render() {
@@ -44,6 +55,10 @@ class Pen extends Eventable {
   }
 
   set mode(val) {
+    if (this._mode === val) {
+      return
+    }
+
     this._mode = val
 
     this.trigger('pen:mode', { mode: this._mode })
@@ -54,6 +69,10 @@ class Pen extends Eventable {
   }
 
   set size(val) {
+    if (this._size === val) {
+      return
+    }
+
     this._size = val
 
     let width = (60 - (50 * ((this._size * 2) / 100))) / 2
@@ -62,7 +81,7 @@ class Pen extends Eventable {
       width = 0
     }
 
-    this.el.style.borderWidth = width + 'px'
+    this.el.style.borderWidth = `${width}px`
 
     this.trigger('pen:size', { size: this._size })
   }
@@ -72,6 +91,10 @@ class Pen extends Eventable {
   }
 
   set colour(val) {
+    if (this._colour === val) {
+      return
+    }
+
     this._colour = val
 
     this.el.style.backgroundColor = this._colour
@@ -85,6 +108,10 @@ class Pen extends Eventable {
   }
 
   set opacity(val) {
+    if (this._opacity === val) {
+      return
+    }
+
     this._opacity = val
 
     const current = window.getComputedStyle(this.el)['background-color']
