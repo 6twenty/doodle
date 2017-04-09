@@ -36,12 +36,20 @@ class Pen extends Eventable {
     this.colour = '#000000'
     this.opacity = 1
 
+    this.el.addEventListener('mousedown', this.stopPropagation)
+    this.el.addEventListener('mouseup', this.stopPropagation)
+    this.el.addEventListener('mousemove', this.stopPropagation)
+
     this.trigger('pen:ready', {
       mode: this.mode,
       size: this.size,
       colour: this.colour,
       opacity: this.opacity
     })
+  }
+
+  stopPropagation(e) {
+    e.stopPropagation()
   }
 
   render() {

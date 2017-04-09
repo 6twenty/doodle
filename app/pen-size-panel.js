@@ -13,7 +13,7 @@ class PenSizePanel extends Panel {
   }
 
   renderPanel() {
-    this.slider = new Slider(Pen.sizes)
+    this.slider = new Slider(this.el, Pen.sizes)
 
     const left = document.createElement('div')
     const right = document.createElement('div')
@@ -34,7 +34,7 @@ class PenSizePanel extends Panel {
     if (change.id !== this.slider.id) {
       return
     }
-    
+
     this.app.pen.size = change.step
   }
 

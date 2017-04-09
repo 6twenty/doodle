@@ -22,11 +22,15 @@ class Panel extends Eventable {
 
     this.renderPanel()
 
+    this.el.addEventListener('mousedown', this.stopPropagation)
+    this.el.addEventListener('mouseup', this.stopPropagation)
+    this.el.addEventListener('mousemove', this.stopPropagation)
+
     this.app.el.appendChild(this.el)
   }
 
-  renderPanel() {
-
+  stopPropagation(e) {
+    e.stopPropagation()
   }
 
   open() {

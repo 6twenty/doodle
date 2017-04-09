@@ -1,0 +1,3 @@
+class CanvasRenderLayer extends CanvasLayer {
+
+}

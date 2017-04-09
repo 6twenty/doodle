@@ -5,8 +5,10 @@ class Slider extends Eventable {
     return this._counter += 1
   }
 
-  constructor(steps) {
+  constructor(root, steps) {
     super()
+
+    this.root = root
 
     this.id = this.constructor.uid()
 
@@ -53,26 +55,32 @@ class Slider extends Eventable {
   }
 
   startDragging(e) {
+    e.stopPropagation()
+
     this.dragging = true
 
     this._startPosition = Math.floor(e.x)
 
-    document.body.addEventListener('mousemove', this.drag)
-    document.body.addEventListener('mouseup', this.stopDragging)
-    document.body.addEventListener('mouseleave', this.stopDragging)
+    this.root.addEventListener('mousemove', this.drag)
+    this.root.addEventListener('mouseup', this.stopDragging)
+    this.root.addEventListener('mouseleave', this.stopDragging)
   }
 
   stopDragging(e) {
+    e.stopPropagation()
+
     delete this._startPosition
 
     this.step = this._step
 
-    document.body.removeEventListener('mousemove', this.drag)
-    document.body.removeEventListener('mouseup', this.stopDragging)
-    document.body.removeEventListener('mouseleave', this.stopDragging)
+    this.root.removeEventListener('mousemove', this.drag)
+    this.root.removeEventListener('mouseup', this.stopDragging)
+    this.root.removeEventListener('mouseleave', this.stopDragging)
   }
 
   drag(e) {
+    e.stopPropagation()
+
     const distance = Math.floor(e.x) - this._startPosition
     const stepsMoved = Math.round(distance / this.stepSize)
     const index = this.steps.indexOf(this.step)

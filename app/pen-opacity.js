@@ -1,11 +1,7 @@
-class PenOpacity extends Eventable {
+class PenOpacity extends Button {
 
   constructor(app) {
-    super()
-
-    this.app = app
-
-    this.render()
+    super(app)
 
     this.panel = new PenOpactyPanel(this)
 

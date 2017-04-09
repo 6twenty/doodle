@@ -1,11 +1,7 @@
-class PenSize extends Eventable {
+class PenSize extends Button {
 
   constructor(app) {
-    super()
-
-    this.app = app
-
-    this.render()
+    super(app)
 
     this.panel = new PenSizePanel(this)
 

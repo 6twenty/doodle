@@ -13,7 +13,7 @@ class PenOpactyPanel extends Panel {
   }
 
   renderPanel() {
-    this.slider = new Slider(Pen.opacities)
+    this.slider = new Slider(this.el, Pen.opacities)
 
     const left = document.createElement('div')
     const right = document.createElement('div')

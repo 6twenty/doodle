@@ -9,4 +9,8 @@ class DrawLayerPanel extends Panel {
     this.render('draw-layer-panel')
   }
 
+  renderPanel() {
+    
+  }
+
 }
