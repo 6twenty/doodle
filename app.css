@@ -207,6 +207,12 @@ body {
 #pen-colour > div {
   position: absolute;
   z-index: 1;
+  height: 3px;
+  width: 11px;
+  background: black;
+  top: 9px;
+  left: 11px;
+  border-bottom-right-radius: 3px;
 }
 
 #pen-colour > div::before,
@@ -216,41 +222,23 @@ body {
   display: block;
 }
 
-#pen-colour > div:nth-child(1) {
-  height: 3px;
-  width: 11px;
-  background: black;
-  top: 9px;
-  left: 11px;
-  border-bottom-right-radius: 3px;
-}
-
-#pen-colour > div:nth-child(1)::before,
-#pen-colour > div:nth-child(1)::after {
+#pen-colour > div::before {
   height: 4px;
   width: 4px;
   background: white;
   border-radius: 50%;
+  top: -4px;
+  left: 2px;
+  box-shadow: -6px -2px 0 white, -10px 3px 0 white;
 }
 
-#pen-colour > div:nth-child(2) {
+#pen-colour > div::after {
   height: 5px;
   width: 5px;
   border-radius: 50%;
   background: white;
-  top: 12px;
-  left: 9px;
-}
-
-#pen-colour > div:nth-child(1)::before {
-  top: -4px;
-  left: 2px;
-}
-
-#pen-colour > div:nth-child(1)::after {
-  top: -6px;
-  left: -4px;
-  box-shadow: -4px 5px 0 white;
+  top: 3px;
+  left: -2px;
 }
 
 #pen-opacity {
