@@ -30,7 +30,7 @@ body {
   border-radius: 50%;
   cursor: pointer;
   background: white;
-  box-shadow: 0 0 1px rgba(0,0,0,.33);
+  box-shadow: 0 0 0 1px rgba(0,0,0,.1);
   height: 30px;
   width: 30px;
 }
@@ -43,7 +43,7 @@ body {
 }
 
 .button:hover {
-  box-shadow: 0 0 3px rgba(0,0,127,.75);
+  box-shadow: 0 0 0 2px rgba(0,0,127,.5);
 }
 
 .panel {
@@ -98,7 +98,7 @@ body {
   background: rgba(0,0,0,1);
   border: solid 25px white;
   cursor: default;
-  box-shadow: 0 0 1px rgba(0,0,0,.33);
+  box-shadow: 0 0 0 1px rgba(0,0,0,.1);
   height: 60px;
   width: 60px;
 }
@@ -305,12 +305,12 @@ body {
   width: 60px;
   border-radius: 50%;
   cursor: pointer;
-  box-shadow: 0 0 1px rgba(0,0,0,.66);
+  box-shadow: 0 0 0 1px rgba(0,0,0,.1);
 }
 
 .pen-mode-panel .draw-mode:hover,
 .pen-mode-panel .erase-mode:hover {
-  box-shadow: 0 0 5px rgba(0,0,127,1);
+  box-shadow: 0 0 0 3px rgba(0,0,127,.5);
 }
 
 .pen-mode-panel .draw-mode::before,
