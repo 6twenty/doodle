@@ -27,6 +27,10 @@ main {
   height: 100%;
 }
 
+canvas {
+  position: absolute;
+}
+
 .button {
   position: absolute;
   z-index: 3;
