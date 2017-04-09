@@ -2,8 +2,6 @@ class Panel extends Eventable {
 
   constructor() {
     super()
-
-
   }
 
   render(name) {
@@ -32,11 +30,23 @@ class Panel extends Eventable {
   }
 
   open() {
+    if (Panel.active) {
+      Panel.active.close()
+    }
+
+    Panel.active = this
+
     this.el.style.display = 'block'
+
+    this.button.el.classList.add('active')
   }
 
   close() {
+    delete Panel.active
+
     this.el.style.display = 'none'
+
+    this.button.el.classList.remove('active')
   }
 
 }

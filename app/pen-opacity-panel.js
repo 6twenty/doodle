@@ -1,9 +1,10 @@
 class PenOpactyPanel extends Panel {
 
-  constructor(app) {
+  constructor(button) {
     super()
 
-    this.app = app
+    this.button = button
+    this.app = this.button.app
 
     this.render('pen-opacity-panel')
   }

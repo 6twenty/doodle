@@ -7,7 +7,7 @@ class DrawLayer extends Eventable {
 
     this.render()
 
-    this.panel = new DrawLayerPanel(this.app)
+    this.panel = new DrawLayerPanel(this)
 
     this.el.onclick = this.click.bind(this)
   }

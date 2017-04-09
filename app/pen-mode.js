@@ -7,7 +7,7 @@ class PenMode extends Eventable {
 
     this.render()
 
-    this.panel = new PenModePanel(this.app)
+    this.panel = new PenModePanel(this)
 
     this.el.onclick = this.click.bind(this)
 

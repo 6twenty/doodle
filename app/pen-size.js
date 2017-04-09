@@ -7,7 +7,7 @@ class PenSize extends Eventable {
 
     this.render()
 
-    this.panel = new PenSizePanel(this.app)
+    this.panel = new PenSizePanel(this)
 
     this.el.onclick = this.click.bind(this)
   }

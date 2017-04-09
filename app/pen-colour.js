@@ -7,7 +7,7 @@ class PenColour extends Eventable {
 
     this.render()
 
-    this.panel = new PenColourPanel(this.app)
+    this.panel = new PenColourPanel(this)
 
     this.el.onclick = this.click.bind(this)
   }
