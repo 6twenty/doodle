@@ -21,11 +21,6 @@ class PenSizePanel extends Panel {
     left.classList.add('pen-size-slider-left')
     right.classList.add('pen-size-slider-right')
 
-    left.style.height = '5px'
-    left.style.width = '5px'
-    right.style.height = '50px'
-    right.style.width = '50px'
-
     this.el.appendChild(left)
     this.el.appendChild(right)
     this.el.appendChild(this.slider.el)
@@ -36,6 +31,10 @@ class PenSizePanel extends Panel {
   }
 
   sliderChange(change) {
+    if (change.id !== this.slider.id) {
+      return
+    }
+    
     this.app.pen.size = change.step
   }
 

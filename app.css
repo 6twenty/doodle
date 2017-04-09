@@ -430,7 +430,9 @@ body {
 .pen-colour-panel .pen-colour:nth-of-type(11) { top: calc(50% + 30px); left: calc(50% + 5px); }
 
 .pen-size-slider-left,
-.pen-size-slider-right {
+.pen-size-slider-right,
+.pen-opacity-slider-left,
+.pen-opacity-slider-right {
   position: absolute;
   background: black;
   border-radius: 50%;
@@ -438,11 +440,33 @@ body {
 }
 
 .pen-size-slider-left {
+  height: 5px;
+  width: 5px;
   left: calc(50% - 170px);
   transform: translate(-50%, -50%);
 }
 
 .pen-size-slider-right {
+  height: 50px;
+  width: 50px;
   left: calc(50% + 145px);
   transform: translate(50%, -50%);
+}
+
+.pen-opacity-slider-left,
+.pen-opacity-slider-right {
+  height: 50px;
+  width: 50px;
+  transform: translateY(-50%);
+}
+
+.pen-opacity-slider-left {
+  left: calc(50% - 220px);
+  background: white;
+  border: dotted 4px black;
+}
+
+.pen-opacity-slider-right {
+  left: calc(50% + 170px);
+  background: black;
 }
