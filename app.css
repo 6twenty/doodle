@@ -125,6 +125,7 @@ canvas {
   left: -10px;
   top: -9px;
   cursor: pointer;
+  transition: transform .2s ease;
 }
 
 #pen {
@@ -136,7 +137,7 @@ canvas {
   background: rgba(0,0,0,1);
   border: solid 25px white;
   cursor: default;
-  box-shadow: 0 0 0 1px rgba(0,0,0,.1);
+  box-shadow: 0 0 0 1px rgba(0,0,0,.1), 0 0 0 1px rgba(0,0,0,.1) inset;
   height: 60px;
   width: 60px;
 }
