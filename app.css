@@ -17,6 +17,7 @@ body {
   width: 100%;
   overflow: hidden;
   cursor: crosshair;
+  user-select: none;
 }
 
 body {
@@ -27,8 +28,13 @@ main {
   height: 100%;
 }
 
+#draw-canvas,
 canvas {
   position: absolute;
+  top: 0;
+  left: 0;
+  height: 5000px;
+  width: 5000px;
 }
 
 .button {

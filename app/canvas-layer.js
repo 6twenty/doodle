@@ -11,8 +11,10 @@ class CanvasLayer extends Eventable {
   build() {
     this.el = document.createElement('canvas')
 
-    this.el.height = 10000
-    this.el.width = 10000
+    this.el.height = 5000
+    this.el.width = 5000
+
+    this.ctx = this.el.getContext('2d')
   }
 
 }

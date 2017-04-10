@@ -1,34 +1,44 @@
 class CanvasDrawLayer extends CanvasLayer {
 
-  constructor(canvas) {
-    super(canvas)
+  setup() {
+    if (this.canvas.app.state.momentum) {
+      this.canvas.app.state.momentum = false
+    }
 
-    this.startDrawing = this.startDrawing.bind(this)
-    this.stopDrawing = this.stopDrawing.bind(this)
-    this.draw = this.draw.bind(this)
-
-    this.canvas.app.el.addEventListener('mousedown', this.startDrawing);
+    this.path = new Path(this)
   }
 
-  startDrawing(e) {
-    console.log('starting drawing')
-
-    this.canvas.app.el.addEventListener('mousemove', this.draw);
-    this.canvas.app.el.addEventListener('mouseup', this.stopDrawing);
-    this.canvas.app.el.addEventListener('mouseleave', this.stopDrawing);
+  draw() {
+    this.path.update()
+    this.render()
   }
 
-  stopDrawing(e) {
-    console.log('stopping drawing')
-
-    this.canvas.app.el.removeEventListener('mousemove', this.draw)
-    this.canvas.app.el.removeEventListener('mouseup', this.stopDrawing)
-    this.canvas.app.el.removeEventListener('mouseleave', this.stopDrawing)
+  finish() {
+    this.path.update()
+    // this.path.simplify()
+    this.render()
+    // STATE.paths.push(STATE.path)
+    this.cleanup()
   }
 
-  draw(e) {
-    console.log('drawing')
+  cleanup() {
+    this.path = null
+  }
 
+  render() {
+    this.path.points.forEach((point, i, points) => {
+      if (i === 0) {
+        this.ctx.moveTo(point.x, point.y)
+        console.log('moveTo')
+      }
+
+      if (i < points.length - 1) {
+        this.ctx.lineTo(point.x, point.y)
+        console.log('lineTo')
+      }
+    })
+
+    this.ctx.stroke()
   }
 
 }
