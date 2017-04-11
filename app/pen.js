@@ -2,6 +2,7 @@ class Pen extends Eventable {
 
   static get colours() {
     return [
+      '#36454f',
       '#46648e',
       '#8bbbff',
       '#89ad48',
@@ -11,8 +12,7 @@ class Pen extends Eventable {
       '#d7503c',
       '#f49f14',
       '#fae014',
-      '#000000',
-      '#ffffff'
+      '#f0ead6'
     ]
   }
 
@@ -32,8 +32,8 @@ class Pen extends Eventable {
     this.render()
 
     this._mode = 'draw'
-    this._size = 14
-    this._colour = '#000000'
+    this._size = Pen.sizes[1]
+    this._colour = Pen.colours[0]
     this._opacity = 1
 
     this.el.addEventListener('mousedown', this.stopPropagation)

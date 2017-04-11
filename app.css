@@ -445,6 +445,7 @@ canvas {
 .pen-colour-panel .pen-colour:nth-of-type(9)  { top: calc(50% + 30px); left: calc(50% - 95px); }
 .pen-colour-panel .pen-colour:nth-of-type(10) { top: calc(50% + 30px); left: calc(50% - 45px); }
 .pen-colour-panel .pen-colour:nth-of-type(11) { top: calc(50% + 30px); left: calc(50% + 5px); }
+.pen-colour-panel .pen-colour:nth-of-type(12) { top: calc(50% + 30px); left: calc(50% + 55px); }
 
 .pen-size-slider-left,
 .pen-size-slider-right,
