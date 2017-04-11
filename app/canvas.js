@@ -5,7 +5,9 @@ class Canvas extends Eventable {
 
     this.app = app
 
-    this.layers = []
+    this.renderLayer = new CanvasRenderLayer(this)
+    this.drawLayer = new CanvasDrawLayer(this)
+    this.layers = [this.renderLayer]
 
     this.render()
   }
@@ -15,13 +17,7 @@ class Canvas extends Eventable {
 
     this.el.id = 'draw-canvas'
 
-    const layer = new CanvasRenderLayer(this)
-
-    this.layers.push(layer)
-
-    this.drawLayer = new CanvasDrawLayer(this)
-
-    this.el.appendChild(layer.el)
+    this.el.appendChild(this.renderLayer.el)
     this.el.appendChild(this.drawLayer.el)
     this.app.el.appendChild(this.el)
   }

@@ -1,5 +1,10 @@
 class App extends Eventable {
 
+  // https://gist.github.com/gre/1650294
+  static easeOutQuint(t) {
+    return 1+(--t)*t*t*t*t
+  }
+
   constructor() {
     super()
 

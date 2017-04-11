@@ -4,6 +4,8 @@ class Path {
     this.drawLayer = drawLayer
     this.points = []
 
+    this.size = 10
+    this.error = 15
     // this.error = this.size * 2.5 // Tolerance for smoothing
   }
 
@@ -52,7 +54,7 @@ class Path {
     }
 
     const uPrime = this.chordLengthParameterize(first, last)
-    const maxError = Math.max(this.error, this.error * this.error)
+    let maxError = Math.max(this.error, this.error * this.error)
 
     let split = undefined
 
@@ -110,11 +112,12 @@ class Path {
   }
 
   generateBezier(first, last, uPrime, tan1, tan2) {
-    const epsilon = 10e-12;
-    const pt1 = this.points[first];
-    const pt2 = this.points[last];
-    const C = [[0, 0], [0, 0]];
-    const X = [0, 0];
+    let epsilon = 10e-12
+
+    const pt1 = this.points[first]
+    const pt2 = this.points[last]
+    const C = [[0, 0], [0, 0]]
+    const X = [0, 0]
 
     for (let i = 0, l = last - first + 1; i < l; i++) {
       const u = uPrime[i]

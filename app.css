@@ -33,8 +33,10 @@ canvas {
   position: absolute;
   top: 0;
   left: 0;
-  height: 5000px;
-  width: 5000px;
+  bottom: 0;
+  right: 0;
+  height: auto;
+  width: auto;
 }
 
 .button {
