@@ -6,8 +6,6 @@ class CanvasDrawLayer extends CanvasLayer {
     }
 
     this.path = new Path(this)
-
-    // this.ctx.save()
   }
 
   draw() {
@@ -16,17 +14,14 @@ class CanvasDrawLayer extends CanvasLayer {
   }
 
   finish() {
-    // STATE.paths.push(STATE.path)
     this.canvas.renderLayer.render(this.path)
+    this.path = null
     this.clear()
   }
 
   render() {
-    this.ctx.beginPath()
-
-    this.ctx.lineWidth = this.path.size
-    this.ctx.lineJoin = "round"
-    this.ctx.lineCap = "round"
+    this.clear()
+    this.beginPath(this.path)
 
     this.path.points.forEach((point, i, points) => {
       if (i === 0) {
@@ -42,8 +37,6 @@ class CanvasDrawLayer extends CanvasLayer {
   }
 
   clear() {
-    this.path = null
-    // this.ctx.restore()
     this.ctx.clearRect(0, 0, this.el.width, this.el.height)
   }
 

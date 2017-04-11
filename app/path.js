@@ -5,6 +5,9 @@ class Path {
     this.points = []
 
     this.size = this.drawLayer.canvas.app.pen.size
+    this.colour = this.drawLayer.canvas.app.pen.colour
+    this.opacity = this.drawLayer.canvas.app.pen.opacity
+
     this.error = this.size * 2.5 // Tolerance for smoothing
   }
 
@@ -17,8 +20,6 @@ class Path {
 
     this.end = point.clone()
     this.points.push(this.end)
-
-    console.log(this.points.length)
   }
 
   simplify() {

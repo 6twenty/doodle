@@ -3,12 +3,7 @@ class CanvasRenderLayer extends CanvasLayer {
   render(path) {
     path.update()
     path.simplify()
-
-    this.ctx.beginPath()
-
-    this.ctx.lineWidth = path.size
-    this.ctx.lineJoin = "round"
-    this.ctx.lineCap = "round"
+    this.beginPath(path)
 
     // Variable width setup
     const threshold = Math.floor(path.size / 2)
