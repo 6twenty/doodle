@@ -20,6 +20,7 @@ class CanvasLayer extends Eventable {
   beginPath(path) {
     this.ctx.beginPath()
 
+    this.ctx.globalCompositeOperation = path.mode === 'draw' ? 'source-over' : 'destination-out'
     this.ctx.strokeStyle = path.colour
     this.ctx.globalAlpha = path.opacity
     this.ctx.lineWidth = path.size

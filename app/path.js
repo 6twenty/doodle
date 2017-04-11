@@ -4,9 +4,9 @@ class Path {
     this.drawLayer = drawLayer
     this.points = []
 
-    this.size = this.drawLayer.canvas.app.pen.size
-    this.colour = this.drawLayer.canvas.app.pen.colour
-    this.opacity = this.drawLayer.canvas.app.pen.opacity
+    Object.keys(this.drawLayer.canvas.app.pen.attrs).forEach(attr => {
+      this[attr] = this.drawLayer.canvas.app.pen.attrs[attr]
+    })
 
     this.error = this.size * 2.5 // Tolerance for smoothing
   }

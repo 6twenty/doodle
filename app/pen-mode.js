@@ -7,7 +7,7 @@ class PenMode extends Button {
 
     this.el.onclick = this.click.bind(this)
 
-    this.on('pen:mode', this.update)
+    this.on('pen:change', this.update)
   }
 
   render() {
@@ -24,10 +24,10 @@ class PenMode extends Button {
     this.panel.open()
   }
 
-  update(change) {
+  update(attrs) {
     this.el.classList.remove('draw-mode')
     this.el.classList.remove('erase-mode')
-    this.el.classList.add(`${change.mode}-mode`)
+    this.el.classList.add(`${attrs.mode}-mode`)
   }
 
 }

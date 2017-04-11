@@ -8,7 +8,7 @@ class PenModePanel extends Panel {
 
     this.render('pen-mode-panel')
 
-    this.on('pen:mode', this.update)
+    this.on('pen:change', this.update)
   }
 
   renderPanel() {
@@ -37,14 +37,14 @@ class PenModePanel extends Panel {
     this.close()
   }
 
-  update(change) {
+  update(attrs) {
     const active = this.el.querySelector('.draw-mode.active, .erase-mode.active')
 
     if (active) {
       active.classList.remove('active')
     }
 
-    this.el.querySelector(`.${change.mode}-mode`).classList.add('active')
+    this.el.querySelector(`.${attrs.mode}-mode`).classList.add('active')
   }
 
 }

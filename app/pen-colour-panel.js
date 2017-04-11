@@ -10,7 +10,7 @@ class PenColourPanel extends Panel {
 
     this.render('pen-colour-panel')
 
-    this.on('pen:colour', this.update)
+    this.on('pen:change', this.update)
   }
 
   renderPanel() {
@@ -33,14 +33,14 @@ class PenColourPanel extends Panel {
     this.close()
   }
 
-  update(change) {
+  update(attrs) {
     const active = this.el.querySelector('.pen-colour.active')
 
     if (active) {
       active.classList.remove('active')
     }
 
-    this.buttons[change.colour].classList.add('active')
+    this.buttons[attrs.colour].classList.add('active')
   }
 
 }
