@@ -4,9 +4,8 @@ class Path {
     this.drawLayer = drawLayer
     this.points = []
 
-    this.size = 10
-    this.error = 15
-    // this.error = this.size * 2.5 // Tolerance for smoothing
+    this.size = this.drawLayer.canvas.app.pen.size
+    this.error = this.size * 2.5 // Tolerance for smoothing
   }
 
   update() {

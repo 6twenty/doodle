@@ -24,6 +24,10 @@ class CanvasDrawLayer extends CanvasLayer {
   render() {
     this.ctx.beginPath()
 
+    this.ctx.lineWidth = this.path.size
+    this.ctx.lineJoin = "round"
+    this.ctx.lineCap = "round"
+
     this.path.points.forEach((point, i, points) => {
       if (i === 0) {
         this.ctx.moveTo(point.x, point.y)
@@ -35,7 +39,6 @@ class CanvasDrawLayer extends CanvasLayer {
     })
 
     this.ctx.stroke()
-    this.ctx.closePath()
   }
 
   clear() {
