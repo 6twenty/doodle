@@ -24,10 +24,7 @@ body {
   margin: 0;
 }
 
-main {
-  height: 100%;
-}
-
+main,
 #draw-canvas,
 canvas {
   position: absolute;
@@ -37,6 +34,20 @@ canvas {
   right: 0;
   height: auto;
   width: auto;
+}
+
+main::after {
+  content: '';
+  background-image: url('/paper.png');
+  background-size: 485px 485px;
+  background-repeat: repeat;
+  opacity: .5;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  position: absolute;
+  z-index: -1;
 }
 
 .button {
