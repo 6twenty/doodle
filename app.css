@@ -332,6 +332,31 @@ canvas {
   box-shadow: -4px 4px 0 white;
 }
 
+#new-canvas {
+  left: 220px;
+}
+
+#new-canvas::before {
+  height: 18px;
+  width: 14px;
+  border: solid 2px black;
+  border-radius: 2px;
+  left: 8px;
+  top: 6px;
+}
+
+#new-canvas::after {
+  height: 8px;
+  width: 8px;
+  right: 8px;
+  top: 6px;
+  border: solid 4px black;
+  border-top-color: transparent;
+  border-right-color: transparent;
+  border-bottom-left-radius: 2px;
+  background: white;
+}
+
 .pen-mode-panel .draw-mode,
 .pen-mode-panel .erase-mode {
   position: absolute;
