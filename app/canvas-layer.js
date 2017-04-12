@@ -26,11 +26,11 @@ class CanvasLayer extends Eventable {
     this.ctx.beginPath()
   }
 
-  setProps() {
-    this.ctx.globalCompositeOperation = this.path.mode === 'draw' ? 'source-over' : 'destination-out'
-    this.ctx.strokeStyle = this.path.colour
-    this.ctx.globalAlpha = this.path.opacity
-    this.ctx.lineWidth = this.path.size
+  setProps(path) {
+    this.ctx.globalCompositeOperation = path.mode === 'draw' ? 'source-over' : 'destination-out'
+    this.ctx.strokeStyle = path.colour
+    this.ctx.globalAlpha = path.opacity
+    this.ctx.lineWidth = path.size
   }
 
   setup() {
@@ -38,7 +38,7 @@ class CanvasLayer extends Eventable {
   }
 
   draw() {
-    this.setProps()
+    this.setProps(this.path)
     this.path.update()
     this.renderProgress()
   }
@@ -47,13 +47,10 @@ class CanvasLayer extends Eventable {
     this.path.update()
     this.path.simplify()
 
-    if (this === this.canvas._drawLayer) {
-      this.clear()
-    }
+    this.clear()
 
     this.canvas.renderLayer.path = this.path
     this.canvas.renderLayer.paths.push(this.path)
-    this.canvas.renderLayer.setProps()
     this.canvas.renderLayer.renderFinal()
 
     this.path = null
@@ -74,7 +71,6 @@ class CanvasLayer extends Eventable {
   }
 
   renderProgressRecent() {
-
     this._index = this._index || 1
 
     this.renderPoints(this.path.points.slice(this._index - 1))
@@ -83,7 +79,18 @@ class CanvasLayer extends Eventable {
   }
 
   renderFinal() {
-    this.renderSegments(this.path.segments)
+    // If drawing directly onto the render layer, the layer needs to be
+    // cleared and re-drawn. Otherwise, only the last path needs to be drawn
+    if (this.canvas.drawLayer === this.canvas.renderLayer) {
+      this.clear()
+      this.paths.forEach(path => {
+        this.setProps(path)
+        this.renderSegments(path.segments)
+      })
+    } else {
+      this.canvas.renderLayer.setProps(this.path)
+      this.renderSegments(this.path.segments)
+    }
   }
 
   renderPoints(points) {
