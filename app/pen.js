@@ -12,7 +12,7 @@ class Pen extends Eventable {
       '#d7503c',
       '#f49f14',
       '#fae014',
-      '#f0ead6'
+      '#fffaf0'
     ]
   }
 
