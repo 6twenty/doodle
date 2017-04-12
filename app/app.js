@@ -101,12 +101,10 @@ class App extends Eventable {
       // If not previously drawing, set up path
       if (!this.state.drawing) {
         this.canvas.drawLayer.setup()
-        console.log('drawLayer.setup')
         this.state.drawing = true
       }
 
       this.canvas.drawLayer.draw()
-      console.log('drawLayer.draw')
 
     // Is moving if mousedown (with shiftdown)
     } else if (this.state.active && this.state.shift && !this.state.drawing) {
@@ -124,7 +122,6 @@ class App extends Eventable {
     } else if (this.state.drawing) {
 
       this.canvas.drawLayer.finish()
-      console.log('drawLayer.finish')
       this.state.drawing = false
 
     } else if (this.state.moving) {

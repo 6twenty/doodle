@@ -5,11 +5,23 @@ class Canvas extends Eventable {
 
     this.app = app
 
-    this.renderLayer = new CanvasRenderLayer(this)
-    this.drawLayer = new CanvasDrawLayer(this)
-    this.layers = [this.renderLayer]
+    this._renderLayer = new CanvasLayer(this)
+    this._drawLayer = new CanvasLayer(this)
 
     this.render()
+  }
+
+  get renderLayer() {
+    return this._renderLayer
+  }
+
+  // For erasing, the render layer is drawn on directly
+  get drawLayer() {
+    if (this.app.pen.mode === 'erase') {
+      return this._renderLayer
+    } else {
+      return this._drawLayer
+    }
   }
 
   render() {

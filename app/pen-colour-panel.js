@@ -35,12 +35,15 @@ class PenColourPanel extends Panel {
 
   update(attrs) {
     const active = this.el.querySelector('.pen-colour.active')
+    const target = this.buttons[attrs.colour]
 
     if (active) {
       active.classList.remove('active')
     }
 
-    this.buttons[attrs.colour].classList.add('active')
+    if (target){
+      target.classList.add('active')
+    }
   }
 
 }

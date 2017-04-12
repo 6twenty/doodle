@@ -38,8 +38,6 @@ class Path {
     }
 
     delete this.points
-
-    this.simplified = true
   }
 
   fitCubic(first, last, tan1, tan2) {
