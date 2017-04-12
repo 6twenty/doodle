@@ -29,6 +29,7 @@ class App extends Eventable {
     this.state = {}
 
     this.tick = this.tick.bind(this)
+    this.resize = this.resize.bind(this)
     this.mouseDown = this.mouseDown.bind(this)
     this.mouseMove = this.mouseMove.bind(this)
     this.mouseUp = this.mouseUp.bind(this)
@@ -54,10 +55,16 @@ class App extends Eventable {
   }
 
   listen() {
+    window.addEventListener('resize', this.resize)
+
     this.el.addEventListener('mousedown', this.mouseDown)
     this.el.addEventListener('mousemove', this.mouseMove)
     this.el.addEventListener('mouseup', this.mouseUp)
     this.el.addEventListener('mouseleave', this.mouseLeave)
+  }
+
+  resize(e) {
+    this.state.resizing = true
   }
 
   mouseDown(e) {
@@ -89,6 +96,12 @@ class App extends Eventable {
   }
 
   tick() {
+
+    // Sizing
+    if (this.state.resizing) {
+      this.canvas.resize()
+      this.state.resizing = false
+    }
 
     // Set zoom
     if (this.state.zooming) {

@@ -13,13 +13,9 @@ class CanvasLayer extends Eventable {
   build() {
     this.el = document.createElement('canvas')
 
-    this.el.height = document.documentElement.clientHeight
-    this.el.width = document.documentElement.clientWidth
+    this.resize()
 
     this.ctx = this.el.getContext('2d')
-
-    this.ctx.lineJoin = "round"
-    this.ctx.lineCap = "round"
   }
 
   beginPath() {
@@ -27,6 +23,9 @@ class CanvasLayer extends Eventable {
   }
 
   setProps(path) {
+    this.ctx.lineJoin = "round"
+    this.ctx.lineCap = "round"
+    
     this.ctx.globalCompositeOperation = path.mode === 'draw' ? 'source-over' : 'destination-out'
     this.ctx.strokeStyle = path.colour
     this.ctx.globalAlpha = path.opacity
@@ -83,14 +82,18 @@ class CanvasLayer extends Eventable {
     // cleared and re-drawn. Otherwise, only the last path needs to be drawn
     if (this.canvas.drawLayer === this.canvas.renderLayer) {
       this.clear()
-      this.paths.forEach(path => {
-        this.setProps(path)
-        this.renderSegments(path.segments)
-      })
+      this.redraw()
     } else {
       this.canvas.renderLayer.setProps(this.path)
       this.renderSegments(this.path.segments)
     }
+  }
+
+  redraw() {
+    this.paths.forEach(path => {
+      this.setProps(path)
+      this.renderSegments(path.segments)
+    })
   }
 
   renderPoints(points) {
@@ -129,6 +132,11 @@ class CanvasLayer extends Eventable {
 
   clear() {
     this.ctx.clearRect(0, 0, this.el.width, this.el.height)
+  }
+
+  resize() {
+    this.el.height = document.documentElement.clientHeight
+    this.el.width = document.documentElement.clientWidth
   }
 
 }

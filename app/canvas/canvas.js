@@ -34,4 +34,10 @@ class Canvas extends Eventable {
     this.app.el.appendChild(this.el)
   }
 
+  resize() {
+    this.drawLayer.resize()
+    this.renderLayer.resize()
+    this.renderLayer.redraw()
+  }
+
 }
