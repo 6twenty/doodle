@@ -113,15 +113,15 @@ class CanvasLayer extends Eventable {
     segments.forEach((segment, i, segments) => {
       const next = segments[i + 1]
 
-      if (!next) {
-        return
-      }
-
       if (i === 0) {
         this.ctx.moveTo(segment.point.x, segment.point.y)
       }
 
-      this.ctx.bezierCurveTo(segment.handleOut.x, segment.handleOut.y, next.handleIn.x, next.handleIn.y, next.point.x, next.point.y)
+      if (next) {
+        this.ctx.bezierCurveTo(segment.handleOut.x, segment.handleOut.y, next.handleIn.x, next.handleIn.y, next.point.x, next.point.y)
+      } else {
+        this.ctx.lineTo(segment.point.x, segment.point.y)
+      }
     })
 
     this.ctx.stroke()
