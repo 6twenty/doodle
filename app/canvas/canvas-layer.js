@@ -4,7 +4,6 @@ class CanvasLayer extends Eventable {
     super()
 
     this.canvas = canvas
-
     this.paths = []
 
     this.build()
@@ -25,7 +24,7 @@ class CanvasLayer extends Eventable {
   setProps(path) {
     this.ctx.lineJoin = "round"
     this.ctx.lineCap = "round"
-    
+
     this.ctx.globalCompositeOperation = path.mode === 'draw' ? 'source-over' : 'destination-out'
     this.ctx.strokeStyle = path.colour
     this.ctx.globalAlpha = path.opacity
@@ -131,12 +130,19 @@ class CanvasLayer extends Eventable {
   }
 
   clear() {
+    this.ctx.save()
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0)
     this.ctx.clearRect(0, 0, this.el.width, this.el.height)
+    this.ctx.restore()
   }
 
   resize() {
     this.el.height = document.documentElement.clientHeight
     this.el.width = document.documentElement.clientWidth
+  }
+
+  pan(point) {
+    this.ctx.translate(point.x, point.y)
   }
 
 }

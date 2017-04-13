@@ -16,7 +16,8 @@ class NewCanvas extends Button {
   }
 
   click() {
-    this.app.canvas.renderLayer.clear()
+    // Total reset
+    App.reset()
   }
 
 }

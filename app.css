@@ -16,7 +16,6 @@ body {
   height: 100%;
   width: 100%;
   overflow: hidden;
-  cursor: crosshair;
   user-select: none;
 }
 
@@ -34,6 +33,15 @@ canvas {
   right: 0;
   height: auto;
   width: auto;
+}
+
+main {
+  cursor: crosshair;
+}
+
+main.panning,
+main.panning-intent {
+  cursor: move;
 }
 
 main::after {
@@ -71,6 +79,11 @@ main::after {
 
 .button:hover {
   box-shadow: 0 0 0 2px rgba(0,0,127,.5);
+}
+
+main.drawing .button,
+main.panning .button {
+  pointer-events: none;
 }
 
 .button.active {
@@ -159,6 +172,11 @@ main::after {
   box-shadow: 0 0 0 1px rgba(0,0,0,.1), 0 0 0 1px rgba(0,0,0,.1) inset;
   height: 60px;
   width: 60px;
+}
+
+main.drawing #pen,
+main.panning #pen {
+  pointer-events: none;
 }
 
 #pen-mode {

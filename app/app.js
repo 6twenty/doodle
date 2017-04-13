@@ -5,8 +5,18 @@ class App extends Eventable {
     return 1+(--t)*t*t*t*t
   }
 
-  constructor() {
+  static reset() {
+    this.state.resetting = true
+    this.stopListening()
+    this.el.parentNode.removeChild(this.el)
+    new App(this.context)
+  }
+
+  constructor(context) {
     super()
+
+    this.context = context
+    this.context.app = this
 
     this.pen = {}
 
@@ -30,6 +40,7 @@ class App extends Eventable {
 
     this.tick = this.tick.bind(this)
     this.resize = this.resize.bind(this)
+    this.keyEvent = this.keyEvent.bind(this)
     this.mouseDown = this.mouseDown.bind(this)
     this.mouseMove = this.mouseMove.bind(this)
     this.mouseUp = this.mouseUp.bind(this)
@@ -57,14 +68,37 @@ class App extends Eventable {
   listen() {
     window.addEventListener('resize', this.resize)
 
+    window.addEventListener('keydown', this.keyEvent)
+    window.addEventListener('keyup', this.keyEvent)
+
     this.el.addEventListener('mousedown', this.mouseDown)
     this.el.addEventListener('mousemove', this.mouseMove)
     this.el.addEventListener('mouseup', this.mouseUp)
     this.el.addEventListener('mouseleave', this.mouseLeave)
   }
 
+  stopListening() {
+    window.removeEventListener('resize', this.resize)
+
+    window.removeEventListener('keydown', this.keyEvent)
+    window.removeEventListener('keyup', this.keyEvent)
+
+    this.el.removeEventListener('mousedown', this.mouseDown)
+    this.el.removeEventListener('mousemove', this.mouseMove)
+    this.el.removeEventListener('mouseup', this.mouseUp)
+    this.el.removeEventListener('mouseleave', this.mouseLeave)
+  }
+
   resize(e) {
     this.state.resizing = true
+  }
+
+  keyEvent(e) {
+    if (e.shiftKey) {
+      this.el.classList.add('panning-intent')
+    } else {
+      this.el.classList.remove('panning-intent')
+    }
   }
 
   mouseDown(e) {
@@ -114,6 +148,7 @@ class App extends Eventable {
 
       // If not previously drawing, set up path
       if (!this.state.drawing) {
+        this.el.classList.add('drawing')
         this.canvas.drawLayer.setup()
         this.state.drawing = true
       }
@@ -124,29 +159,31 @@ class App extends Eventable {
     } else if (this.state.active && this.state.shift && !this.state.drawing) {
 
       if (!this.state.moving) {
-        // setupMove()
-        console.log('setupMove')
+        this.el.classList.add('panning')
+        this.canvas.startPanning()
         this.state.moving = true
       }
 
-      // handleMove()
-      console.log('handleMove')
+      this.canvas.pan()
 
     // If was previously drawing, cache the path
     } else if (this.state.drawing) {
 
+      this.el.classList.remove('drawing')
       this.canvas.drawLayer.finish()
       this.state.drawing = false
 
     } else if (this.state.moving) {
 
-      // finishMove()
-      console.log('finishMove')
+      this.el.classList.remove('panning')
+      this.canvas.finishPanning()
       this.state.moving = false
 
     }
 
-    this.loop()
+    if (!this.state.resetting) {
+      this.loop()
+    }
   }
 
 }

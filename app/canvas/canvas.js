@@ -4,6 +4,7 @@ class Canvas extends Eventable {
     super()
 
     this.app = app
+    this.state = {}
 
     this._renderLayer = new CanvasLayer(this)
     this._drawLayer = new CanvasLayer(this)
@@ -38,6 +39,27 @@ class Canvas extends Eventable {
     this.drawLayer.resize()
     this.renderLayer.resize()
     this.renderLayer.redraw()
+  }
+
+  startPanning() {
+    this.state.panOrigin = this.app.pointer.clone()
+  }
+
+  pan() {
+    const point = this.app.pointer.subtract(this.state.panOrigin)
+
+    this.renderLayer.clear()
+    this.drawLayer.pan(point)
+    this.renderLayer.pan(point)
+    this.renderLayer.redraw()
+
+    this.app.matrix = this.app.matrix.translate(point.x, point.y);
+
+    this.startPanning()
+  }
+
+  finishPanning() {
+    delete this.state.moveOrigin
   }
 
 }
