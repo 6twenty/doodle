@@ -5,13 +5,6 @@ class App extends Eventable {
     return 1+(--t)*t*t*t*t
   }
 
-  static reset() {
-    this.state.resetting = true
-    this.stopListening()
-    this.el.parentNode.removeChild(this.el)
-    new App(this.context)
-  }
-
   constructor(context) {
     super()
 
@@ -48,6 +41,13 @@ class App extends Eventable {
 
     this.listen()
     this.loop()
+  }
+
+  reset() {
+    this.state.resetting = true
+    this.stopListening()
+    this.el.parentNode.removeChild(this.el)
+    new App(this.context)
   }
 
   get pointer() {

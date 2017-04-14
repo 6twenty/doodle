@@ -16,8 +16,7 @@ class NewCanvas extends Button {
   }
 
   click() {
-    // Total reset
-    App.reset()
+    this.app.reset()
   }
 
 }
