@@ -32,6 +32,7 @@ class App extends Eventable {
     this.state = {}
 
     this.tick = this.tick.bind(this)
+    this.visibility = this.visibility.bind(this)
     this.resize = this.resize.bind(this)
     this.keyEvent = this.keyEvent.bind(this)
     this.mouseDown = this.mouseDown.bind(this)
@@ -66,6 +67,8 @@ class App extends Eventable {
   }
 
   listen() {
+    document.addEventListener('visibilitychange', this.visibility)
+
     window.addEventListener('resize', this.resize)
 
     window.addEventListener('keydown', this.keyEvent)
@@ -78,6 +81,8 @@ class App extends Eventable {
   }
 
   stopListening() {
+    document.removeEventListener('visibilitychange', this.visibility)
+
     window.removeEventListener('resize', this.resize)
 
     window.removeEventListener('keydown', this.keyEvent)
@@ -87,6 +92,17 @@ class App extends Eventable {
     this.el.removeEventListener('mousemove', this.mouseMove)
     this.el.removeEventListener('mouseup', this.mouseUp)
     this.el.removeEventListener('mouseleave', this.mouseLeave)
+  }
+
+  visibility(e) {
+    if (document.hidden) {
+      this.state.moving = false
+      this.state.drawing = false
+      this.state.shift = false
+      this.state.active = false
+    } else {
+      this.state.redraw = true
+    }
   }
 
   resize(e) {
@@ -130,6 +146,11 @@ class App extends Eventable {
   }
 
   tick() {
+
+    if (this.state.redraw) {
+      this.canvas.renderLayer.redraw()
+      this.state.redraw = false
+    }
 
     // Sizing
     if (this.state.resizing) {
