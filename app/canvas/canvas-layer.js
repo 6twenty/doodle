@@ -141,8 +141,10 @@ class CanvasLayer extends Eventable {
     this.el.width = document.documentElement.clientWidth
   }
 
-  pan(point) {
-    this.ctx.translate(point.x, point.y)
+  pan() {
+    const matrix = this.canvas.app.matrix
+
+    this.ctx.setTransform(matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f)
   }
 
 }

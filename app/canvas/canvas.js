@@ -48,12 +48,13 @@ class Canvas extends Eventable {
   pan() {
     const point = this.app.pointer.subtract(this.state.panOrigin)
 
+    this.app.matrix = this.app.matrix.translate(point.x, point.y);
+
     this.renderLayer.clear()
-    this.drawLayer.pan(point)
-    this.renderLayer.pan(point)
+    this.drawLayer.pan()
+    this.renderLayer.pan()
     this.renderLayer.redraw()
 
-    this.app.matrix = this.app.matrix.translate(point.x, point.y);
 
     this.startPanning()
   }
