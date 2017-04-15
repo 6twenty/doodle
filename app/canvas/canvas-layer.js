@@ -17,10 +17,6 @@ class CanvasLayer extends Eventable {
     this.ctx = this.el.getContext('2d')
   }
 
-  beginPath() {
-    this.ctx.beginPath()
-  }
-
   setProps(path) {
     this.ctx.lineJoin = "round"
     this.ctx.lineCap = "round"
@@ -32,7 +28,7 @@ class CanvasLayer extends Eventable {
   }
 
   setup() {
-    this.path = new Path(this)
+    this.path = new Path(this.canvas)
   }
 
   draw() {
@@ -96,7 +92,7 @@ class CanvasLayer extends Eventable {
   }
 
   renderPoints(points) {
-    this.beginPath()
+    this.ctx.beginPath()
 
     points.forEach((point, i, points) => {
       if (i === 0) {
@@ -110,7 +106,7 @@ class CanvasLayer extends Eventable {
   }
 
   renderSegments(segments) {
-    this.beginPath()
+    this.ctx.beginPath()
 
     segments.forEach((segment, i, segments) => {
       const next = segments[i + 1]
@@ -142,7 +138,7 @@ class CanvasLayer extends Eventable {
   }
 
   pan() {
-    const matrix = this.canvas.app.matrix
+    const matrix = this.canvas.matrix
 
     this.ctx.setTransform(matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f)
   }

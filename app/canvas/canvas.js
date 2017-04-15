@@ -6,10 +6,24 @@ class Canvas extends Eventable {
     this.app = app
     this.state = {}
 
+    const svg = document.querySelector('svg')
+
+    this.matrix = svg.createSVGMatrix()
+    this.point = svg.createSVGPoint()
+
     this._renderLayer = new CanvasLayer(this)
     this._drawLayer = new CanvasLayer(this)
 
     this.render()
+  }
+
+  get pointer() {
+    this.point.x = this.app.state.x
+    this.point.y = this.app.state.y
+
+    const pt = this.point.matrixTransform(this.matrix.inverse())
+
+    return new Point(pt.x, pt.y)
   }
 
   get renderLayer() {
@@ -42,13 +56,13 @@ class Canvas extends Eventable {
   }
 
   startPanning() {
-    this.state.panOrigin = this.app.pointer.clone()
+    this.state.panOrigin = this.pointer.clone()
   }
 
   pan() {
-    const point = this.app.pointer.subtract(this.state.panOrigin)
+    const point = this.pointer.subtract(this.state.panOrigin)
 
-    this.app.matrix = this.app.matrix.translate(point.x, point.y);
+    this.matrix = this.matrix.translate(point.x, point.y);
 
     this.renderLayer.clear()
     this.drawLayer.pan()

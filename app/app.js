@@ -25,10 +25,6 @@ class App extends Eventable {
     this.canvas = new Canvas(this)
     this.pen = new Pen(this)
 
-    this.svg = document.querySelector('svg')
-    this.matrix = this.svg.createSVGMatrix()
-    this.point = this.svg.createSVGPoint()
-
     this.state = {}
 
     this.tick = this.tick.bind(this)
@@ -49,15 +45,6 @@ class App extends Eventable {
     this.stopListening()
     this.el.parentNode.removeChild(this.el)
     new App(this.context)
-  }
-
-  get pointer() {
-    this.point.x = this.state.x
-    this.point.y = this.state.y
-
-    const pt = this.point.matrixTransform(this.matrix.inverse())
-
-    return new Point(pt.x, pt.y)
   }
 
   render() {

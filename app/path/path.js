@@ -1,18 +1,18 @@
 class Path {
 
-  constructor(drawLayer) {
-    this.drawLayer = drawLayer
+  constructor(canvas) {
+    this.canvas = canvas
     this.points = []
 
-    Object.keys(this.drawLayer.canvas.app.pen.attrs).forEach(attr => {
-      this[attr] = this.drawLayer.canvas.app.pen.attrs[attr]
+    Object.keys(this.canvas.app.pen.attrs).forEach(attr => {
+      this[attr] = this.canvas.app.pen.attrs[attr]
     })
 
     this.error = this.size * 2.5 // Tolerance for smoothing
   }
 
   update() {
-    const point = this.drawLayer.canvas.app.pointer
+    const point = this.canvas.pointer
 
     if (this.end && point.equals(this.end)) {
       return
