@@ -65,16 +65,32 @@ class Canvas extends Eventable {
     this.matrix = this.matrix.translate(point.x, point.y);
 
     this.renderLayer.clear()
-    this.drawLayer.pan()
-    this.renderLayer.pan()
+    this.drawLayer.transform()
+    this.renderLayer.transform()
     this.renderLayer.redraw()
-
 
     this.startPanning()
   }
 
   finishPanning() {
     delete this.state.moveOrigin
+  }
+
+  scale() {
+    // To scale centered on the pointer the canvas is first translated
+    // so that the pointer is at 0,0; then after scaling it is translated
+    // back again.
+
+    const point = this.pointer
+
+    this.matrix = this.matrix.translate(point.x, point.y)
+    this.matrix = this.matrix.scale(this.app.state.scale)
+    this.matrix = this.matrix.translate(-point.x, -point.y)
+
+    this.renderLayer.clear()
+    this.drawLayer.transform()
+    this.renderLayer.transform()
+    this.renderLayer.redraw()
   }
 
 }

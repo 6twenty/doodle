@@ -35,6 +35,7 @@ class App extends Eventable {
     this.mouseMove = this.mouseMove.bind(this)
     this.mouseUp = this.mouseUp.bind(this)
     this.mouseLeave = this.mouseLeave.bind(this)
+    this.mouseWheel = this.mouseWheel.bind(this)
 
     this.listen()
     this.loop()
@@ -57,6 +58,8 @@ class App extends Eventable {
     document.addEventListener('visibilitychange', this.visibility)
 
     window.addEventListener('resize', this.resize)
+
+    window.addEventListener('mousewheel', this.mouseWheel)
 
     window.addEventListener('keydown', this.keyEvent)
     window.addEventListener('keyup', this.keyEvent)
@@ -98,8 +101,10 @@ class App extends Eventable {
 
   keyEvent(e) {
     if (e.shiftKey) {
+      this.state.shift = true
       this.el.classList.add('panning-intent')
     } else {
+      this.state.shift = false
       this.el.classList.remove('panning-intent')
     }
   }
@@ -128,6 +133,11 @@ class App extends Eventable {
     this.state.shift = false
   }
 
+  mouseWheel(e) {
+    this.state.scale = Math.round(Math.pow(1.1, (e.detail / 100)) * 1000) / 1000
+    this.state.scaling = true
+  }
+
   loop() {
     requestAnimationFrame(this.tick)
   }
@@ -145,10 +155,12 @@ class App extends Eventable {
       this.state.resizing = false
     }
 
-    // Set zoom
-    if (this.state.zooming) {
-      // scale()
-      console.log('scale')
+    // Set scale
+    if (this.state.shift && this.state.scaling) {
+      this.canvas.scale()
+      this.state.scaling = false
+    } else if (this.state.scaling) {
+      this.state.scaling = false
     }
 
     // Is drawing if mousedown (but not shiftdown)
@@ -174,7 +186,6 @@ class App extends Eventable {
 
       this.canvas.pan()
 
-    // If was previously drawing, cache the path
     } else if (this.state.drawing) {
 
       this.el.classList.remove('drawing')
