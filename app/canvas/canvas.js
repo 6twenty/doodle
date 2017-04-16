@@ -57,23 +57,67 @@ class Canvas extends Eventable {
 
   startPanning() {
     this.state.panOrigin = this.pointer.clone()
+    this.app.state.momentum = false
+
+    delete this.state.momentum
   }
 
   pan() {
-    const point = this.pointer.subtract(this.state.panOrigin)
+    const pointer = this.pointer.clone()
+    const point = pointer.subtract(this.state.panOrigin)
 
-    this.matrix = this.matrix.translate(point.x, point.y);
+    this.state.momentum = {
+      x: pointer.x - this.state.panOrigin.x,
+      y: pointer.y - this.state.panOrigin.y
+    }
+
+    if (pointer.getDistance(this.state.panOrigin) === 0) {
+      return
+    }
+
+    this.matrix = this.matrix.translate(point.x, point.y)
 
     this.renderLayer.clear()
     this.drawLayer.transform()
     this.renderLayer.transform()
     this.renderLayer.redraw()
 
-    this.startPanning()
+    this.state.panOrigin = this.pointer.clone()
   }
 
   finishPanning() {
-    delete this.state.moveOrigin
+    if (this.state.momentum.x !== 0 || this.state.momentum.y !== 0) {
+      this.app.state.momentum = true
+      this.state.momentum.timestamp = this.app.state.timestamp
+    } else {
+      delete this.state.momentum
+    }
+
+    delete this.state.panOrigin
+  }
+
+  momentum() {
+    const duration = 600
+    const momentum = this.state.momentum
+    const time = this.app.state.timestamp - momentum.timestamp
+
+    if (time > duration) {
+      this.app.state.momentum = false
+
+      delete this.state.momentum
+
+      return
+    }
+
+    const factor = 1 - App.easeOutQuint(time / duration)
+    const point = new Point(momentum.x * factor, momentum.y * factor)
+
+    this.matrix = this.matrix.translate(point.x, point.y)
+
+    this.renderLayer.clear()
+    this.drawLayer.transform()
+    this.renderLayer.transform()
+    this.renderLayer.redraw()
   }
 
   scale() {

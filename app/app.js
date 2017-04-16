@@ -142,7 +142,9 @@ class App extends Eventable {
     requestAnimationFrame(this.tick)
   }
 
-  tick() {
+  tick(timestamp) {
+
+    this.state.timestamp = timestamp
 
     if (this.state.redraw) {
       this.canvas.renderLayer.redraw()
@@ -161,6 +163,11 @@ class App extends Eventable {
       this.state.scaling = false
     } else if (this.state.scaling) {
       this.state.scaling = false
+    }
+
+    // Momentum panning
+    if (this.state.momentum) {
+      this.canvas.momentum()
     }
 
     // Is drawing if mousedown (but not shiftdown)
