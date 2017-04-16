@@ -90,6 +90,10 @@ class App extends Eventable {
       this.state.drawing = false
       this.state.shift = false
       this.state.active = false
+
+      this.el.classList.remove('panning-intent')
+      this.el.classList.remove('panning')
+      this.el.classList.remove('drawing')
     } else {
       this.state.redraw = true
     }
