@@ -1,5 +1,9 @@
 class CanvasLayer extends Eventable {
 
+  static get VARIANCE() {
+    return 0.3
+  }
+
   constructor(canvas) {
     super()
 
@@ -108,21 +112,67 @@ class CanvasLayer extends Eventable {
   renderSegments(segments) {
     this.ctx.beginPath()
 
-    segments.forEach((segment, i, segments) => {
-      const next = segments[i + 1]
+    if (segments.length > 1) {
+      this.ctx.lineWidth *= (1 - CanvasLayer.VARIANCE)
 
-      if (i === 0) {
-        this.ctx.moveTo(segment.point.x, segment.point.y)
+      this.renderSegmentsForward(segments)
+      this.renderSegmentsBackward(segments)
+      this.ctx.closePath()
+      this.ctx.stroke()
+    } else {
+      this.ctx.moveTo(segments[0].point.x, segments[0].point.y)
+      this.ctx.lineTo(segments[0].point.x, segments[0].point.y)
+      this.ctx.stroke()
+    }
+  }
+
+  renderSegmentsForward(segments) {
+    let width = this.ctx.lineWidth
+
+    segments.forEach((segment, i, segments) => {
+      let offset = undefined
+
+      if (segment.handleOut) {
+        offset = segment.handleOut.subtract(segment.point)
+      } else if (segment.handleIn) {
+        offset = segment.point.subtract(segment.handleIn)
       }
 
-      if (next) {
-        this.ctx.bezierCurveTo(segment.handleOut.x, segment.handleOut.y, next.handleIn.x, next.handleIn.y, next.point.x, next.point.y)
+      if (offset) {
+        const angle = Math.atan2(offset.y, offset.x) + (Math.PI / 2)
+        segment.offset = new Point(Math.cos(angle), Math.sin(angle)).normalize(width * CanvasLayer.VARIANCE)
       } else {
-        this.ctx.lineTo(segment.point.x, segment.point.y)
+        segment.offset = new Point(0, 0)
+      }
+
+      const point = segment.point.subtract(segment.offset)
+
+      if (i > 0) {
+        const prev = segments[i - 1]
+        const cp1 = prev.handleOut.subtract(prev.offset)
+        const cp2 = segment.handleIn.subtract(segment.offset)
+
+        this.ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, point.x, point.y)
+      } else {
+        this.ctx.moveTo(point.x, point.y)
       }
     })
+  }
 
-    this.ctx.stroke()
+  renderSegmentsBackward(segments) {
+    segments.slice().reverse().forEach((segment, i, segments) => {
+      const point = segment.point.add(segment.offset)
+
+      if (i > 0) {
+        const prev = segments[i - 1]
+        const cp1 = prev.handleIn.add(prev.offset)
+        const cp2 = segment.handleOut.add(segment.offset)
+
+        this.ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, point.x, point.y)
+      } else {
+        this.ctx.lineTo(point.x, point.y)
+      }
+    })
   }
 
   clear() {
