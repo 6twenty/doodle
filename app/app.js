@@ -80,6 +80,8 @@ class App extends Eventable {
 
     window.removeEventListener('resize', this.resize)
 
+    window.removeEventListener('mousewheel', this.mouseWheel)
+
     window.removeEventListener('keydown', this.keyEvent)
     window.removeEventListener('keyup', this.keyEvent)
 
