@@ -127,8 +127,23 @@ class Canvas extends Eventable {
 
     const point = this.pointer
 
+    let scale = this.app.state.scale
+    let factor = 0
+
+    if (this.matrix.a > 1) {
+      factor = App.easeOutQuad((this.matrix.a - 1) / 20)
+    } else if (this.matrix.a < 1) {
+      factor = App.easeOutQuad(1 - this.matrix.a)
+    }
+
+    if (scale > 1) {
+      scale = ((scale - 1) * (1 - factor)) + 1
+    } else if (scale < 1) {
+      scale = scale + ((1 - scale) * factor)
+    }
+
     this.matrix = this.matrix.translate(point.x, point.y)
-    this.matrix = this.matrix.scale(this.app.state.scale)
+    this.matrix = this.matrix.scale(scale)
     this.matrix = this.matrix.translate(-point.x, -point.y)
 
     this.renderLayer.clear()
