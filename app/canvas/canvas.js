@@ -5,14 +5,27 @@ class Canvas extends Eventable {
 
     this.app = app
     this.state = {}
+    this._index = 0
 
     const svg = document.querySelector('svg')
 
     this.matrix = svg.createSVGMatrix()
     this.point = svg.createSVGPoint()
 
-    this._renderLayer = new CanvasLayer(this)
     this._drawLayer = new CanvasLayer(this)
+    this._renderLayer = new CanvasLayer(this)
+
+    this.layers = [
+      new CanvasLayer(this),
+      new CanvasLayer(this),
+      new CanvasLayer(this),
+      new CanvasLayer(this),
+      this.renderLayer, // Default layer is in the middle
+      new CanvasLayer(this),
+      new CanvasLayer(this),
+      new CanvasLayer(this),
+      new CanvasLayer(this)
+    ]
 
     this.render()
   }
@@ -26,10 +39,6 @@ class Canvas extends Eventable {
     return new Point(pt.x, pt.y)
   }
 
-  get renderLayer() {
-    return this._renderLayer
-  }
-
   // For erasing, the render layer is drawn on directly
   get drawLayer() {
     if (this.app.pen.mode === 'erase') {
@@ -39,20 +48,43 @@ class Canvas extends Eventable {
     }
   }
 
+  set drawLayer(layer) {
+    this._drawLayer = layer
+  }
+
+  get renderLayer() {
+    return this._renderLayer
+  }
+
+  set renderLayer(layer) {
+    layer.el.classList.add('render-layer')
+    this._renderLayer.el.classList.remove('render-layer')
+    this._renderLayer = layer
+    this.el.insertBefore(this._drawLayer.el, this.renderLayer.el.nextSibling)
+    this.trigger('layer:change', { layer: layer })
+  }
+
   render() {
     this.el = document.createElement('div')
 
     this.el.id = 'draw-canvas'
 
-    this.el.appendChild(this.renderLayer.el)
-    this.el.appendChild(this.drawLayer.el)
+    this.drawLayer.el.classList.add('draw-layer')
+    this.renderLayer.el.classList.add('render-layer')
+
+    this.layers.forEach(layer => {
+      this.el.appendChild(layer.el)
+    })
+
+    this.el.insertBefore(this.drawLayer.el, this.renderLayer.el.nextSibling)
+
     this.app.el.appendChild(this.el)
   }
 
   resize() {
-    this.drawLayer.resize()
-    this.renderLayer.resize()
-    this.renderLayer.redraw()
+    this._drawLayer.resize()
+    this._renderLayer.resize()
+    this._renderLayer.redraw()
   }
 
   startPanning() {

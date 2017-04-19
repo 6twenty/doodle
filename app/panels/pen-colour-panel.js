@@ -10,6 +10,7 @@ class PenColourPanel extends Panel {
 
     this.render('pen-colour-panel')
 
+    this.on('pen:ready', this.update)
     this.on('pen:change', this.update)
   }
 

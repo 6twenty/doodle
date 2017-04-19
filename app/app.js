@@ -20,14 +20,15 @@ class App extends Eventable {
 
     this.render()
 
+    this.canvas = new Canvas(this)
+
     new PenMode(this)
     new PenSize(this)
     new PenColour(this)
     new PenOpacity(this)
     new DrawLayer(this)
     new NewCanvas(this)
-
-    this.canvas = new Canvas(this)
+    
     this.pen = new Pen(this)
 
     this.state = {}

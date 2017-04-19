@@ -8,6 +8,7 @@ class PenModePanel extends Panel {
 
     this.render('pen-mode-panel')
 
+    this.on('pen:ready', this.update)
     this.on('pen:change', this.update)
   }
 
