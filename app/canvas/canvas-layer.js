@@ -9,7 +9,6 @@ class CanvasLayer extends Eventable {
 
     this.canvas = canvas
     this.id = id
-    this.paths = []
 
     this.build()
   }
@@ -57,6 +56,8 @@ class CanvasLayer extends Eventable {
     this.canvas.renderLayer.renderFinal()
 
     this.path = null
+
+    this.canvas.save()
   }
 
   renderProgress() {

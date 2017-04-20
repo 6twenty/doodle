@@ -16,6 +16,7 @@ class App extends Eventable {
     this.context = context
     this.context.app = this
 
+    this.state = {}
     this.pen = {}
 
     this.render()
@@ -28,10 +29,8 @@ class App extends Eventable {
     new PenOpacity(this)
     new DrawLayer(this)
     new NewCanvas(this)
-    
-    this.pen = new Pen(this)
 
-    this.state = {}
+    this.pen = new Pen(this)
 
     this.tick = this.tick.bind(this)
     this.visibility = this.visibility.bind(this)

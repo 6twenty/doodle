@@ -1,14 +1,57 @@
 class Path {
 
-  constructor(canvas) {
+  constructor(canvas, attrs) {
     this.canvas = canvas
+
+    if (attrs) {
+      this.initWithAttrs(canvas, attrs)
+    } else {
+      this.initWithCanvas(canvas)
+    }
+
+    this.error = this.size * 2.5 // Tolerance for smoothing
+  }
+
+  initWithCanvas(canvas) {
+    this.layer = this.canvas.renderLayer.id
     this.points = []
 
     Object.keys(this.canvas.app.pen.attrs).forEach(attr => {
       this[attr] = this.canvas.app.pen.attrs[attr]
     })
+  }
 
-    this.error = this.size * 2.5 // Tolerance for smoothing
+  initWithAttrs(canvas, attrs) {
+    Object.keys(attrs).forEach(attr => {
+      this[attr] = attrs[attr]
+    })
+
+    this.segments = this.segments.map(data => {
+      const segment = new Segment()
+
+      segment.point = new Point(data.point.x, data.point.y)
+
+      if (data.handleIn) {
+        segment.handleIn = new Point(data.handleIn.x, data.handleIn.y)
+      }
+
+      if (data.handleOut) {
+        segment.handleOut = new Point(data.handleOut.x, data.handleOut.y)
+      }
+
+      return segment
+    })
+  }
+
+  attrs() {
+    return {
+      layer: this.layer,
+      size: this.size,
+      colour: this.colour,
+      opacity: this.opacity,
+      mode: this.mode,
+      segments: this.segments
+    }
   }
 
   update() {

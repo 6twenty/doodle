@@ -6,6 +6,7 @@ class Canvas extends Eventable {
     this.app = app
     this.state = {}
 
+    const paths = this.load()
     const svg = document.querySelector('svg')
 
     this.matrix = svg.createSVGMatrix()
@@ -20,7 +21,14 @@ class Canvas extends Eventable {
     this._drawLayer = new CanvasLayer(this)
     this._renderLayer = this.layers[1] // Default to the middle layer
 
+    this.layers.forEach(layer => {
+      layer.paths = paths.filter(path => {
+        return path.layer == layer.id
+      })
+    })
+
     this.render()
+    this.renderAll()
   }
 
   get pointer() {
@@ -174,6 +182,26 @@ class Canvas extends Eventable {
       layer.transform()
       layer.redraw()
     })
+  }
+
+  save() {
+    let paths = this.layers.map(layer => layer.paths.map(path => path.attrs()))
+
+    paths = [].concat.apply([], paths)
+
+    localStorage.paths = JSON.stringify(paths)
+  }
+
+  load() {
+    let cache = localStorage.paths
+
+    if (cache) {
+      return JSON.parse(cache).map(data => {
+        return new Path(this, data)
+      })
+    } else {
+      return []
+    }
   }
 
 }
