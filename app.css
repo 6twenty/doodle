@@ -511,6 +511,7 @@ main.panning #pen {
   box-shadow: 0 0 0 1px rgba(0,0,0,.1), 0 0 0 1px rgba(0,0,0,.1) inset;
   cursor: pointer;
   background: white;
+  left: calc(50% - 25px);
 }
 
 .draw-layer-panel .canvas-layer:hover {
@@ -521,15 +522,9 @@ main.panning #pen {
   box-shadow: 0 0 0 3px rgba(0,127,0,.5), 0 0 0 1px rgba(0,0,0,.1) inset;
 }
 
-.draw-layer-panel .canvas-layer:nth-of-type(1) { top: calc(50% + 95px);  left: calc(50% - 275px); }
-.draw-layer-panel .canvas-layer:nth-of-type(2) { top: calc(50% + 50px);  left: calc(50% - 220px); }
-.draw-layer-panel .canvas-layer:nth-of-type(3) { top: calc(50% + 15px);  left: calc(50% - 160px); }
-.draw-layer-panel .canvas-layer:nth-of-type(4) { top: calc(50% - 10px);  left: calc(50% - 95px);  }
-.draw-layer-panel .canvas-layer:nth-of-type(5) { top: calc(50% - 25px);  left: calc(50% - 25px);  }
-.draw-layer-panel .canvas-layer:nth-of-type(6) { top: calc(50% - 40px);  left: calc(50% + 45px);  }
-.draw-layer-panel .canvas-layer:nth-of-type(7) { top: calc(50% - 65px);  left: calc(50% + 110px); }
-.draw-layer-panel .canvas-layer:nth-of-type(8) { top: calc(50% - 100px); left: calc(50% + 170px); }
-.draw-layer-panel .canvas-layer:nth-of-type(9) { top: calc(50% - 145px); left: calc(50% + 225px); }
+.draw-layer-panel .canvas-layer:nth-of-type(1) { top: calc(50% - 95px); }
+.draw-layer-panel .canvas-layer:nth-of-type(2) { top: calc(50% - 25px); }
+.draw-layer-panel .canvas-layer:nth-of-type(3) { top: calc(50% + 45px); }
 
 .pen-size-slider-left,
 .pen-size-slider-right,

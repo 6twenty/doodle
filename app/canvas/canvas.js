@@ -17,14 +17,8 @@ class Canvas extends Eventable {
 
     this.layers = [
       new CanvasLayer(this),
-      new CanvasLayer(this),
-      new CanvasLayer(this),
-      new CanvasLayer(this),
       this.renderLayer, // Default layer is in the middle
       new CanvasLayer(this),
-      new CanvasLayer(this),
-      new CanvasLayer(this),
-      new CanvasLayer(this)
     ]
 
     this.render()

@@ -58,6 +58,8 @@ class DrawLayerPanel extends Panel {
 
   canvasLayerClick(layer) {
     this.app.canvas.renderLayer = layer
+
+    this.close()
   }
 
   update(attrs) {
