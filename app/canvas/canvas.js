@@ -102,13 +102,9 @@ class Canvas extends Eventable {
     }
 
     this.matrix = this.matrix.translate(point.x, point.y)
-
-    this.renderLayer.clear()
-    this.drawLayer.transform()
-    this.renderLayer.transform()
-    this.renderLayer.redraw()
-
     this.state.panOrigin = this.pointer.clone()
+
+    this.renderAll()
   }
 
   finishPanning() {
@@ -140,10 +136,7 @@ class Canvas extends Eventable {
 
     this.matrix = this.matrix.translate(point.x, point.y)
 
-    this.renderLayer.clear()
-    this.drawLayer.transform()
-    this.renderLayer.transform()
-    this.renderLayer.redraw()
+    this.renderAll()
   }
 
   scale() {
@@ -172,10 +165,16 @@ class Canvas extends Eventable {
     this.matrix = this.matrix.scale(scale)
     this.matrix = this.matrix.translate(-point.x, -point.y)
 
-    this.renderLayer.clear()
+    this.renderAll()
+  }
+
+  renderAll() {
     this.drawLayer.transform()
-    this.renderLayer.transform()
-    this.renderLayer.redraw()
+    this.layers.forEach(layer => {
+      layer.clear()
+      layer.transform()
+      layer.redraw()
+    })
   }
 
 }
