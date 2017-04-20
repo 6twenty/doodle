@@ -4,11 +4,11 @@ class CanvasLayer extends Eventable {
     return 0.3
   }
 
-  constructor(canvas) {
+  constructor(canvas, id) {
     super()
 
     this.canvas = canvas
-    this.id = ++this.canvas._index
+    this.id = id
     this.paths = []
 
     this.build()
@@ -17,7 +17,9 @@ class CanvasLayer extends Eventable {
   build() {
     this.el = document.createElement('canvas')
 
-    this.el.dataset.id = this.id
+    if (this.id) {
+      this.el.dataset.id = this.id
+    }
 
     this.resize()
 

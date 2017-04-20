@@ -522,9 +522,9 @@ main.panning #pen {
   box-shadow: 0 0 0 3px rgba(0,127,0,.5), 0 0 0 1px rgba(0,0,0,.1) inset;
 }
 
-.draw-layer-panel .canvas-layer:nth-of-type(1) { top: calc(50% - 95px); }
-.draw-layer-panel .canvas-layer:nth-of-type(2) { top: calc(50% - 25px); }
-.draw-layer-panel .canvas-layer:nth-of-type(3) { top: calc(50% + 45px); }
+.draw-layer-panel .canvas-layer[data-id="3"] { top: calc(50% - 95px); }
+.draw-layer-panel .canvas-layer[data-id="2"] { top: calc(50% - 25px); }
+.draw-layer-panel .canvas-layer[data-id="1"] { top: calc(50% + 45px); }
 
 .pen-size-slider-left,
 .pen-size-slider-right,

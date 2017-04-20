@@ -5,21 +5,20 @@ class Canvas extends Eventable {
 
     this.app = app
     this.state = {}
-    this._index = 0
 
     const svg = document.querySelector('svg')
 
     this.matrix = svg.createSVGMatrix()
     this.point = svg.createSVGPoint()
 
-    this._drawLayer = new CanvasLayer(this)
-    this._renderLayer = new CanvasLayer(this)
-
     this.layers = [
-      new CanvasLayer(this),
-      this.renderLayer, // Default layer is in the middle
-      new CanvasLayer(this),
+      new CanvasLayer(this, 1),
+      new CanvasLayer(this, 2),
+      new CanvasLayer(this, 3)
     ]
+
+    this._drawLayer = new CanvasLayer(this)
+    this._renderLayer = this.layers[1] // Default to the middle layer
 
     this.render()
   }
