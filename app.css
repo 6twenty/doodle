@@ -46,10 +46,6 @@ main.panning-intent {
 
 main::after {
   content: '';
-  background-image: url('paper.png');
-  background-size: 485px 485px;
-  background-repeat: repeat;
-  opacity: .5;
   top: 0;
   left: 0;
   bottom: 0;
