@@ -185,7 +185,7 @@ class App extends Eventable {
     }
 
     // Is drawing if mousedown (but not shiftdown)
-    if (this.state.active && !this.state.shift && !this.state.moving) {
+    if (this.state.active && !this.state.shift && !this.state.moving && !this.state.momentum) {
 
       // If not previously drawing, set up path
       if (!this.state.drawing) {
