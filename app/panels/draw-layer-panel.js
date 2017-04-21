@@ -46,8 +46,14 @@ class DrawLayerPanel extends Panel {
       const canvas = this.layers[id].thumb
       const ctx = canvas.getContext('2d')
 
+      // Maintain aspect ratio
+      const thumbWidth = layer.el.width > layer.el.height ? 50 : 50 * (layer.el.width / layer.el.height)
+      const thumbHeight = layer.el.height > layer.el.width ? 50 : 50 * (layer.el.height / layer.el.width)
+      const x = (50 - thumbWidth) / 2
+      const y = (50 - thumbHeight) / 2
+
       ctx.clearRect(0, 0, 50, 50)
-      ctx.drawImage(layer.el, 0, 0, 50, 50)
+      ctx.drawImage(layer.el, Math.floor(x), Math.floor(y), Math.floor(thumbWidth), Math.floor(thumbHeight))
     })
   }
 
