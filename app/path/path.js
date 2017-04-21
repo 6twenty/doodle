@@ -9,7 +9,7 @@ class Path {
       this.initWithCanvas(canvas)
     }
 
-    this.error = this.size * 2.5 // Tolerance for smoothing
+    this.error = this.size // Tolerance for smoothing
   }
 
   initWithCanvas(canvas) {
