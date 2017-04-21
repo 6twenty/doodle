@@ -118,18 +118,36 @@ class CanvasLayer extends Eventable {
   renderSegments(segments) {
     this.ctx.beginPath()
 
-    if (segments.length > 1) {
+    if (segments.length > 5) {
       this.ctx.lineWidth *= (1 - CanvasLayer.VARIANCE)
 
       this.renderSegmentsForward(segments)
       this.renderSegmentsBackward(segments)
       this.ctx.closePath()
       this.ctx.stroke()
+    } else if (segments.length > 1) {
+      this.renderSegmentsPlain(segments)
     } else {
       this.ctx.moveTo(segments[0].point.x, segments[0].point.y)
       this.ctx.lineTo(segments[0].point.x, segments[0].point.y)
       this.ctx.stroke()
     }
+  }
+
+  renderSegmentsPlain(segments) {
+    segments.forEach((segment, i, segments) => {
+      if (i > 0) {
+        const prev = segments[i - 1]
+        const cp1 = prev.handleOut
+        const cp2 = segment.handleIn
+
+        this.ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, segment.point.x, segment.point.y)
+      } else {
+        this.ctx.moveTo(segment.point.x, segment.point.y)
+      }
+    })
+
+    this.ctx.stroke()
   }
 
   renderSegmentsForward(segments) {
