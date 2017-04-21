@@ -121,6 +121,16 @@ class App extends Eventable {
       this.state.shift = false
       this.el.classList.remove('panning-intent')
     }
+
+    if (e.type === 'keydown') {
+      this.keyCommand(e)
+    }
+  }
+
+  keyCommand(e) {
+    if ((e.metaKey || e.ctrlKey) && e.keyCode === 90) {
+      this.state.command = e.shiftKey ? 'redo' : 'undo'
+    }
   }
 
   mouseDown(e) {
@@ -163,6 +173,13 @@ class App extends Eventable {
     if (this.state.redraw) {
       this.canvas.renderLayer.redraw()
       this.state.redraw = false
+    }
+
+    // Key commands
+    if (this.state.command) {
+      this.canvas.command(this.state.command)
+
+      delete this.state.command
     }
 
     // Sizing

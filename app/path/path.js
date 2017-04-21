@@ -2,6 +2,7 @@ class Path {
 
   constructor(canvas, attrs) {
     this.canvas = canvas
+    this.timestamp = this.canvas.app.state.timestamp
 
     if (attrs) {
       this.initWithAttrs(canvas, attrs)

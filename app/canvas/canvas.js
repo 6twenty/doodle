@@ -5,6 +5,7 @@ class Canvas extends Eventable {
 
     this.app = app
     this.state = {}
+    this.state.redoPaths = []
 
     const paths = this.load()
     const svg = document.querySelector('svg')
@@ -63,6 +64,15 @@ class Canvas extends Eventable {
     this._renderLayer = layer
     this.el.insertBefore(this._drawLayer.el, this.renderLayer.el.nextSibling)
     this.trigger('layer:change', { layer: layer })
+  }
+
+  get paths() {
+    const paths = this.layers.map(layer => layer.paths)
+
+    // Flatten and sort
+    return [].concat.apply([], paths).sort((a, b) => {
+      return a.timestamp - b.timestamp
+    })
   }
 
   render() {
@@ -185,9 +195,7 @@ class Canvas extends Eventable {
   }
 
   save() {
-    let paths = this.layers.map(layer => layer.paths.map(path => path.attrs()))
-
-    paths = [].concat.apply([], paths)
+    const paths = this.paths.map(path => path.attrs())
 
     localStorage.paths = JSON.stringify(paths)
   }
@@ -202,6 +210,53 @@ class Canvas extends Eventable {
     } else {
       return []
     }
+  }
+
+  command(command) {
+    switch (command) {
+      case 'undo':
+        this.undo()
+        break
+      case 'redo':
+        this.redo()
+        break
+    }
+  }
+
+  undo() {
+    const paths = this.paths
+
+    if (paths.length === 0) {
+      return
+    }
+
+    const path = paths.splice(this.paths.length - 1, 1)[0]
+    const layer = this.layers.find(layer => {
+      return layer.id === path.layer
+    })
+
+    this.state.redoPaths.push(path)
+    layer.paths.splice(layer.paths.length - 1, 1)
+    layer.clear()
+    layer.redraw()
+    this.save()
+  }
+
+  redo() {
+    const path = this.state.redoPaths.shift()
+
+    if (!path) {
+      return
+    }
+
+    const layer = this.layers.find(layer => {
+      return layer.id === path.layer
+    })
+
+    layer.paths.push(path)
+    layer.clear()
+    layer.redraw()
+    this.save()
   }
 
 }
