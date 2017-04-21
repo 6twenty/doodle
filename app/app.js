@@ -50,6 +50,9 @@ class App extends Eventable {
     this.state.resetting = true
     this.stopListening()
     this.el.parentNode.removeChild(this.el)
+
+    delete localStorage.paths
+
     new App(this.context)
   }
 
