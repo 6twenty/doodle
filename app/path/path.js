@@ -9,8 +9,6 @@ class Path {
     } else {
       this.initWithCanvas(canvas)
     }
-
-    this.error = this.size // Tolerance for smoothing
   }
 
   initWithCanvas(canvas) {
@@ -20,6 +18,9 @@ class Path {
     Object.keys(this.canvas.app.pen.attrs).forEach(attr => {
       this[attr] = this.canvas.app.pen.attrs[attr]
     })
+
+    // Tolerance for smoothing
+    this.error = this.size * this.canvas.matrix.inverse().a
   }
 
   initWithAttrs(canvas, attrs) {
@@ -55,7 +56,8 @@ class Path {
       colour: this.colour,
       opacity: this.opacity,
       mode: this.mode,
-      segments: this.segments
+      segments: this.segments,
+      error: this.error
     }
   }
 
