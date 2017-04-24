@@ -177,10 +177,6 @@ main.panning #pen {
 
 #pen-mode {
   left: 20px;
-}
-
-#pen-mode::before,
-#pen-mode::after {
   transform: rotate(-45deg);
 }
 
@@ -192,7 +188,6 @@ main.panning #pen {
   border: solid 4px transparent;
   border-right: solid 3px black;
   border-left: none;
-  transform-origin: 9px 4px;
 }
 
 #pen-mode.draw-mode::after {
@@ -204,7 +199,6 @@ main.panning #pen {
   border-right: solid 4px black;
   border-top-right-radius: 4px;
   border-bottom-right-radius: 4px;
-  transform-origin: 4px 4px;
 }
 
 #pen-mode.erase-mode::before {
@@ -215,7 +209,6 @@ main.panning #pen {
   border: solid 1px black;
   border-top-left-radius: 2px;
   border-bottom-left-radius: 2px;
-  transform-origin: 9px 5px;
 }
 
 #pen-mode.erase-mode::after {
@@ -226,7 +219,6 @@ main.panning #pen {
   background: black;
   border-top-right-radius: 2px;
   border-bottom-right-radius: 2px;
-  transform-origin: 2px 5px;
 }
 
 #pen-size {
