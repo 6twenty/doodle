@@ -32,6 +32,10 @@ class Path {
 
       segment.point = new Point(data.point.x, data.point.y)
 
+      if (data.offset) {
+        segment.offset = new Point(data.offset.x, data.offset.y)
+      }
+
       if (data.handleIn) {
         segment.handleIn = new Point(data.handleIn.x, data.handleIn.y)
       }

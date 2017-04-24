@@ -1,7 +1,7 @@
 class CanvasLayer extends Eventable {
 
   static get VARIANCE() {
-    return 0.3
+    return 0.2
   }
 
   constructor(canvas, id) {
@@ -48,6 +48,7 @@ class CanvasLayer extends Eventable {
   finish() {
     this.path.update()
     this.path.simplify()
+    this.pathOffset()
 
     this.clear()
 
@@ -58,6 +59,42 @@ class CanvasLayer extends Eventable {
     this.path = null
 
     this.canvas.save()
+  }
+
+  pathOffset() {
+    if (this.path.segments.length === 1) {
+      return
+    }
+
+    const maxWidth = Math.round(this.ctx.lineWidth * CanvasLayer.VARIANCE)
+
+    let width = 0
+
+    this.path.segments.forEach((segment, i, segments) => {
+      let angleOffset = undefined
+
+      if (segment.handleOut) {
+        angleOffset = segment.handleOut.subtract(segment.point)
+      } else if (segment.handleIn) {
+        angleOffset = segment.point.subtract(segment.handleIn)
+      }
+
+      const remaining = segments.length - (i + 1)
+      const change = Math.random() > 0.5 ? width++ : width--
+
+      // Can't be less than 0 or greater than maxWidth
+      width = Math.min(Math.max(0, width), maxWidth)
+
+      // Force reducing to 0 near the end
+      if (remaining < width) {
+        width = remaining
+      }
+
+      const angle = Math.atan2(angleOffset.y, angleOffset.x) + (Math.PI / 2)
+      const offset = new Point(Math.cos(angle), Math.sin(angle)).normalize(width)
+
+      segment.offset = offset
+    })
   }
 
   renderProgress() {
@@ -118,15 +155,13 @@ class CanvasLayer extends Eventable {
   renderSegments(segments) {
     this.ctx.beginPath()
 
-    if (segments.length > 5) {
+    if (segments.length > 1) {
       this.ctx.lineWidth *= (1 - CanvasLayer.VARIANCE)
 
       this.renderSegmentsForward(segments)
       this.renderSegmentsBackward(segments)
       this.ctx.closePath()
       this.ctx.stroke()
-    } else if (segments.length > 1) {
-      this.renderSegmentsPlain(segments)
     } else {
       this.ctx.moveTo(segments[0].point.x, segments[0].point.y)
       this.ctx.lineTo(segments[0].point.x, segments[0].point.y)
@@ -134,41 +169,8 @@ class CanvasLayer extends Eventable {
     }
   }
 
-  renderSegmentsPlain(segments) {
-    segments.forEach((segment, i, segments) => {
-      if (i > 0) {
-        const prev = segments[i - 1]
-        const cp1 = prev.handleOut
-        const cp2 = segment.handleIn
-
-        this.ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, segment.point.x, segment.point.y)
-      } else {
-        this.ctx.moveTo(segment.point.x, segment.point.y)
-      }
-    })
-
-    this.ctx.stroke()
-  }
-
   renderSegmentsForward(segments) {
-    let width = this.ctx.lineWidth
-
     segments.forEach((segment, i, segments) => {
-      let offset = undefined
-
-      if (segment.handleOut) {
-        offset = segment.handleOut.subtract(segment.point)
-      } else if (segment.handleIn) {
-        offset = segment.point.subtract(segment.handleIn)
-      }
-
-      if (offset) {
-        const angle = Math.atan2(offset.y, offset.x) + (Math.PI / 2)
-        segment.offset = new Point(Math.cos(angle), Math.sin(angle)).normalize(width * CanvasLayer.VARIANCE)
-      } else {
-        segment.offset = new Point(0, 0)
-      }
-
       const point = segment.point.subtract(segment.offset)
 
       if (i > 0) {
