@@ -19,7 +19,7 @@ class Download extends Button {
   click() {
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')
-    const box = this.app.canvas.boundingBox()
+    const box = this.app.canvas.boundingBox(this.app.canvas.paths)
     const margin = Math.max(box.width * 0.1, box.height * 0.1)
 
     canvas.width = box.width + margin

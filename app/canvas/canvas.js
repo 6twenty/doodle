@@ -102,20 +102,20 @@ class Canvas extends Eventable {
   }
 
   // Get the approx bounding box of the given paths
-  boundingBox() {
-    const box = {
-      left: 0,
-      right: 0,
-      top: 0,
-      bottom: 0
-    }
+  boundingBox(paths) {
+    const box = {}
 
-    this.paths.forEach(path => {
+    paths.forEach(path => {
       const margin = path.size * 2
 
       path.segments.forEach(segment => {
         ['point', 'handleIn', 'handleOut'].forEach(point => {
           if (segment[point]) {
+            box.left = box.left || segment[point].x
+            box.right = box.right || segment[point].x
+            box.top = box.top || segment[point].y
+            box.bottom = box.bottom || segment[point].y
+
             if (segment[point].x < box.left) box.left = segment[point].x
             if (segment[point].x > box.right) box.right = segment[point].x
             if (segment[point].y < box.top) box.top = segment[point].y
