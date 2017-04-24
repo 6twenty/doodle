@@ -46,6 +46,8 @@ class DrawLayerPanel extends Panel {
       const canvas = this.layers[id].thumb
       const ctx = canvas.getContext('2d')
 
+      ctx.imageSmoothingQuality = 'high'
+
       // Maintain aspect ratio
       const thumbWidth = layer.el.width > layer.el.height ? 50 : 50 * (layer.el.width / layer.el.height)
       const thumbHeight = layer.el.height > layer.el.width ? 50 : 50 * (layer.el.height / layer.el.width)
