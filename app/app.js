@@ -131,6 +131,10 @@ class App extends Eventable {
     if ((e.metaKey || e.ctrlKey) && e.keyCode === 90) {
       this.state.command = e.shiftKey ? 'redo' : 'undo'
     }
+
+    if (e.keyCode === 27) {
+      this.state.command = 'esc'
+    }
   }
 
   mouseDown(e) {

@@ -223,6 +223,9 @@ class Canvas extends Eventable {
       case 'redo':
         this.redo()
         break
+      case 'esc':
+        this.closePanel()
+        break
     }
   }
 
@@ -260,6 +263,12 @@ class Canvas extends Eventable {
     layer.clear()
     layer.redraw()
     this.save()
+  }
+
+  closePanel() {
+    if (Panel.active) {
+      Panel.active.close()
+    }
   }
 
 }
