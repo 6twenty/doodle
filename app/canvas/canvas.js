@@ -13,6 +13,9 @@ class Canvas extends Eventable {
     this.matrix = svg.createSVGMatrix()
     this.point = svg.createSVGPoint()
 
+    // Start off by panning so that 0,0 is in the center of the viewport
+    this.matrix = this.matrix.translate(document.documentElement.clientWidth / 2, document.documentElement.clientHeight / 2);
+
     this.layers = [
       new CanvasLayer(this, 1),
       new CanvasLayer(this, 2),
