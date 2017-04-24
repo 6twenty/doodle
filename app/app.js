@@ -29,6 +29,7 @@ class App extends Eventable {
     new PenOpacity(this)
     new DrawLayer(this)
     new NewCanvas(this)
+    new Download(this)
 
     this.pen = new Pen(this)
 

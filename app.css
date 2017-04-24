@@ -390,6 +390,28 @@ main.panning #pen {
   background: white;
 }
 
+#download {
+  left: 260px;
+  background: black;
+  border: solid 5px white;
+}
+
+#download::before {
+  top: 11px;
+  left: calc(50% - 5px);
+  border: solid 5px transparent;
+  border-top-color: white;
+  border-bottom: none;
+}
+
+#download::after {
+  top: 6px;
+  left: calc(50% - 2px);
+  width: 4px;
+  height: 5px;
+  background: white;
+}
+
 .pen-mode-panel .draw-mode,
 .pen-mode-panel .erase-mode {
   position: absolute;

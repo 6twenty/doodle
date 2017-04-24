@@ -101,6 +101,41 @@ class Canvas extends Eventable {
     this.renderAll()
   }
 
+  // Get the approx bounding box of the given paths
+  boundingBox() {
+    const box = {
+      left: 0,
+      right: 0,
+      top: 0,
+      bottom: 0
+    }
+
+    this.paths.forEach(path => {
+      const margin = path.size * 2
+
+      path.segments.forEach(segment => {
+        ['point', 'handleIn', 'handleOut'].forEach(point => {
+          if (segment[point]) {
+            if (segment[point].x < box.left) box.left = segment[point].x
+            if (segment[point].x > box.right) box.right = segment[point].x
+            if (segment[point].y < box.top) box.top = segment[point].y
+            if (segment[point].y > box.bottom) box.bottom = segment[point].y
+          }
+        })
+      })
+
+      box.left -= margin
+      box.top -= margin
+      box.right += margin
+      box.bottom += margin
+    })
+
+    box.width = box.right - box.left
+    box.height = box.bottom - box.top
+
+    return box
+  }
+
   startPanning() {
     this.state.panOrigin = this.pointer.clone()
     this.app.state.momentum = false
