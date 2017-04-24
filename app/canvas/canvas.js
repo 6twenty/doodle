@@ -16,6 +16,10 @@ class Canvas extends Eventable {
     // Start off by panning so that 0,0 is in the center of the viewport
     this.matrix = this.matrix.translate(document.documentElement.clientWidth / 2, document.documentElement.clientHeight / 2);
 
+    if (paths.length > 0) {
+      this.fit(paths)
+    }
+
     this.layers = [
       new CanvasLayer(this, 1),
       new CanvasLayer(this, 2),
@@ -99,6 +103,14 @@ class Canvas extends Eventable {
     this._drawLayer.resize()
     this.layers.forEach(layer => layer.resize())
     this.renderAll()
+  }
+
+  fit(paths) {
+    const box = this.boundingBox(paths)
+    const x = box.left + (box.width / 2)
+    const y = box.top + (box.height / 2)
+
+    this.matrix = this.matrix.translate(-x, -y)
   }
 
   // Get the approx bounding box of the given paths
