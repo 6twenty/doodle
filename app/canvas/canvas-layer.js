@@ -20,9 +20,10 @@ class CanvasLayer extends Eventable {
       this.el.dataset.id = this.id
     }
 
-    this.resize()
-
     this.ctx = this.el.getContext('2d')
+
+    this.resize()
+    this.transform()
   }
 
   setProps(path) {
