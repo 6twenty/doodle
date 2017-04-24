@@ -94,8 +94,8 @@ class Canvas extends Eventable {
 
   resize() {
     this._drawLayer.resize()
-    this._renderLayer.resize()
-    this._renderLayer.redraw()
+    this.layers.forEach(layer => layer.resize())
+    this.renderAll()
   }
 
   startPanning() {
