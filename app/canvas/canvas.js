@@ -247,6 +247,8 @@ class Canvas extends Eventable {
   save() {
     const paths = this.paths.map(path => path.attrs())
 
+    this.trigger('canvas:save', { paths: paths })
+
     localStorage.paths = JSON.stringify(paths)
   }
 

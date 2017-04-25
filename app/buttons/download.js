@@ -4,6 +4,8 @@ class Download extends Button {
     super(app)
 
     this.el.onclick = this.click.bind(this)
+
+    this.on('canvas:save', this.update)
   }
 
   render() {
@@ -12,6 +14,10 @@ class Download extends Button {
     this.el.id = 'download'
     this.el.classList.add('button')
     this.el.download = 'doodle.png'
+
+    if (this.app.canvas.paths.length === 0) {
+      this.el.classList.add('hidden')
+    }
 
     this.app.el.appendChild(this.el)
   }
@@ -38,6 +44,14 @@ class Download extends Button {
     })
 
     this.el.href = canvas.toDataURL('image/png')
+  }
+
+  update(data) {
+    if (data.paths.length > 0) {
+      this.el.classList.remove('hidden')
+    } else {
+      this.el.classList.add('hidden')
+    }
   }
 
 }
