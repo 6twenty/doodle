@@ -532,6 +532,16 @@ main.panning #pen {
   left: calc(50% - 25px);
 }
 
+.draw-layer-panel .canvas-layer:not(:first-of-type)::after {
+  content: '';
+  position: absolute;
+  top: calc(100% + 5px);
+  bottom: -15px;
+  left: calc(50% - 1px);
+  width: 2px;
+  background: rgba(0,0,0,.1);
+}
+
 .draw-layer-panel .canvas-layer:hover {
   box-shadow: 0 0 0 3px rgba(0,0,127,.5), 0 0 0 1px rgba(0,0,0,.1) inset;
 }
