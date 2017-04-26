@@ -47,6 +47,16 @@ class App extends Eventable {
     this.loop()
   }
 
+  confirm(message) {
+    return new Promise((resolve, reject) => {
+      const didConfirm = window.confirm(message)
+
+      if (didConfirm) {
+        resolve()
+      }
+    })
+  }
+
   reset() {
     this.state.resetting = true
     this.stopListening()

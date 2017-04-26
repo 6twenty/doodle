@@ -17,7 +17,9 @@ class NewCanvas extends Button {
   }
 
   click() {
-    this.app.reset()
+    this.app.confirm('Clear the canvas?').then(() => {
+      this.app.reset()
+    })
   }
 
 }
