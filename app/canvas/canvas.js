@@ -298,7 +298,7 @@ class Canvas extends Eventable {
   }
 
   redo() {
-    const path = this.state.redoPaths.shift()
+    const path = this.state.redoPaths.pop()
 
     if (!path) {
       return
