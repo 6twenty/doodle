@@ -12,6 +12,7 @@ class PenColour extends Button {
     this.el = document.createElement('div')
 
     this.el.id = 'pen-colour'
+    this.el.title = 'Colour'
     this.el.classList.add('button')
     this.el.appendChild(document.createElement('div'))
 

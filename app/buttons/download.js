@@ -13,6 +13,7 @@ class Download extends Button {
 
     this.el.id = 'download'
     this.el.classList.add('button')
+    this.el.title = 'Download'
     this.el.download = 'doodle.png'
 
     if (this.app.canvas.paths.length === 0) {

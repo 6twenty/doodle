@@ -12,6 +12,7 @@ class DrawLayer extends Button {
     this.el = document.createElement('div')
 
     this.el.id = 'draw-layer'
+    this.el.title = 'Layer'
     this.el.classList.add('button')
 
     this.app.el.appendChild(this.el)

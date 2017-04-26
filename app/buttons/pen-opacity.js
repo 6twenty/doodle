@@ -12,6 +12,7 @@ class PenOpacity extends Button {
     this.el = document.createElement('div')
 
     this.el.id = 'pen-opacity'
+    this.el.title = 'Opacity'
     this.el.classList.add('button')
 
     this.app.el.appendChild(this.el)
