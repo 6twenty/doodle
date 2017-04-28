@@ -3,6 +3,7 @@ html {
   -ms-text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
   box-sizing: border-box;
+  font-size: 16px;
 }
 
 html *,
@@ -21,6 +22,7 @@ body {
 
 body {
   margin: 0;
+  font-family: -apple-system, ".SFNSText-Regular", "San Francisco", "Roboto", "Segoe UI", "Helvetica Neue", "Lucida Grande", sans-serif;
 }
 
 main,
@@ -81,6 +83,21 @@ main::after {
 
 .button:hover {
   box-shadow: 0 0 0 2px rgba(0,0,127,.5);
+}
+
+.button > .tooltip {
+  display: none;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 600%;
+  text-align: center;
+  transform: translate(-50%, 150%);
+  pointer-events: none;
+}
+
+.button:hover > .tooltip {
+  display: block;
 }
 
 main.drawing .button,
@@ -273,7 +290,7 @@ main.panning #pen {
   border-radius: 50%;
 }
 
-#pen-colour > div {
+#pen-colour > div:not(.tooltip) {
   position: absolute;
   z-index: 1;
   height: 3px;
@@ -284,14 +301,14 @@ main.panning #pen {
   border-bottom-right-radius: 3px;
 }
 
-#pen-colour > div::before,
-#pen-colour > div::after {
+#pen-colour > div:not(.tooltip)::before,
+#pen-colour > div:not(.tooltip)::after {
   content: '';
   position: absolute;
   display: block;
 }
 
-#pen-colour > div::before {
+#pen-colour > div:not(.tooltip)::before {
   height: 4px;
   width: 4px;
   background: white;
@@ -301,7 +318,7 @@ main.panning #pen {
   box-shadow: -6px -2px 0 white, -10px 3px 0 white;
 }
 
-#pen-colour > div::after {
+#pen-colour > div:not(.tooltip)::after {
   height: 5px;
   width: 5px;
   border-radius: 50%;

@@ -31,11 +31,11 @@ class PenMode extends Button {
     if (attrs.mode === 'draw') {
       this.el.classList.remove('erase-mode')
       this.el.classList.add('draw-mode')
-      this.el.title = 'Erase mode'
+      this.title = 'Erase mode'
     } else if (attrs.mode === 'erase') {
       this.el.classList.remove('draw-mode')
       this.el.classList.add('erase-mode')
-      this.el.title = 'Draw mode'
+      this.title = 'Draw mode'
     }
   }
 

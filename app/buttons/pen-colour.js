@@ -3,6 +3,7 @@ class PenColour extends Button {
   constructor(app) {
     super(app)
 
+    this.title = 'Colour'
     this.panel = new PenColourPanel(this)
 
     this.el.onclick = this.click.bind(this)
@@ -12,7 +13,6 @@ class PenColour extends Button {
     this.el = document.createElement('div')
 
     this.el.id = 'pen-colour'
-    this.el.title = 'Colour'
     this.el.classList.add('button')
     this.el.appendChild(document.createElement('div'))
 
