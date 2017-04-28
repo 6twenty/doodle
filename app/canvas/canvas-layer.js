@@ -210,8 +210,14 @@ class CanvasLayer extends Eventable {
   }
 
   resize() {
-    this.el.height = document.documentElement.clientHeight
-    this.el.width = document.documentElement.clientWidth
+    const height = document.documentElement.clientHeight
+    const width = document.documentElement.clientWidth
+
+    this.el.style.height = `${height}px`
+    this.el.style.width = `${width}px`
+    
+    this.el.height = height * window.devicePixelRatio
+    this.el.width = width * window.devicePixelRatio
   }
 
   transform() {

@@ -29,10 +29,11 @@ class Download extends Button {
     const box = this.app.canvas.boundingBox(this.app.canvas.paths)
     const margin = Math.max(box.width * 0.1, box.height * 0.1)
 
-    canvas.width = box.width + margin
-    canvas.height = box.height + margin
+    canvas.width = (box.width + margin) * window.devicePixelRatio
+    canvas.height = (box.height + margin) * window.devicePixelRatio
     ctx.fillStyle = 'white'
 
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
     ctx.translate(-(box.left - (margin / 2)), -(box.top - (margin / 2)))
     ctx.fillRect(box.left - margin, box.top - margin, canvas.width + margin, canvas.height + margin)
 

@@ -13,6 +13,9 @@ class Canvas extends Eventable {
     this.matrix = svg.createSVGMatrix()
     this.point = svg.createSVGPoint()
 
+    // Scale to the device's pixel ratio
+    this.matrix = this.matrix.scale(window.devicePixelRatio)
+
     // Start off by panning so that 0,0 is in the center of the viewport
     this.matrix = this.matrix.translate(document.documentElement.clientWidth / 2, document.documentElement.clientHeight / 2);
 
@@ -40,8 +43,8 @@ class Canvas extends Eventable {
   }
 
   get pointer() {
-    this.point.x = this.app.state.x
-    this.point.y = this.app.state.y
+    this.point.x = this.app.state.x * window.devicePixelRatio
+    this.point.y = this.app.state.y * window.devicePixelRatio
 
     const pt = this.point.matrixTransform(this.matrix.inverse())
 
