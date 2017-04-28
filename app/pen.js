@@ -36,6 +36,8 @@ class Pen extends Eventable {
     this._colour = Pen.colours[0]
     this._opacity = 1
 
+    this.update()
+
     this.el.addEventListener('mousedown', this.stopPropagation)
     this.el.addEventListener('mouseup', this.stopPropagation)
     this.el.addEventListener('mousemove', this.stopPropagation)
@@ -53,6 +55,21 @@ class Pen extends Eventable {
     this.el.id = 'pen'
 
     this.app.el.appendChild(this.el)
+  }
+
+  update() {
+    this.el.style.backgroundColor = this.colour
+
+    let backgroundColour = window.getComputedStyle(this.el)['background-color']
+
+    backgroundColour = backgroundColour.replace(/[^\d,]/g, '').split(',')
+    backgroundColour[3] = this.opacity
+
+    this.el.style.backgroundColor = 'rgba(' + backgroundColour.join(',') + ')'
+
+    let width = (60 - (50 * ((this.size * 2) / 100))) / 2
+
+    this.el.style.borderWidth = `${width < 0 ? 0 : width}px`
   }
 
   get attrs() {
@@ -75,14 +92,7 @@ class Pen extends Eventable {
 
     this._mode = val
 
-    this.el.style.backgroundColor = this.colour
-
-    const current = window.getComputedStyle(this.el)['background-color']
-    const split = current.replace(/[^\d,]/g, '').split(',')
-
-    split[3] = this.opacity
-
-    this.el.style.backgroundColor = 'rgba(' + split.join(',') + ')'
+    this.update()
 
     this.trigger('pen:change', this.attrs)
   }
@@ -98,13 +108,7 @@ class Pen extends Eventable {
 
     this._size = val
 
-    let width = (60 - (50 * ((this._size * 2) / 100))) / 2
-
-    if (width < 0) {
-      width = 0
-    }
-
-    this.el.style.borderWidth = `${width}px`
+    this.update()
 
     this.trigger('pen:change', this.attrs)
   }
@@ -124,14 +128,7 @@ class Pen extends Eventable {
 
     this._colour = val
 
-    this.el.style.backgroundColor = this.colour
-
-    const current = window.getComputedStyle(this.el)['background-color']
-    const split = current.replace(/[^\d,]/g, '').split(',')
-
-    split[3] = this._opacity
-
-    this.el.style.backgroundColor = 'rgba(' + split.join(',') + ')'
+    this.update()
 
     this.trigger('pen:change', this.attrs)
   }
@@ -151,12 +148,7 @@ class Pen extends Eventable {
 
     this._opacity = val
 
-    const current = window.getComputedStyle(this.el)['background-color']
-    const split = current.replace(/[^\d,]/g, '').split(',')
-
-    split[3] = this.opacity
-
-    this.el.style.backgroundColor = 'rgba(' + split.join(',') + ')'
+    this.update()
 
     this.trigger('pen:change', this.attrs)
   }
