@@ -3,6 +3,8 @@ class PenMode extends Button {
   constructor(app) {
     super(app)
 
+    this.update({ mode: 'draw' })
+
     this.el.onclick = this.click.bind(this)
 
     this.on('pen:change', this.update)
@@ -13,8 +15,6 @@ class PenMode extends Button {
 
     this.el.id = 'pen-mode'
     this.el.classList.add('button')
-
-    this.update({ mode: 'draw' })
 
     this.app.el.appendChild(this.el)
   }
