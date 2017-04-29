@@ -188,7 +188,7 @@ class App extends Eventable {
     e.preventDefault()
 
     this.state.shift = e.touches.length === 2
-    this.state.active = e.touches.length > 0
+    this.state.active = e.touches.length === 1 || e.touches.length === 2
     this.state.x = e.pageX
     this.state.y = e.pageY
 
@@ -205,7 +205,7 @@ class App extends Eventable {
     e.preventDefault()
 
     this.state.shift = e.touches.length === 2
-    this.state.active = e.touches.length > 0
+    this.state.active = e.touches.length === 1 || e.touches.length === 2
     this.state.x = e.pageX
     this.state.y = e.pageY
 
@@ -227,7 +227,7 @@ class App extends Eventable {
     e.preventDefault()
 
     this.state.shift = e.touches.length === 2
-    this.state.active = e.touches.length > 0
+    this.state.active = e.touches.length === 1 || e.touches.length === 2
 
     delete this.state.distance
   }
