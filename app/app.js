@@ -40,8 +40,10 @@ class App extends Eventable {
     this.mouseDown = this.mouseDown.bind(this)
     this.mouseMove = this.mouseMove.bind(this)
     this.mouseUp = this.mouseUp.bind(this)
-    this.mouseLeave = this.mouseLeave.bind(this)
     this.mouseWheel = this.mouseWheel.bind(this)
+    this.touchStart = this.touchStart.bind(this)
+    this.touchMove = this.touchMove.bind(this)
+    this.touchStop = this.touchStop.bind(this)
 
     this.listen()
     this.loop()
@@ -86,7 +88,12 @@ class App extends Eventable {
     this.el.addEventListener('mousedown', this.mouseDown)
     this.el.addEventListener('mousemove', this.mouseMove)
     this.el.addEventListener('mouseup', this.mouseUp)
-    this.el.addEventListener('mouseleave', this.mouseLeave)
+    this.el.addEventListener('mouseleave', this.mouseUp)
+
+    this.el.addEventListener('touchstart', this.touchStart)
+    this.el.addEventListener('touchmove', this.touchMove)
+    this.el.addEventListener('touchend', this.touchStop)
+    this.el.addEventListener('touchcancel', this.touchStop)
   }
 
   stopListening() {
@@ -102,7 +109,12 @@ class App extends Eventable {
     this.el.removeEventListener('mousedown', this.mouseDown)
     this.el.removeEventListener('mousemove', this.mouseMove)
     this.el.removeEventListener('mouseup', this.mouseUp)
-    this.el.removeEventListener('mouseleave', this.mouseLeave)
+    this.el.removeEventListener('mouseleave', this.mouseUp)
+
+    this.el.removeEventListener('touchstart', this.touchStart)
+    this.el.removeEventListener('touchmove', this.touchMove)
+    this.el.removeEventListener('touchend', this.touchStop)
+    this.el.removeEventListener('touchcancel', this.touchStop)
   }
 
   visibility(e) {
@@ -167,14 +179,57 @@ class App extends Eventable {
     this.state.shift = false
   }
 
-  mouseLeave(e) {
-    this.state.active = false
-    this.state.shift = false
-  }
-
   mouseWheel(e) {
     this.state.scale = Math.round(Math.pow(1.1, (e.detail / 100)) * 1000) / 1000
     this.state.scaling = true
+  }
+
+  touchStart(e) {
+    e.preventDefault()
+
+    this.state.shift = e.touches.length === 2
+    this.state.active = e.touches.length > 0
+    this.state.x = e.pageX
+    this.state.y = e.pageY
+
+    if (e.touches.length === 2 && !this.state.distance) {
+      const a = Math.abs(e.touches[1].pageX - e.touches[0].pageX)
+      const b = Math.abs(e.touches[1].pageY - e.touches[0].pageY)
+      const distance = Math.sqrt((a * a) + (b * b))
+
+      this.state.distance = distance
+    }
+  }
+
+  touchMove(e) {
+    e.preventDefault()
+
+    this.state.shift = e.touches.length === 2
+    this.state.active = e.touches.length > 0
+    this.state.x = e.pageX
+    this.state.y = e.pageY
+
+    if (e.touches.length === 2) {
+      const a = Math.abs(e.touches[1].pageX - e.touches[0].pageX)
+      const b = Math.abs(e.touches[1].pageY - e.touches[0].pageY)
+      const distance = Math.sqrt((a * a) + (b * b))
+
+      if (this.state.distance) {
+        this.state.scale = distance / this.state.distance
+        this.state.scaling = true
+      }
+
+      this.state.distance = distance
+    }
+  }
+
+  touchStop(e) {
+    e.preventDefault()
+
+    this.state.shift = e.touches.length === 2
+    this.state.active = e.touches.length > 0
+
+    delete this.state.distance
   }
 
   loop() {
