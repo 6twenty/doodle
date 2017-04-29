@@ -187,11 +187,6 @@ class App extends Eventable {
   touchStart(e) {
     e.preventDefault()
 
-    this.state.shift = e.touches.length === 2
-    this.state.active = e.touches.length === 1 || e.touches.length === 2
-    this.state.x = e.pageX
-    this.state.y = e.pageY
-
     if (e.touches.length === 2 && !this.state.distance) {
       const a = Math.abs(e.touches[1].pageX - e.touches[0].pageX)
       const b = Math.abs(e.touches[1].pageY - e.touches[0].pageY)
