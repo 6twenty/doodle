@@ -11,6 +11,9 @@ class Button extends Eventable {
     this.el.addEventListener('mousedown', this.stopPropagation)
     this.el.addEventListener('mouseup', this.stopPropagation)
     this.el.addEventListener('mousemove', this.stopPropagation)
+    this.el.addEventListener('touchstart', this.stopPropagation)
+    this.el.addEventListener('touchmove', this.stopPropagation)
+    this.el.addEventListener('touchend', this.touchEnd.bind(this))
   }
 
   set title(title) {
@@ -27,6 +30,11 @@ class Button extends Eventable {
 
   stopPropagation(e) {
     e.stopPropagation()
+  }
+
+  touchEnd(e) {
+    e.stopPropagation()
+    e.target.click()
   }
 
 }
