@@ -201,8 +201,8 @@ class App extends Eventable {
 
     this.state.shift = e.touches.length === 2
     this.state.active = e.touches.length === 1 || e.touches.length === 2
-    this.state.x = e.pageX
-    this.state.y = e.pageY
+    this.state.x = this.state.drawing ? e.touches[0].pageX : e.pageX
+    this.state.y = this.state.drawing ? e.touches[0].pageY : e.pageY
 
     if (e.touches.length === 2) {
       const a = Math.abs(e.touches[1].pageX - e.touches[0].pageX)
