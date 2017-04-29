@@ -32,6 +32,7 @@ class CanvasLayer extends Eventable {
 
     this.ctx.globalCompositeOperation = path.mode === 'draw' ? 'source-over' : 'destination-out'
     this.ctx.strokeStyle = path.colour
+    this.ctx.fillStyle = path.colour
     this.ctx.globalAlpha = path.opacity
     this.ctx.lineWidth = path.size
   }
@@ -142,6 +143,14 @@ class CanvasLayer extends Eventable {
   renderPoints(points) {
     this.ctx.beginPath()
 
+    if (points.length === 1) {
+      this.ctx.moveTo(points[0].x, points[0].y)
+      this.ctx.arc(points[0].x, points[0].y, this.ctx.lineWidth / 2, 0, 2 * Math.PI)
+      this.ctx.fill()
+
+      return
+    }
+
     points.forEach((point, i, points) => {
       if (i === 0) {
         this.ctx.moveTo(point.x, point.y)
@@ -164,9 +173,10 @@ class CanvasLayer extends Eventable {
       this.ctx.closePath()
       this.ctx.stroke()
     } else {
+      // Just draw a circle
       this.ctx.moveTo(segments[0].point.x, segments[0].point.y)
-      this.ctx.lineTo(segments[0].point.x, segments[0].point.y)
-      this.ctx.stroke()
+      this.ctx.arc(segments[0].point.x, segments[0].point.y, this.ctx.lineWidth / 2, 0, 2 * Math.PI)
+      this.ctx.fill()
     }
   }
 
@@ -215,7 +225,7 @@ class CanvasLayer extends Eventable {
 
     this.el.style.height = `${height}px`
     this.el.style.width = `${width}px`
-    
+
     this.el.height = height * window.devicePixelRatio
     this.el.width = width * window.devicePixelRatio
   }
