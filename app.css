@@ -91,15 +91,17 @@ main::after {
   position: absolute;
   top: calc(50% + 10px);
   left: calc(50% + 10px);
-  width: 600%;
   transform: rotate(45deg);
   pointer-events: none;
   transform-origin: left bottom;
   line-height: 1;
+  white-space: nowrap;
+  background: white;
+  box-shadow: 0 0 0 2px white;
 }
 
 .button:hover > .tooltip {
-  display: block;
+  display: inline-block;
 }
 
 main.drawing .button,
