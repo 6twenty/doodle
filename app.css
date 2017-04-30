@@ -94,6 +94,7 @@ main::after {
   transform: rotate(45deg);
   pointer-events: none;
   transform-origin: left bottom;
+  line-height: 1;
 }
 
 .button:hover > .tooltip {
@@ -544,4 +545,46 @@ main.panning #pen {
 .pen-opacity-slider-right {
   left: calc(50% + 170px);
   background: black;
+}
+
+@media all and (orientation: portrait) {
+
+  .button {
+    left: 20px !important;
+  }
+
+  .button .tooltip {
+    transform: none;
+    top: calc(50% - .5em);
+    left: calc(50% + 1.5em);
+  }
+
+  #pen-mode {
+    top: 20px;
+  }
+
+  #pen-size {
+    top: 60px;
+  }
+
+  #pen-colour {
+    top: 100px;
+  }
+
+  #pen-opacity {
+    top: 140px;
+  }
+
+  #draw-layer {
+    top: 180px;
+  }
+
+  #new-canvas {
+    top: 220px;
+  }
+
+  #download {
+    top: 260px;
+  }
+
 }
