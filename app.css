@@ -571,6 +571,11 @@ main.panning #pen {
     left: calc(50% + 1.5em);
   }
 
+  .panel-close {
+    left: 60px;
+    top: 20px;
+  }
+
   #pen-mode {
     top: 20px;
   }
