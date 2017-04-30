@@ -15,14 +15,8 @@ class PenOpactyPanel extends Panel {
   renderPanel() {
     this.slider = new Slider(this.el, Pen.opacities)
 
-    const left = document.createElement('div')
-    const right = document.createElement('div')
+    this.slider.el.classList.add('opacity-slider')
 
-    left.classList.add('pen-opacity-slider-left')
-    right.classList.add('pen-opacity-slider-right')
-
-    this.el.appendChild(left)
-    this.el.appendChild(right)
     this.el.appendChild(this.slider.el)
   }
 

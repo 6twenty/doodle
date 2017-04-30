@@ -15,14 +15,8 @@ class PenSizePanel extends Panel {
   renderPanel() {
     this.slider = new Slider(this.el, Pen.sizes)
 
-    const left = document.createElement('div')
-    const right = document.createElement('div')
+    this.slider.el.classList.add('size-slider')
 
-    left.classList.add('pen-size-slider-left')
-    right.classList.add('pen-size-slider-right')
-
-    this.el.appendChild(left)
-    this.el.appendChild(right)
     this.el.appendChild(this.slider.el)
   }
 

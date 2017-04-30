@@ -13,19 +13,33 @@ class Slider extends Eventable {
     this.id = this.constructor.uid()
 
     this.steps = steps
-    this.stepToPosition = {}
     this.step = this._step = this.steps[0]
-    this.stepSize = 300 / (this.steps.length - 1)
-
-    this.steps.forEach((step, index) => {
-      this.stepToPosition[step] = index * this.stepSize
-    })
 
     this.startDragging = this.startDragging.bind(this)
     this.stopDragging = this.stopDragging.bind(this)
     this.drag = this.drag.bind(this)
 
     this.build()
+  }
+
+  get width() {
+    const width = document.documentElement.clientWidth - 280
+
+    return width > 300 ? 300 : width
+  }
+
+  get stepSize() {
+    return this.width / (this.steps.length - 1)
+  }
+
+  get stepToPosition() {
+    const map = {}
+
+    this.steps.forEach((step, index) => {
+      map[step] = index * this.stepSize
+    })
+
+    return map
   }
 
   build() {
@@ -35,6 +49,7 @@ class Slider extends Eventable {
     this.el.classList.add('slider')
 
     this.handle.addEventListener('mousedown', this.startDragging.bind(this))
+    window.addEventListener('resize', this.setPosition.bind(this))
 
     this.el.appendChild(this.handle)
   }
