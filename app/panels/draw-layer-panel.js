@@ -10,7 +10,7 @@ class DrawLayerPanel extends Panel {
 
     this.render('draw-layer-panel')
 
-    this.on('layer:change', this.update);
+    this.on('layer:change', this.update)
   }
 
   renderPanel() {

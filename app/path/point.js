@@ -38,7 +38,7 @@ class Point {
     const scale = current !== 0 ? length / current : 0
     const point = new Point(this.x * scale, this.y * scale)
 
-    return point;
+    return point
   }
 
   negate() {

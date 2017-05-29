@@ -17,7 +17,7 @@ class Canvas extends Eventable {
     this.matrix = this.matrix.scale(window.devicePixelRatio)
 
     // Start off by panning so that 0,0 is in the center of the viewport
-    this.matrix = this.matrix.translate(document.documentElement.clientWidth / 2, document.documentElement.clientHeight / 2);
+    this.matrix = this.matrix.translate(document.documentElement.clientWidth / 2, document.documentElement.clientHeight / 2)
 
     if (paths.length > 0) {
       this.fit(paths)
