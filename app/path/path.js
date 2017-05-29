@@ -3,6 +3,12 @@ class Path {
   constructor(canvas, attrs) {
     this.canvas = canvas
     this.timestamp = this.canvas.app.state.timestamp
+    this.bounds = {
+      top: 0,
+      right: 0,
+      bottom: 0,
+      left: 0
+    }
 
     if (attrs) {
       this.initWithAttrs(canvas, attrs)
@@ -57,7 +63,8 @@ class Path {
       opacity: this.opacity,
       mode: this.mode,
       segments: this.segments,
-      error: this.error
+      error: this.error,
+      bounds: this.bounds
     }
   }
 
@@ -70,6 +77,15 @@ class Path {
 
     this.end = point.clone()
     this.points.push(this.end)
+  }
+
+  setBounds() {
+    this.points.forEach(point => {
+      if (point.x < this.bounds.left) this.bounds.left = point.x
+      if (point.x > this.bounds.right) this.bounds.right = point.x
+      if (point.y < this.bounds.top) this.bounds.top = point.y
+      if (point.y > this.bounds.bottom) this.bounds.bottom = point.y
+    })
   }
 
   simplify() {

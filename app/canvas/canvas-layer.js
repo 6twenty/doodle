@@ -49,6 +49,7 @@ class CanvasLayer extends Eventable {
 
   finish() {
     this.path.update()
+    this.path.setBounds()
     this.path.simplify()
     this.pathOffset()
 
