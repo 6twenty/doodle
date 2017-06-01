@@ -4,7 +4,6 @@ class NewCanvas extends Button {
     super(app)
 
     this.title = 'Clear'
-    this.el.onclick = this.click.bind(this)
   }
 
   render() {

@@ -5,8 +5,6 @@ class PenOpacity extends Button {
 
     this.title = 'Opacity'
     this.panel = new PenOpactyPanel(this)
-
-    this.el.onclick = this.click.bind(this)
   }
 
   render() {
@@ -16,10 +14,6 @@ class PenOpacity extends Button {
     this.el.classList.add('button')
 
     this.app.el.appendChild(this.el)
-  }
-
-  click() {
-    this.panel.open()
   }
 
 }

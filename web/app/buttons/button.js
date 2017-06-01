@@ -8,6 +8,8 @@ class Button extends Eventable {
     this.render()
     this.tooltip()
 
+    this.el.onclick = this.click.bind(this)
+
     this.el.addEventListener('mousedown', this.stopPropagation)
     this.el.addEventListener('mouseup', this.stopPropagation)
     this.el.addEventListener('mousemove', this.stopPropagation)
@@ -26,6 +28,18 @@ class Button extends Eventable {
     this.tooltip.classList.add('tooltip')
 
     this.el.appendChild(this.tooltip)
+  }
+
+  click() {
+    if (!this.panel) {
+      return
+    }
+
+    if (Panel.active === this.panel) {
+      this.panel.close()
+    } else {
+      this.panel.open()
+    }
   }
 
   stopPropagation(e) {

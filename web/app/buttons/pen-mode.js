@@ -4,7 +4,6 @@ class PenMode extends Button {
     super(app)
 
     this.title = 'Mode'
-    this.el.onclick = this.click.bind(this)
 
     this.on('pen:change', this.update)
   }

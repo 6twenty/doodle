@@ -5,8 +5,6 @@ class PenColour extends Button {
 
     this.title = 'Colour'
     this.panel = new PenColourPanel(this)
-
-    this.el.onclick = this.click.bind(this)
   }
 
   render() {
@@ -17,10 +15,6 @@ class PenColour extends Button {
     this.el.appendChild(document.createElement('div'))
 
     this.app.el.appendChild(this.el)
-  }
-
-  click() {
-    this.panel.open()
   }
 
 }

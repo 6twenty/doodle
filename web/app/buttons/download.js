@@ -4,7 +4,6 @@ class Download extends Button {
     super(app)
 
     this.title = 'Download'
-    this.el.onclick = this.click.bind(this)
 
     this.on('canvas:save', this.update)
   }

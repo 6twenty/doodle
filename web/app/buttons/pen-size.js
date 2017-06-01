@@ -5,8 +5,6 @@ class PenSize extends Button {
 
     this.title = 'Size'
     this.panel = new PenSizePanel(this)
-
-    this.el.onclick = this.click.bind(this)
   }
 
   render() {
@@ -16,10 +14,6 @@ class PenSize extends Button {
     this.el.classList.add('button')
 
     this.app.el.appendChild(this.el)
-  }
-
-  click() {
-    this.panel.open()
   }
 
 }
