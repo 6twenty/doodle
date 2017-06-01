@@ -526,6 +526,21 @@ main.panning #pen {
 .draw-layer-panel .canvas-layer[data-id="2"] { top: calc(50% - 25px); }
 .draw-layer-panel .canvas-layer[data-id="1"] { top: calc(50% + 45px); }
 
+.draw-layer-panel .canvas-layer .toggle-visibility {
+  position: absolute;
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  border: solid 10px rgba(0,127,0,.5);
+  left: -40px;
+  top: calc(50% - 10px);
+  cursor: pointer;
+}
+
+.draw-layer-panel .canvas-layer .toggle-visibility.off {
+  border-width: 2px;
+}
+
 .slider.size-slider::before,
 .slider.size-slider::after,
 .slider.opacity-slider::before,

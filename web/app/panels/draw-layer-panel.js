@@ -17,25 +17,30 @@ class DrawLayerPanel extends Panel {
     this.app.canvas.layers.forEach(layer => {
       const el = document.createElement('div')
       const canvas = document.createElement('canvas')
+      const toggle = document.createElement('div')
 
       canvas.height = canvas.width = 50
 
       el.dataset.id = layer.id
       el.classList.add('canvas-layer')
+      toggle.classList.add('toggle-visibility')
 
       if (layer === this.app.canvas.renderLayer) {
         el.classList.add('active')
       }
 
       el.onclick = this.canvasLayerClick.bind(this, layer)
+      toggle.onclick = this.toggleCanvasLayerClick.bind(this, layer)
 
       this.layers[layer.id] = {
         layer: layer,
         el: el,
+        toggle: toggle,
         thumb: canvas
       }
 
       el.appendChild(canvas)
+      el.appendChild(toggle)
       this.el.appendChild(el)
     })
   }
@@ -68,6 +73,20 @@ class DrawLayerPanel extends Panel {
     this.app.canvas.renderLayer = layer
 
     this.close()
+  }
+
+  toggleCanvasLayerClick(layer, e) {
+    e.stopPropagation()
+
+    const toggle = this.layers[layer.id].toggle
+
+    if (layer.visible) {
+      toggle.classList.add('off')
+      layer.hide()
+    } else {
+      toggle.classList.remove('off')
+      layer.show()
+    }
   }
 
   update(attrs) {

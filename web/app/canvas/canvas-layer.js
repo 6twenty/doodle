@@ -9,6 +9,7 @@ class CanvasLayer extends Eventable {
 
     this.canvas = canvas
     this.id = id
+    this.visible = true
 
     this.build()
   }
@@ -235,6 +236,16 @@ class CanvasLayer extends Eventable {
     const matrix = this.canvas.matrix
 
     this.ctx.setTransform(matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f)
+  }
+
+  hide() {
+    this.el.style.display = 'none'
+    this.visible = false
+  }
+
+  show () {
+    this.el.style.display = ''
+    this.visible = true
   }
 
 }
