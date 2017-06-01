@@ -16,6 +16,8 @@ class App extends Eventable {
     this.context = context
     this.context.app = this
 
+    this.debug = location.hash === '#debug'
+
     this.state = {}
     this.pen = {}
 

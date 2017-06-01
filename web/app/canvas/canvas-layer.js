@@ -38,6 +38,14 @@ class CanvasLayer extends Eventable {
     this.ctx.lineWidth = path.size
   }
 
+  setDebugProps() {
+    this.ctx.globalCompositeOperation = 'source-over'
+    this.ctx.strokeStyle = 'red'
+    this.ctx.fillStyle = 'black'
+    this.ctx.globalAlpha = 1
+    this.ctx.lineWidth = 0.5
+  }
+
   setup() {
     this.path = new Path(this.canvas)
   }
@@ -180,6 +188,10 @@ class CanvasLayer extends Eventable {
       this.ctx.arc(segments[0].point.x, segments[0].point.y, this.ctx.lineWidth / 2, 0, 2 * Math.PI)
       this.ctx.fill()
     }
+
+    if (this.canvas.app.debug) {
+      this.renderSegmentsDebug(segments)
+    }
   }
 
   renderSegmentsForward(segments) {
@@ -212,6 +224,40 @@ class CanvasLayer extends Eventable {
         this.ctx.lineTo(point.x, point.y)
       }
     })
+  }
+
+  renderSegmentsDebug(segments) {
+    this.setDebugProps()
+
+    this.ctx.beginPath()
+
+    segments.forEach((segment, i, segments) => {
+      const point = segment.point
+
+      if (i > 0) {
+        const prev = segments[i - 1]
+        const cp1 = prev.handleOut
+        const cp2 = segment.handleIn
+
+        // Destination point
+        this.ctx.moveTo(point.x + 2, point.y)
+        this.ctx.arc(point.x, point.y, 2, 0, 2 * Math.PI)
+        // Path to destination point
+        this.ctx.moveTo(prev.point.x, prev.point.y)
+        this.ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, point.x, point.y)
+        // Control point 1
+        this.ctx.moveTo(prev.point.x, prev.point.y)
+        this.ctx.lineTo(cp1.x, cp1.y)
+        // Control point 2
+        this.ctx.moveTo(point.x, point.y)
+        this.ctx.lineTo(cp2.x, cp2.y)
+      } else {
+        this.ctx.moveTo(point.x + 2, point.y)
+        this.ctx.arc(point.x, point.y, 2, 0, 2 * Math.PI)
+      }
+    })
+
+    this.ctx.stroke()
   }
 
   clear() {
