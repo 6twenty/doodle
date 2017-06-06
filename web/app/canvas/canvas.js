@@ -42,15 +42,6 @@ class Canvas extends Eventable {
     this.renderAll()
   }
 
-  get pointer() {
-    this.point.x = this.app.state.x * window.devicePixelRatio
-    this.point.y = this.app.state.y * window.devicePixelRatio
-
-    const pt = this.point.matrixTransform(this.matrix.inverse())
-
-    return new Point(pt.x, pt.y)
-  }
-
   // For erasing, the render layer is drawn on directly
   get drawLayer() {
     if (this.app.pen.mode === 'erase') {
@@ -83,6 +74,18 @@ class Canvas extends Eventable {
     return [].concat.apply([], paths).sort((a, b) => {
       return a.timestamp - b.timestamp
     })
+  }
+
+  pointer(x, y) {
+    if (!x) x = this.app.state.x
+    if (!y) y = this.app.state.y
+
+    this.point.x = x * window.devicePixelRatio
+    this.point.y = y * window.devicePixelRatio
+
+    const pt = this.point.matrixTransform(this.matrix.inverse())
+
+    return new Point(pt.x, pt.y)
   }
 
   render() {
@@ -144,14 +147,14 @@ class Canvas extends Eventable {
   }
 
   startPanning() {
-    this.state.panOrigin = this.pointer.clone()
+    this.state.panOrigin = this.pointer().clone()
     this.app.state.momentum = false
 
     delete this.state.momentum
   }
 
   pan() {
-    const pointer = this.pointer.clone()
+    const pointer = this.pointer().clone()
     const point = pointer.subtract(this.state.panOrigin)
 
     this.state.momentum = {
@@ -164,7 +167,7 @@ class Canvas extends Eventable {
     }
 
     this.matrix = this.matrix.translate(point.x, point.y)
-    this.state.panOrigin = this.pointer.clone()
+    this.state.panOrigin = this.pointer().clone()
 
     this.renderAll()
   }
@@ -206,7 +209,7 @@ class Canvas extends Eventable {
     // so that the pointer is at 0,0; then after scaling it is translated
     // back again.
 
-    const point = this.pointer
+    const point = this.pointer()
 
     let scale = this.app.state.scale
     let factor = 0

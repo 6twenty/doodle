@@ -18,8 +18,9 @@ class App extends Eventable {
 
     this.debug = location.hash === '#debug'
 
-    this.state = {}
     this.pen = {}
+    this.state = {}
+    this.state.coords = []
 
     this.render()
 
@@ -174,6 +175,13 @@ class App extends Eventable {
     this.state.active = e.which === 1
     this.state.x = e.pageX
     this.state.y = e.pageY
+
+    if (this.state.drawing) {
+      this.state.coords.push({
+        x: this.state.x,
+        y: this.state.y
+      })
+    }
   }
 
   mouseUp(e) {
@@ -205,6 +213,13 @@ class App extends Eventable {
     this.state.active = e.touches.length === 1 || e.touches.length === 2
     this.state.x = this.state.drawing ? e.touches[0].pageX : e.pageX
     this.state.y = this.state.drawing ? e.touches[0].pageY : e.pageY
+
+    if (this.state.drawing) {
+      this.state.coords.push({
+        x: this.state.x,
+        y: this.state.y
+      })
+    }
 
     if (e.touches.length === 2) {
       const a = Math.abs(e.touches[1].pageX - e.touches[0].pageX)

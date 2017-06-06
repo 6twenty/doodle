@@ -69,14 +69,20 @@ class Path {
   }
 
   update() {
-    const point = this.canvas.pointer
+    const coords = this.canvas.app.state.coords.slice(0, this.canvas.app.state.coords.length)
 
-    if (this.end && point.equals(this.end)) {
-      return
-    }
+    coords.forEach(coord => {
+      const point = this.canvas.pointer(coord.x, coord.y)
 
-    this.end = point.clone()
-    this.points.push(this.end)
+      if (this.end && point.equals(this.end)) {
+        return
+      }
+
+      this.end = point.clone()
+      this.points.push(this.end)
+    })
+
+    this.canvas.app.state.coords = []
   }
 
   setBounds() {
