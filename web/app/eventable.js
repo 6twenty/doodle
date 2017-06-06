@@ -1,42 +1,35 @@
 class Eventable {
 
-  static get handlers() {
-    Eventable._handlers = Eventable._handlers || {}
-    return Eventable._handlers
-  }
+  on(name, handler) {
+    const fn = this.__handleEvent.bind(this, handler.bind(this))
 
-  static on(name, handler, context) {
-    Eventable.handlers[name] = Eventable.handlers[name] || []
-    Eventable.handlers[name].push({
-      fn: handler,
-      context: context
-    })
-  }
-
-  static off(name) {
-    delete Eventable.handlers[name]
-  }
-
-  static trigger(name, data) {
-    if (!Eventable.handlers[name]) {
-      return
+    if (this.el) {
+      this.el.addEventListener(name, fn)
     }
 
-    Eventable.handlers[name].forEach(handler => {
-      handler.fn.call(handler.context, data || {})
-    })
-  }
-
-  on(name, handler, context) {
-    this.constructor.on(name, handler, this)
-  }
-
-  off(name) {
-    this.constructor.off(name, handler)
+    document.addEventListener(name, fn)
   }
 
   trigger(name, data) {
-    this.constructor.trigger(name, data)
+    const e = new CustomEvent(name, {
+      detail: data,
+      bubbles: true,
+      cancelable: true
+    })
+
+    this.el.dispatchEvent(e)
+  }
+
+  // If the event gets triggered on this component's element then it's
+  // handled and propagation is halted. Otherwise the event propagates
+  // to document and is handled there.
+  __handleEvent(handler, e) {
+    if (e.currentTarget === this.el) {
+      e.stopPropagation()
+      handler(e.detail)
+    } else {
+      handler(e.detail)
+    }
   }
 
 }

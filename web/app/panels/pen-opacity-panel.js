@@ -25,10 +25,6 @@ class PenOpactyPanel extends Panel {
   }
 
   sliderChange(change) {
-    if (change.id !== this.slider.id) {
-      return
-    }
-
     this.app.pen.opacity = change.step
   }
 

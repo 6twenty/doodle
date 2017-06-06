@@ -1,16 +1,9 @@
 class Slider extends Eventable {
 
-  static uid() {
-    this._counter = this._counter || 0
-    return this._counter += 1
-  }
-
   constructor(root, steps) {
     super()
 
     this.root = root
-
-    this.id = this.constructor.uid()
 
     this.steps = steps
     this.step = this._step = this.steps[0]
@@ -66,7 +59,7 @@ class Slider extends Eventable {
 
     this.handle.style.transform = `translateX(${position}px)`
 
-    this.trigger('slider:change', { id: this.id, step: this._step })
+    this.trigger('slider:change', { step: this._step })
   }
 
   startDragging(e) {
@@ -109,9 +102,13 @@ class Slider extends Eventable {
       targetIndex = 0
     }
 
-    this._step = this.steps[targetIndex]
+    const step = this.steps[targetIndex]
+    const hasChanged = this._step !== step
 
-    this.setPosition()
+    if (hasChanged) {
+      this._step = step
+      this.setPosition()
+    }
   }
 
 }

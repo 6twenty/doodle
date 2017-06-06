@@ -25,10 +25,6 @@ class PenSizePanel extends Panel {
   }
 
   sliderChange(change) {
-    if (change.id !== this.slider.id) {
-      return
-    }
-
     this.app.pen.size = change.step
   }
 
