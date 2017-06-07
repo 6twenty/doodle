@@ -16,7 +16,16 @@ class App extends Eventable {
     this.context = context
     this.context.app = this
 
+    this.db = firebase.database()
+
     this.debug = location.hash === '#debug'
+    this.id = location.pathname.replace(/^\//, '')
+
+    if (this.id === '') {
+      // Create a new ID
+      this.id = this.db.ref('/doodles').push().key
+      history.replaceState(null, null, `/${this.id}`)
+    }
 
     this.pen = {}
     this.state = {}
@@ -50,6 +59,7 @@ class App extends Eventable {
 
     this.listen()
     this.loop()
+    this.load()
   }
 
   confirm(message) {
@@ -66,8 +76,6 @@ class App extends Eventable {
     this.state.resetting = true
     this.stopListening()
     this.el.parentNode.removeChild(this.el)
-
-    delete localStorage.paths
 
     new App(this.context)
   }
@@ -323,6 +331,23 @@ class App extends Eventable {
     if (!this.state.resetting) {
       this.loop()
     }
+  }
+
+  load() {
+    this.db.ref(`/doodles/${this.id}`).once('value').then(snapshot => {
+      if (!snapshot.exists()) {
+        this.canvas.load([])
+        return
+      }
+
+      const val = snapshot.val()
+      const keys = Object.keys(val.paths).sort()
+      const paths = keys.map(key => {
+        return new Path(this.canvas, val.paths[key])
+      })
+
+      this.canvas.load(paths)
+    })
   }
 
 }

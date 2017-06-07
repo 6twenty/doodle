@@ -7,7 +7,6 @@ class Canvas extends Eventable {
     this.state = {}
     this.state.redoPaths = []
 
-    const paths = this.load()
     const svg = document.querySelector('svg')
 
     this.matrix = svg.createSVGMatrix()
@@ -19,10 +18,6 @@ class Canvas extends Eventable {
     // Start off by panning so that 0,0 is in the center of the viewport
     this.matrix = this.matrix.translate(document.documentElement.clientWidth / 2, document.documentElement.clientHeight / 2)
 
-    if (paths.length > 0) {
-      this.fit(paths)
-    }
-
     this.layers = [
       new CanvasLayer(this, 1),
       new CanvasLayer(this, 2),
@@ -32,14 +27,7 @@ class Canvas extends Eventable {
     this._drawLayer = new CanvasLayer(this)
     this._renderLayer = this.layers[1] // Default to the middle layer
 
-    this.layers.forEach(layer => {
-      layer.paths = paths.filter(path => {
-        return path.layer == layer.id
-      })
-    })
-
     this.render()
-    this.renderAll()
   }
 
   // For erasing, the render layer is drawn on directly
@@ -242,24 +230,32 @@ class Canvas extends Eventable {
     })
   }
 
-  save() {
-    const paths = this.paths.map(path => path.attrs())
+  save(path) {
+    const ref = this.app.db.ref(`/doodles/${this.app.id}/paths`)
 
-    this.trigger('canvas:save', { paths: paths })
+    if (!path.key) {
+      path.key = ref.push().key
+    }
 
-    localStorage.paths = JSON.stringify(paths)
+    ref.child(path.key).set(path.attrs())
   }
 
-  load() {
-    let cache = localStorage.paths
+  unsave(path) {
+    this.app.db.ref(`/doodles/${this.app.id}/paths/${path.key}`).remove()
+  }
 
-    if (cache) {
-      return JSON.parse(cache).map(data => {
-        return new Path(this, data)
-      })
-    } else {
-      return []
+  load(paths) {
+    if (paths.length > 0) {
+      this.fit(paths)
     }
+
+    this.layers.forEach(layer => {
+      layer.paths = paths.filter(path => {
+        return path.layer == layer.id
+      })
+    })
+
+    this.renderAll()
   }
 
   command(command) {
@@ -292,7 +288,7 @@ class Canvas extends Eventable {
     layer.paths.splice(layer.paths.length - 1, 1)
     layer.clear()
     layer.redraw()
-    this.save()
+    this.unsave(path)
   }
 
   redo() {
@@ -309,7 +305,7 @@ class Canvas extends Eventable {
     layer.paths.push(path)
     layer.clear()
     layer.redraw()
-    this.save()
+    this.save(path)
   }
 
   closePanel() {

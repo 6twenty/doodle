@@ -68,9 +68,9 @@ class CanvasLayer extends Eventable {
     this.canvas.renderLayer.paths.push(this.path)
     this.canvas.renderLayer.renderFinal()
 
-    this.path = null
+    this.canvas.save(this.path)
 
-    this.canvas.save()
+    this.path = null
   }
 
   pathOffset() {
