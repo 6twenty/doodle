@@ -76,6 +76,7 @@ class App extends Eventable {
 
   reset() {
     this.state.resetting = true
+    this.canvas.paths.forEach(path => this.canvas.unsave(path))
     this.stopListening()
     this.el.parentNode.removeChild(this.el)
 
