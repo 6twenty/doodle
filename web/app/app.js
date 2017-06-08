@@ -302,6 +302,11 @@ class App extends Eventable {
         this.el.classList.add('drawing')
         this.canvas.drawLayer.setup()
         this.state.drawing = true
+
+        this.state.coords.push({
+          x: this.state.x,
+          y: this.state.y
+        })
       }
 
       this.canvas.drawLayer.draw()
