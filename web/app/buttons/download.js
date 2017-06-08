@@ -5,7 +5,7 @@ class Download extends Button {
 
     this.title = 'Download'
 
-    this.on('canvas:save', this.update)
+    this.on('canvas:change', this.update)
   }
 
   render() {

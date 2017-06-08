@@ -239,10 +239,14 @@ class Canvas extends Eventable {
     }
 
     ref.child(path.key).set(path.attrs())
+
+    this.trigger('canvas:change', { paths: this.paths })
   }
 
   unsave(path) {
     this.app.db.ref(`/doodles/${this.app.id}/paths/${path.key}`).remove()
+
+    this.trigger('canvas:change', { paths: this.paths })
   }
 
   addPaths(paths) {
@@ -258,6 +262,8 @@ class Canvas extends Eventable {
     }
 
     this.renderAll()
+
+    this.trigger('canvas:change', { paths: this.paths })
   }
 
   removeKeys(keys) {
@@ -274,6 +280,8 @@ class Canvas extends Eventable {
     })
 
     this.renderAll()
+
+    this.trigger('canvas:change', { paths: this.paths })
   }
 
   command(command) {
@@ -291,13 +299,12 @@ class Canvas extends Eventable {
   }
 
   undo() {
-    const paths = this.paths
+    const path = this.paths.pop()
 
-    if (paths.length === 0) {
+    if (!path) {
       return
     }
 
-    const path = paths.splice(this.paths.length - 1, 1)[0]
     const layer = this.layers.find(layer => {
       return layer.id === path.layer
     })
