@@ -10,6 +10,7 @@ class CanvasLayer extends Eventable {
     this.canvas = canvas
     this.id = id
     this.visible = true
+    this.paths = []
 
     this.build()
   }

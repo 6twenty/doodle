@@ -30,6 +30,8 @@ class App extends Eventable {
     this.pen = {}
     this.state = {}
     this.state.coords = []
+    this.state.addPaths = []
+    this.state.removeKeys = []
 
     this.render()
 
@@ -59,7 +61,7 @@ class App extends Eventable {
 
     this.listen()
     this.loop()
-    this.load()
+    this.connect()
   }
 
   confirm(message) {
@@ -328,25 +330,33 @@ class App extends Eventable {
 
     }
 
+    if (this.state.addPaths.length > 0) {
+      this.canvas.addPaths(this.state.addPaths)
+      this.state.addPaths = []
+    }
+
+    if (this.state.removeKeys.length > 0) {
+      this.canvas.removeKeys(this.state.removeKeys)
+      this.state.removeKeys = []
+    }
+
     if (!this.state.resetting) {
       this.loop()
     }
   }
 
-  load() {
-    this.db.ref(`/doodles/${this.id}`).once('value').then(snapshot => {
-      if (!snapshot.exists()) {
-        this.canvas.load([])
-        return
-      }
+  connect() {
+    const ref = this.db.ref(`/doodles/${this.id}/paths`)
 
-      const val = snapshot.val()
-      const keys = Object.keys(val.paths).sort()
-      const paths = keys.map(key => {
-        return new Path(this.canvas, val.paths[key])
-      })
+    ref.on('child_added', snapshot => {
+      const path = new Path(this.canvas, snapshot.val())
 
-      this.canvas.load(paths)
+      path.key = snapshot.key
+      this.state.addPaths.push(path)
+    })
+
+    ref.on('child_removed', snapshot => {
+      this.state.removeKeys.push(snapshot.key)
     })
   }
 

@@ -28,6 +28,7 @@ class Canvas extends Eventable {
     this._renderLayer = this.layers[1] // Default to the middle layer
 
     this.render()
+    this.renderAll()
   }
 
   // For erasing, the render layer is drawn on directly
@@ -244,15 +245,32 @@ class Canvas extends Eventable {
     this.app.db.ref(`/doodles/${this.app.id}/paths/${path.key}`).remove()
   }
 
-  load(paths) {
-    if (paths.length > 0) {
-      this.fit(paths)
+  addPaths(paths) {
+    const existingKeys = this.paths.map(path => path.key)
+
+    // Filter to only paths that don't already exist, then add them
+    paths.filter(path => existingKeys.indexOf(path.key) < 0).forEach(path => {
+      this.layers.find(layer => layer.id === path.layer).paths.push(path)
+    })
+
+    if (existingKeys.length === 0) {
+      this.fit(this.paths)
     }
 
-    this.layers.forEach(layer => {
-      layer.paths = paths.filter(path => {
-        return path.layer == layer.id
-      })
+    this.renderAll()
+  }
+
+  removeKeys(keys) {
+    const existingKeys = this.paths.map(path => path.key)
+
+    // Filter to only paths that currently exist, and remove them
+    keys.filter(key => existingKeys.indexOf(key) >= 0).forEach(key => {
+      const path = this.paths.filter(path => path.key === key)[0]
+      const layer = this.layers.find(layer => layer.id === path.layer)
+      const index = layer.paths.map(path => path.key).indexOf(path.key)
+
+      // Remove this path
+      layer.paths.splice(index, 1)
     })
 
     this.renderAll()
