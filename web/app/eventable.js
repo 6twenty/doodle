@@ -17,6 +17,10 @@ class Eventable {
       cancelable: true
     })
 
+    if (window.app.debug) {
+      console.log(this, name, data)
+    }
+
     this.el.dispatchEvent(e)
   }
 
