@@ -32,7 +32,7 @@ class CanvasLayer extends Eventable {
     this.ctx.lineJoin = "round"
     this.ctx.lineCap = "round"
 
-    this.ctx.globalCompositeOperation = path.mode === 'draw' ? 'source-over' : 'destination-out'
+    this.ctx.globalCompositeOperation = path.mode === 'erase' ? 'destination-out' : 'source-over'
     this.ctx.strokeStyle = path.colour
     this.ctx.fillStyle = path.colour
     this.ctx.globalAlpha = path.opacity
