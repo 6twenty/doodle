@@ -344,8 +344,12 @@ class Canvas extends Eventable {
     const ctx = canvas.getContext('2d')
     const box = this.boundingBox(this.paths)
     const svg = document.querySelector('svg')
+    const isDebugging = this.app.debug
 
     let matrix = svg.createSVGMatrix()
+
+    // Disable debugging for the snapshot
+    this.app.debug = false
 
     matrix = matrix.scale(window.devicePixelRatio)
     matrix = matrix.translate(box.width / 2, box.height / 2)
@@ -386,6 +390,9 @@ class Canvas extends Eventable {
       // Render onto the main canvas
       ctx.drawImage(layerCanvas, box.left, box.top, box.width, box.height)
     })
+
+    // Resume debugging if need be
+    this.app.debug = isDebugging
 
     return canvas
   }
