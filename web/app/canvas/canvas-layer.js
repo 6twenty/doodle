@@ -39,9 +39,9 @@ class CanvasLayer extends Eventable {
     this.ctx.lineWidth = path.size
   }
 
-  setDebugProps() {
+  setDebugProps(colour) {
     this.ctx.globalCompositeOperation = 'source-over'
-    this.ctx.strokeStyle = 'red'
+    this.ctx.strokeStyle = colour
     this.ctx.fillStyle = 'black'
     this.ctx.globalAlpha = 1
     this.ctx.lineWidth = 0.5
@@ -140,14 +140,14 @@ class CanvasLayer extends Eventable {
       this.redraw()
     } else {
       this.canvas.renderLayer.setProps(this.path)
-      this.renderSegments(this.path.segments)
+      this.renderSegments(this.path)
     }
   }
 
   redraw() {
     this.paths.forEach(path => {
       this.setProps(path)
-      this.renderSegments(path.segments)
+      this.renderSegments(path)
     })
   }
 
@@ -173,30 +173,30 @@ class CanvasLayer extends Eventable {
     this.ctx.stroke()
   }
 
-  renderSegments(segments) {
+  renderSegments(path) {
     this.ctx.beginPath()
 
-    if (segments.length > 1) {
+    if (path.segments.length > 1) {
       this.ctx.lineWidth *= (1 - CanvasLayer.VARIANCE)
 
-      this.renderSegmentsForward(segments)
-      this.renderSegmentsBackward(segments)
+      this.renderSegmentsForward(path)
+      this.renderSegmentsBackward(path)
       this.ctx.closePath()
       this.ctx.stroke()
     } else {
       // Just draw a circle
-      this.ctx.moveTo(segments[0].point.x, segments[0].point.y)
-      this.ctx.arc(segments[0].point.x, segments[0].point.y, this.ctx.lineWidth / 2, 0, 2 * Math.PI)
+      this.ctx.moveTo(path.segments[0].point.x, path.segments[0].point.y)
+      this.ctx.arc(path.segments[0].point.x, path.segments[0].point.y, this.ctx.lineWidth / 2, 0, 2 * Math.PI)
       this.ctx.fill()
     }
 
     if (this.canvas.app.debug) {
-      this.renderSegmentsDebug(segments)
+      this.renderSegmentsDebug(path)
     }
   }
 
-  renderSegmentsForward(segments) {
-    segments.forEach((segment, i, segments) => {
+  renderSegmentsForward(path) {
+    path.segments.forEach((segment, i, segments) => {
       const point = segment.point.subtract(segment.offset)
 
       if (i > 0) {
@@ -211,8 +211,8 @@ class CanvasLayer extends Eventable {
     })
   }
 
-  renderSegmentsBackward(segments) {
-    segments.slice().reverse().forEach((segment, i, segments) => {
+  renderSegmentsBackward(path) {
+    path.segments.slice().reverse().forEach((segment, i, segments) => {
       const point = segment.point.add(segment.offset)
 
       if (i > 0) {
@@ -227,12 +227,24 @@ class CanvasLayer extends Eventable {
     })
   }
 
-  renderSegmentsDebug(segments) {
-    this.setDebugProps()
+  renderSegmentsDebug(path) {
+    // Bounding box in blue
+    this.setDebugProps('blue')
+
+    this.ctx.beginPath()
+    this.ctx.moveTo(path.bounds.left, path.bounds.top)
+    this.ctx.lineTo(path.bounds.right, path.bounds.top)
+    this.ctx.lineTo(path.bounds.right, path.bounds.bottom)
+    this.ctx.lineTo(path.bounds.left, path.bounds.bottom)
+    this.ctx.closePath()
+    this.ctx.stroke()
+
+    // Curves in red
+    this.setDebugProps('red')
 
     this.ctx.beginPath()
 
-    segments.forEach((segment, i, segments) => {
+    path.segments.forEach((segment, i, segments) => {
       const point = segment.point
 
       if (i > 0) {
