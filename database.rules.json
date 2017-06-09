@@ -1,6 +1,36 @@
 {
   "rules": {
-    ".read": "auth != null",
-    ".write": "auth != null"
+    "doodles": {
+      ".read": true,
+      ".write": true,
+      ".validate": "newData.hasChildren()",
+      "$doodle_id": {
+        ".validate": "newData.hasChild('paths')",
+        "paths": {
+          ".validate": "newData.hasChildren()",
+          "$path_id": {
+            ".validate": "newData.hasChildren(['size', 'opacity', 'colour', 'layer', 'error', 'mode'])",
+            "size": {
+              ".validate": "newData.isNumber()"
+            },
+            "opacity": {
+              ".validate": "newData.isNumber()"
+            },
+            "colour": {
+              ".validate": "newData.isString()"
+            },
+            "layer": {
+              ".validate": "newData.isNumber()"
+            },
+            "error": {
+              ".validate": "newData.isNumber()"
+            },
+            "mode": {
+              ".validate": "newData.isString()"
+            }
+          }
+        }
+      }
+    }
   }
 }
