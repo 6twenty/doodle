@@ -17,6 +17,7 @@ class App extends Eventable {
     this.context.app = this
 
     this.db = firebase.database()
+    this.storage = firebase.storage()
 
     this.debug = location.hash === '#debug'
     this.id = location.pathname.replace(/^\//, '')
@@ -44,6 +45,7 @@ class App extends Eventable {
     new DrawLayer(this)
     new NewCanvas(this)
     new Download(this)
+    new ShareButton(this)
 
     this.pen = new Pen(this)
 
