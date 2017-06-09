@@ -86,6 +86,11 @@ class Path {
   }
 
   setBounds() {
+    this.bounds.left = this.points[0].x
+    this.bounds.right = this.points[0].x
+    this.bounds.top = this.points[0].y
+    this.bounds.bottom = this.points[0].y
+
     this.points.forEach(point => {
       if (point.x < this.bounds.left) this.bounds.left = point.x
       if (point.x > this.bounds.right) this.bounds.right = point.x
