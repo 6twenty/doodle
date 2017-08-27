@@ -6,6 +6,10 @@
     "public": "web",
     "rewrites": [
       {
+        "source": "/*.png",
+        "function": "renderer"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

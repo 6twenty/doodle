@@ -341,6 +341,17 @@ class App extends Eventable {
     if (this.state.addPaths.length > 0) {
       this.canvas.addPaths(this.state.addPaths)
       this.state.addPaths = []
+
+      if (typeof window.rendered === 'function') {
+        const canvas = this.canvas.snapshot()
+        const png = canvas.toDataURL('image/png')
+
+        console.log('CALLING window.rendered(png)')
+
+        window.rendered(png)
+      } else {
+        console.log('FUNCTION NOT DEFINED window.rendered')
+      }
     }
 
     if (this.state.removeKeys.length > 0) {
